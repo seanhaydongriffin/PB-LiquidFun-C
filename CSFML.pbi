@@ -1225,9 +1225,105 @@ Global _CSFML_sfRenderWindow_drawCircleShape.ProtosfRenderWindow_drawCircleShape
 PrototypeC Protofb_sfCircleShape_setRadius(*sprite, angle.f)
 Global _CSFML_sfCircleShape_setRadius.Protofb_sfCircleShape_setRadius = GetFunction(3, "sfCircleShape_setRadius")
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: _CSFML_sfCircleShape_setFillColor
+; Description ...: Set the fill color of a text.
+;				   By default, the text;s fill color is opaque white. Setting the fill color To a transparent color With an
+;				   outline will cause the outline to be displayed in the fill area of the text.
+; Syntax.........: _CSFML_sfCircleShape_setFillColor($text, $color)
+; Parameters ....: $text - Text object
+;				   $color - New fill color of the text
+; Return values .: Success - True
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+PrototypeC Protofb_sfCircleShape_setFillColor(*shape, *color)
+Global _CSFML_sfCircleShape_setFillColor.Protofb_sfCircleShape_setFillColor = GetFunction(6, "fb_sfCircleShape_setFillColor")
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _CSFML_sfCircleShape_setFillColor_rgba
+; Description ...: Clear a render window with the given color.
+; Syntax.........: _CSFML_sfCircleShape_setFillColor_rgba($renderWindow, $color)
+; Parameters ....: $renderWindow - Render window object
+;				   $color - Fill color
+; Return values .: Success - True
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......: _CSFML_sfRenderWindow_create
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+PrototypeC Protofb_sfCircleShape_setFillColor_rgba(*shape, red, green, blue, alpha)
+Global _CSFML_sfCircleShape_setFillColor_rgba.Protofb_sfCircleShape_setFillColor_rgba = GetFunction(6, "fb_sfCircleShape_setFillColor_rgba")
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _CSFML_sfCircleShape_setOutlineColor
+; Description ...: Set the fill color of a text.
+;				   By default, the text;s fill color is opaque white. Setting the fill color To a transparent color With an
+;				   outline will cause the outline to be displayed in the fill area of the text.
+; Syntax.........: _CSFML_sfCircleShape_setOutlineColor($text, $color)
+; Parameters ....: $text - Text object
+;				   $color - New fill color of the text
+; Return values .: Success - True
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+PrototypeC Protofb_sfCircleShape_setOutlineColor(*shape, *color)
+Global _CSFML_sfCircleShape_setOutlineColor.Protofb_sfCircleShape_setOutlineColor = GetFunction(6, "fb_sfCircleShape_setOutlineColor")
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _CSFML_sfCircleShape_setOutlineColor_rgba
+; Description ...: Clear a render window with the given color.
+; Syntax.........: _CSFML_sfCircleShape_setOutlineColor_rgba($renderWindow, $color)
+; Parameters ....: $renderWindow - Render window object
+;				   $color - Outline color
+; Return values .: Success - True
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......: _CSFML_sfRenderWindow_create
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+PrototypeC Protofb_sfCircleShape_setOutlineColor_rgba(*shape, red, green, blue, alpha)
+Global _CSFML_sfCircleShape_setOutlineColor_rgba.Protofb_sfCircleShape_setOutlineColor_rgba = GetFunction(6, "fb_sfCircleShape_setOutlineColor_rgba")
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _CSFML_sfCircleShape_setOutlineColor
+; Description ...: Set the fill color of a text.
+;				   By default, the text;s fill color is opaque white. Setting the fill color To a transparent color With an
+;				   outline will cause the outline to be displayed in the fill area of the text.
+; Syntax.........: _CSFML_sfCircleShape_setOutlineColor($text, $color)
+; Parameters ....: $text - Text object
+;				   $color - New fill color of the text
+; Return values .: Success - True
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+PrototypeC ProtosfCircleShape_setOutlineThickness(*shape, thickness.f)
+Global _CSFML_sfCircleShape_setOutlineThickness.ProtosfCircleShape_setOutlineThickness = GetFunction(3, "sfCircleShape_setOutlineThickness")
+
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 1212
-; FirstLine = 1188
+; CursorPosition = 1321
+; FirstLine = 1284
 ; Folding = -
 ; EnableUnicode
 ; EnableXP
