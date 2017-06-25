@@ -3,12 +3,18 @@ XIncludeFile "LiquidFun-C.pbi"
 
 Declare b2Body_SetAngle(tmp_body.l, tmp_angle.d)
 Declare b2Body_AddAngle(tmp_body.l, add_angle.d)
+Declare keyboard_proc(*Value)
+
+
+WndProcMsg.MSG
 
 ;OpenConsole()
 
 Global camera_linearvelocity_x.f = 0
 Global camera_linearvelocity_y.f = 0
 Global camera_linearvelocity_z.f = 0
+Global body_focused.i = 0
+Global end_game.i = 0
 
 
 OpenWindow(0, 0, 0, 800, 600, "OpenGL Gadget", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
@@ -17,7 +23,7 @@ SetActiveGadget(0)
 glMatrixMode_(#GL_PROJECTION)
 gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
 glMatrixMode_(#GL_MODELVIEW)
-glTranslatef_(0, 0, -30.0)
+glTranslatef_(0, 0, -200.0)
 glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
 
 
@@ -66,8 +72,10 @@ body_shape(3)\y = 1
 Global bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
 
 
-Dim tmp_pos.f(2)
+Global Dim tmp_pos.f(2)
 frame_timer = ElapsedMilliseconds()
+CreateThread(@keyboard_proc(), 1000)
+;keyboard_timer = ElapsedMilliseconds()
 
 
 
@@ -151,52 +159,28 @@ Repeat
     num_frames = num_frames + 1
   EndIf
   
-  Eventxx = WindowEvent()
   key.i = 0
+  Eventxx = WindowEvent()
   
-;    If EventType() = #PB_EventType_KeyUp ; like KeyboardReleased
-    If EventType() = #PB_EventType_KeyDown ; like KeyboardReleased
+;   If EventType() = #PB_EventType_KeyUp ; like KeyboardReleased
+     
+;     key = GetGadgetAttribute(0,#PB_OpenGL_Key)
+;     
+;     Select key
+;         
+;       Case #PB_Shortcut_C
+;         
+;         body_focused = 0
+;         
+;       Case #PB_Shortcut_B
+;         
+;         body_focused = 1
+;     EndSelect
+;   EndIf
+    
+  
       
-      key = GetGadgetAttribute(0,#PB_OpenGL_Key)
-      
-      Select key
-          
-          Case #PB_Shortcut_Q
-            
-            b2Body_AddAngle(groundBody, Radian(1))
-          
-          Case #PB_Shortcut_W
-            
-            b2Body_AddAngle(groundBody, Radian(-1))
-          
-          Case #PB_Shortcut_Left
-            
-            camera_linearvelocity_x = camera_linearvelocity_x + 0.5
-          
-          Case #PB_Shortcut_Right
-            
-            camera_linearvelocity_x = camera_linearvelocity_x - 0.5
-          
-          Case #PB_Shortcut_Down
-            
-            camera_linearvelocity_y = camera_linearvelocity_y + 0.5
-          
-          Case #PB_Shortcut_Up
-            
-            camera_linearvelocity_y = camera_linearvelocity_y - 0.5
-          
-          Case #PB_Shortcut_PageDown
-            
-            camera_linearvelocity_z = camera_linearvelocity_z + 0.5
-          
-          Case #PB_Shortcut_PageUp
-            
-            camera_linearvelocity_z = camera_linearvelocity_z - 0.5
-
-      EndSelect
-    EndIf
-
-Until Eventxx = #PB_Event_CloseWindow Or key = #PB_Shortcut_Escape
+Until Eventxx = #PB_Event_CloseWindow Or end_game = 1
 
 StopDrawing()
 
@@ -234,9 +218,104 @@ Procedure b2Body_AddAngle(tmp_body.l, add_angle.d)
   b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), curr_angle + add_angle)
 EndProcedure
 
+
+Procedure keyboard_proc(*Value)
+  
+  keyboard_timer = ElapsedMilliseconds()
+
+  While (1)
+  
+    If (ElapsedMilliseconds() - keyboard_timer) > 10
+      
+      keyboard_timer = ElapsedMilliseconds()
+      
+      ; game control
+      
+      If GetAsyncKeyState_(#VK_ESCAPE)
+        
+        end_game = 1
+      EndIf
+      
+      ; ground control
+                  
+      If GetAsyncKeyState_(#VK_Q)
+        
+        b2Body_AddAngle(groundBody, Radian(1))
+      EndIf
+      
+      If GetAsyncKeyState_(#VK_E)
+        
+        b2Body_AddAngle(groundBody, Radian(-1))
+      EndIf
+
+      ; body control
+
+      If GetAsyncKeyState_(#VK_A)
+        
+        b2Body_GetPosition(body, tmp_pos())
+        b2Body_ApplyForce(body, -400, 0, tmp_pos(0), tmp_pos(1), 1)
+      EndIf
+
+      If GetAsyncKeyState_(#VK_D)
+        
+        b2Body_GetPosition(body, tmp_pos())
+        b2Body_ApplyForce(body, 400, 0, tmp_pos(0), tmp_pos(1), 1)
+      EndIf
+
+      If GetAsyncKeyState_(#VK_W)
+        
+        b2Body_GetPosition(body, tmp_pos())
+        b2Body_ApplyForce(body, 0, 400, tmp_pos(0), tmp_pos(1), 1)
+      EndIf
+
+      If GetAsyncKeyState_(#VK_S)
+        
+        b2Body_GetPosition(body, tmp_pos())
+        b2Body_ApplyForce(body, 0, -400, tmp_pos(0), tmp_pos(1), 1)
+      EndIf
+      
+      ; camera control
+            
+      If GetAsyncKeyState_(#VK_LEFT)
+        
+        camera_linearvelocity_x = camera_linearvelocity_x + 0.5
+      EndIf
+      
+      If GetAsyncKeyState_(#VK_RIGHT)
+
+        camera_linearvelocity_x = camera_linearvelocity_x - 0.5
+      EndIf
+      
+      If GetAsyncKeyState_(#VK_DOWN)
+        
+        camera_linearvelocity_y = camera_linearvelocity_y + 0.5
+      EndIf
+      
+      If GetAsyncKeyState_(#VK_UP)
+        
+        camera_linearvelocity_y = camera_linearvelocity_y - 0.5
+      EndIf
+            
+      If GetAsyncKeyState_(#VK_NEXT)
+              
+        camera_linearvelocity_z = camera_linearvelocity_z + 0.5
+      EndIf
+            
+      If GetAsyncKeyState_(#VK_PRIOR)
+              
+        camera_linearvelocity_z = camera_linearvelocity_z - 0.5
+      EndIf
+    EndIf
+      
+  Wend
+
+
+EndProcedure
+
+
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 189
-; FirstLine = 168
+; CursorPosition = 25
+; FirstLine = 8
 ; Folding = -
 ; EnableUnicode
 ; EnableXP
