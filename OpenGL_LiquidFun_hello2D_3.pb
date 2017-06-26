@@ -8,6 +8,19 @@ Declare MyWindowCallback(WindowID,Message,wParam,lParam)
 Declare fps_timer_proc(*Value)
 
 
+UsePNGImageDecoder()
+
+
+; Remember! In Paint.NET save images as 32-bit PNG for the below to work
+LoadImage(0, "platform.png")
+platform_bitmap.BITMAP
+GetObject_(ImageID(0), SizeOf(BITMAP), @platform_bitmap)
+
+LoadImage(1, "crate.png")
+crate_bitmap.BITMAP
+GetObject_(ImageID(1), SizeOf(BITMAP), @crate_bitmap)
+
+   
 
 ;OpenConsole()
 
@@ -27,16 +40,18 @@ gluPerspective_(30.0, 200/200, 1.0, 1000.0)
 glMatrixMode_(#GL_MODELVIEW)
 glTranslatef_(0, 0, -200.0)
 glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
+glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
+glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
 
 ; Info Text Window
 SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
 GetWindowRect_(WindowID(0),win.RECT)
-OpenWindow(1,win\left+10,win\top+20,200,100,"Follower",#PB_Window_BorderLess)
+OpenWindow(1,win\left+10,win\top+20,200,200,"Follower",#PB_Window_BorderLess)
 Global info_text_window.l = WindowID(1)
 SetWindowColor(1,#Black)
 SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
 SetLayeredWindowAttributes_(WindowID(1),#Black,0,#LWA_COLORKEY)
-TextGadget(5, 10,  10, 250, 20, "TextGadget Standard (Left)")
+TextGadget(5, 10,  10, 200, 200, "")
 SetGadgetColor(5, #PB_Gadget_BackColor, #Black)
 SetGadgetColor(5, #PB_Gadget_FrontColor, #White)
 
@@ -58,14 +73,14 @@ b2Body_SetAngle(groundBody, Radian(-5))
 ; setup the ground shape and fixture
 ; body, density, friction, isSensor,	restitution, userData, categoryBits, groupIndex, maskBits, px, py, radius)
 Global Dim groundBody_shape.b2Vec2(4)
-groundBody_shape(0)\x = -50
-groundBody_shape(0)\y = -10
-groundBody_shape(1)\x = 50
-groundBody_shape(1)\y = -10
-groundBody_shape(2)\x = 50
-groundBody_shape(2)\y = 10
-groundBody_shape(3)\x = -50
-groundBody_shape(3)\y = 10
+groundBody_shape(0)\x = 50
+groundBody_shape(0)\y = 10
+groundBody_shape(1)\x = -50
+groundBody_shape(1)\y = 10
+groundBody_shape(2)\x = -50
+groundBody_shape(2)\y = -10
+groundBody_shape(3)\x = 50
+groundBody_shape(3)\y = -10
 Global groundBodyFixture.l = b2PolygonShape_CreateFixture_4(groundBody, 1, 0.1, 0, 0, 0, 1, 0, 65535, groundBody_shape(0)\x, groundBody_shape(0)\y, groundBody_shape(1)\x, groundBody_shape(1)\y, groundBody_shape(2)\x, groundBody_shape(2)\y, groundBody_shape(3)\x, groundBody_shape(3)\y)
 
 ; setup the body body
@@ -76,14 +91,14 @@ b2Body_SetAngle(body, Radian(5))
 ; setup the body shape and fixture
 ; body, density, friction, isSensor,	restitution, userData, categoryBits, groupIndex, maskBits, px, py, radius)
 Global Dim body_shape.b2Vec2(4)
-body_shape(0)\x = -1
-body_shape(0)\y = -1
-body_shape(1)\x = 1
-body_shape(1)\y = -1
-body_shape(2)\x = 1
-body_shape(2)\y = 1
-body_shape(3)\x = -1
-body_shape(3)\y = 1
+body_shape(0)\x = 1
+body_shape(0)\y = 1
+body_shape(1)\x = -1
+body_shape(1)\y = 1
+body_shape(2)\x = -1
+body_shape(2)\y = -1
+body_shape(3)\x = 1
+body_shape(3)\y = -1
 Global bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
 
 
@@ -110,36 +125,69 @@ Repeat
     ; opengl movement
     
     glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
-
+    
+    
+    
+    glEnable_(#GL_TEXTURE_2D)                               ; Enable texture mapping
+    glBindTexture_(#GL_TEXTURE_2D, TextureID)
+    
+    
+;  glBegin_(#GL_QUADS)                                     ; Start drawing the cube
+ ; glEnd_()
+    
+    
+    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_BGRA_EXT, ImageWidth(0), ImageHeight(0), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, platform_bitmap\bmBits)
+    
+    
+    
     ; groundBody
     b2Body_GetPosition(groundBody, tmp_pos())
     tmp_angle.d = b2Body_GetAngle(groundBody)
     glPushMatrix_()
     glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
     glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-;    glBegin_  (#GL_QUADS)
-    glBegin_  (#GL_LINE_LOOP)
-    glVertex3f_ (groundBody_shape(0)\x, groundBody_shape(0)\y, 0.5)   
-    glVertex3f_ (groundBody_shape(1)\x, groundBody_shape(1)\y, 0.5)   
-    glVertex3f_ (groundBody_shape(2)\x, groundBody_shape(2)\y, 0.5)   
-    glVertex3f_ (groundBody_shape(3)\x, groundBody_shape(3)\y, 0.5)   
+    glBegin_  (#GL_QUADS)
+;    glBegin_  (#GL_LINE_LOOP)
+;    glVertex3f_ (groundBody_shape(0)\x, groundBody_shape(0)\y, 0.5)   
+;    glVertex3f_ (groundBody_shape(1)\x, groundBody_shape(1)\y, 0.5)   
+;    glVertex3f_ (groundBody_shape(2)\x, groundBody_shape(2)\y, 0.5)   
+;    glVertex3f_ (groundBody_shape(3)\x, groundBody_shape(3)\y, 0.5)   
+    
+;    glTexCoord2f_(1.0, 1.0) : glVertex3f_( 1.0, 1.0, 1.0) ; Top right of cube (Front)
+;    glTexCoord2f_(0.0, 1.0) : glVertex3f_(-1.0, 1.0, 1.0) ; Top left of cube (Front) 
+;    glTexCoord2f_(0.0, 0.0) : glVertex3f_(-1.0,-1.0, 1.0) ; Bottom left of cube (Front)
+;    glTexCoord2f_(1.0, 0.0) : glVertex3f_( 1.0,-1.0, 1.0) ; Bottom right of cube (Front)
+    
+    glTexCoord2f_(1.0, 1.0) : glVertex3f_(groundBody_shape(0)\x, groundBody_shape(0)\y, 0.5) ; Top right of cube (Front)
+    glTexCoord2f_(0.0, 1.0) : glVertex3f_(groundBody_shape(1)\x, groundBody_shape(1)\y, 0.5) ; Top left of cube (Front) 
+    glTexCoord2f_(0.0, 0.0) : glVertex3f_(groundBody_shape(2)\x, groundBody_shape(2)\y, 0.5) ; Bottom left of cube (Front)
+    glTexCoord2f_(1.0, 0.0) : glVertex3f_(groundBody_shape(3)\x, groundBody_shape(3)\y, 0.5) ; Bottom right of cube (Front)
+
+    
     glEnd_()
     glPopMatrix_()
     
+    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_BGRA_EXT, ImageWidth(1), ImageHeight(1), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, crate_bitmap\bmBits)
+
     ; body
     b2Body_GetPosition(body, tmp_pos())
     tmp_angle.d = b2Body_GetAngle(body)
     glPushMatrix_()
     glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
     glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-;    glBegin_  (#GL_QUADS)
-    glBegin_  (#GL_LINE_LOOP)
-    glVertex3f_ (body_shape(0)\x, body_shape(0)\y, 0.5)   
-    glVertex3f_ (body_shape(1)\x, body_shape(1)\y, 0.5)   
-    glVertex3f_ (body_shape(2)\x, body_shape(2)\y, 0.5)   
-    glVertex3f_ (body_shape(3)\x, body_shape(3)\y, 0.5)   
+    glBegin_  (#GL_QUADS)
+;    glBegin_  (#GL_LINE_LOOP)
+;    glVertex3f_ (body_shape(0)\x, body_shape(0)\y, 0.5)   
+;    glVertex3f_ (body_shape(1)\x, body_shape(1)\y, 0.5)   
+;    glVertex3f_ (body_shape(2)\x, body_shape(2)\y, 0.5)   
+;    glVertex3f_ (body_shape(3)\x, body_shape(3)\y, 0.5)   
+    glTexCoord2f_(1.0, 1.0) : glVertex3f_(body_shape(0)\x, body_shape(0)\y, 0.5) ; Top right of cube (Front)
+    glTexCoord2f_(0.0, 1.0) : glVertex3f_(body_shape(1)\x, body_shape(1)\y, 0.5) ; Top left of cube (Front) 
+    glTexCoord2f_(0.0, 0.0) : glVertex3f_(body_shape(2)\x, body_shape(2)\y, 0.5) ; Bottom left of cube (Front)
+    glTexCoord2f_(1.0, 0.0) : glVertex3f_(body_shape(3)\x, body_shape(3)\y, 0.5) ; Bottom right of cube (Front)
     glEnd_()
     glPopMatrix_()
+    
     
     SetGadgetAttribute(Gadget, #PB_OpenGL_FlipBuffers, #True)
     
@@ -341,7 +389,17 @@ Procedure fps_timer_proc(*Value)
       fps = num_frames + 1
       num_frames = 0
       
-    SetGadgetText(5, "FPS2 = " + Str(fps) + ", # of bodies = " + Str(particlecount))
+      SetGadgetText(5, "Keys" + Chr(10) +
+                       "----" + Chr(10) +
+                       "Arrow Keys - move camera" + Chr(10) +
+                       "PgDn & PgUp - zoom camera in & out" + Chr(10) +
+                       "Q & E - rotate platform" + Chr(10) +
+                       "A, D, S, W - add force to create" + Chr(10) +
+                       "" + Chr(10) +
+                       "Info" + Chr(10) +
+                       "----" + Chr(10) +
+                       "FPS2 = " + Str(fps) + Chr(10) + 
+                       "# of bodies = " + Str(particlecount))
       
       
      ; Debug("fps = " + Str(fps) + ", number of bodies = " + Str(num_bodies))
@@ -357,9 +415,9 @@ Procedure fps_timer_proc(*Value)
 EndProcedure
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 191
-; FirstLine = 155
+; CursorPosition = 401
+; FirstLine = 372
 ; Folding = -
 ; EnableUnicode
 ; EnableXP
-; Executable = ..\Box2C_hello2D\Box2C_hello2D.exe
+; Executable = OpenGL_LiquidFun_hello2D_3.exe
