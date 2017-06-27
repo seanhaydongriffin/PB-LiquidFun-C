@@ -11,7 +11,13 @@ Structure Vec2 Align #PB_Structure_AlignC
   y.f 
 EndStructure
 
-Global Dim triangle.Vec2(2)
+Structure Vec3 Align #PB_Structure_AlignC
+  x.f
+  y.f
+  z.f
+EndStructure
+
+
 
 
 Global RotateSpeedZ.f = 1.0
@@ -39,8 +45,6 @@ body3_LiquidFun_SFML.pb_LiquidFun_SFML_struct
 OpenWindow(0, 0, 0, 800, 600, "OpenGL Gadget", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
 OpenGLGadget(0, 0, 0, 800, 600, #PB_OpenGL_NoFlipSynchronization )
 glMatrixMode_(#GL_PROJECTION)
-
-
 gluPerspective_(30.0, 200/200, 1.0, 30.0) 
 glMatrixMode_(#GL_MODELVIEW)
 glTranslatef_(0, 0, -30.0)
@@ -67,28 +71,25 @@ b2PolygonShape_CreateFixture_4_sfSprite(body_LiquidFun_SFML, body, body_texture,
 b2PolygonShape_CreateFixture_4_sfSprite(body2_LiquidFun_SFML, body2, body2_body3_texture, -2.5, 0.5, 2.5, 0.5, 2.5, -0.5, -2.5, -0.5, 2.5, 0.5)
 b2PolygonShape_CreateFixture_4_sfSprite(body3_LiquidFun_SFML, body3, body2_body3_texture, -2.5, 0.5, 2.5, 0.5, 2.5, -0.5, -2.5, -0.5, 2.5, 0.5)
 
-
 ;particleradius.d = 0.1
 particleradius.d = 0.06
 dampingStrength.d = 1.5
 particledensity.d = 0.1
 
-
 ; Wave Machine Sean
 particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particleradius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
-particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 2)
-
-;particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, #b2_springParticle, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 2)
-;Debug (particlegroup)
-
+particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 2)
 b2ParticleSystem_SetDensity(particlesystem, particledensity)
 particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
-;Debug (particlecount)
-
-;_CSFML_sfText_setString(text, Str(particlecount))
-
+;Debug(particlecount)
 positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
 ;Debug (positionbuffer)
+
+
+;Global Dim triangles.b2Vec2(particlecount * 3)
+;Global Dim triangles.b2Vec2(100 * 3)
+Global Dim triangles.Vec3(Int(particlecount) * 3)
+
 
 
 frame_timer = ElapsedMilliseconds()
@@ -111,7 +112,7 @@ Repeat
     frame_timer = ElapsedMilliseconds()
 
     DrawCube(0)
-     DrawText(10, 10, "FPS = " + Str(fps))
+     DrawText(10, 10, "FPS2 = " + Str(fps) + ", # of bodies = " + Str(particlecount))
 
     num_frames = num_frames + 1
   EndIf
@@ -152,35 +153,102 @@ Procedure DrawCube(Gadget)
     b2Body_SetAngularVelocity(body, Radian(walls_angular_velocity))
   EndIf
 
+   *positionbuffer_ptr.b2Vec2 = positionbuffer
+   
+   
+;   Render points using a glVertexPointer ...
+; 
+;   ; clear framebuffer And depth-buffer
+;   glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
+;   glEnableClientState_(#GL_VERTEX_ARRAY )
+;   glVertexPointer_( 2, #GL_FLOAT, SizeOf(b2Vec2), *positionbuffer_ptr );
+;   glPointSize_( 3.0 );
+;   glDrawArrays_( #GL_POINTS, 0, particlecount );
+;   glDisableClientState_( #GL_VERTEX_ARRAY );
+   
+   
+  
+;   Render triangles using a glVertexPointer ...
+;  
+;   triangle_size.f = 0.05
+; 
+;   For i = 0 To (Int(particlecount) - 1)
+; 
+;     triangles((i * 3) + 0)\x = *positionbuffer_ptr\x + -triangle_size
+;     triangles((i * 3) + 0)\y = *positionbuffer_ptr\y + triangle_size
+;     triangles((i * 3) + 0)\z = 0.5
+;     triangles((i * 3) + 1)\x = *positionbuffer_ptr\x + -triangle_size
+;     triangles((i * 3) + 1)\y = *positionbuffer_ptr\y + -triangle_size
+;     triangles((i * 3) + 1)\z = 0.5
+;     triangles((i * 3) + 2)\x = *positionbuffer_ptr\x + triangle_size
+;     triangles((i * 3) + 2)\y = *positionbuffer_ptr\y + 0
+;     triangles((i * 3) + 2)\z = 0.5
+;            
+;     ; point to the next particle
+;     *positionbuffer_ptr + SizeOf(b2Vec2)
+; 
+;   Next
+; 
+;   ; clear framebuffer And depth-buffer
+;   glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
+;   
+;   glEnableClientState_(#GL_VERTEX_ARRAY )
+;   ;  glVertexPointer_( 2, #GL_FLOAT, SizeOf(b2Vec2), *positionbuffer_ptr );
+;   glVertexPointer_( 2, #GL_FLOAT, SizeOf(Vec3), @triangles(0)\x );
+;   ;  glVertexPointer_( 2, #GL_FLOAT, SizeOf(Vec3), *triangle_ptr );
+;   ; glPointSize_( 5.0 );
+;   glDrawArrays_( #GL_TRIANGLES, 0, ArraySize(triangles()) );
+;   glDisableClientState_( #GL_VERTEX_ARRAY );
+   
+;   Render triangles using glVertex3f
+;    
+;    glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
+;   
+;   glBegin_  (#GL_TRIANGLES)
+;   
+;   triangle_size.f = 0.05
+;   
+;   For i = 0 To (particlecount - 1)
+;     
+;     
+;       ; NOTE! The 0.5 below is very important!  If set to 0.0 then the shape does not render at all on some computers.  I do not know why yet
+;     
+;       glVertex3f_ (*positionbuffer_ptr\x + -triangle_size, *positionbuffer_ptr\y + triangle_size, 0.5)   
+;       glVertex3f_ (*positionbuffer_ptr\x + -triangle_size, *positionbuffer_ptr\y + -triangle_size, 0.5)
+;       glVertex3f_ (*positionbuffer_ptr\x + triangle_size, *positionbuffer_ptr\y + 0, 0.5)
+;       
+;       ; point to the next particle
+;       *positionbuffer_ptr + SizeOf(b2Vec2)
+;     Next
+; 
+;   glEnd_()
   
   
+;   Render points using glVertex3f
   
- *positionbuffer_ptr.b2Vec2 = positionbuffer
-    
+   glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
   
- ; SetGadgetAttribute(Gadget, #PB_OpenGL_SetContext, #True)
-  
+     glPointSize_( 3.0 );
+  glBegin_  (#GL_POINTS)
 
-  ; clear framebuffer And depth-buffer
-  glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
-
-  glBegin_  (#GL_TRIANGLES)
-  
-  triangle_size.f = 0.05
   
   For i = 0 To (particlecount - 1)
     
-            ;Debug (*positionbuffer_ptr\x)
-
-      glVertex3f_ (*positionbuffer_ptr\x + -triangle_size, *positionbuffer_ptr\y + triangle_size, 0)   
-      glVertex3f_ (*positionbuffer_ptr\x + -triangle_size, *positionbuffer_ptr\y + -triangle_size, 0)
-      glVertex3f_ (*positionbuffer_ptr\x + triangle_size, *positionbuffer_ptr\y + 0, 0)
+    
+      ; NOTE! The 0.5 below is very important!  If set to 0.0 then the shape does not render at all on some computers.  I do not know why yet
+    
+      glVertex3f_ (*positionbuffer_ptr\x, *positionbuffer_ptr\y, 0.5)   
       
       ; point to the next particle
       *positionbuffer_ptr + SizeOf(b2Vec2)
     Next
 
   glEnd_()
+  
+  
+  
+  
+  
   
   SetGadgetAttribute(Gadget, #PB_OpenGL_FlipBuffers, #True)
   
@@ -191,6 +259,8 @@ EndProcedure
 
 Procedure HandleError (Result, Text$)
   If Result = 0
+    
+    Debug("bad")
     MessageRequester("Error", Text$, 0)
     End
   EndIf
@@ -223,6 +293,8 @@ Procedure fps_timer_proc(*Value)
 EndProcedure
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
+; CursorPosition = 239
+; FirstLine = 235
 ; Folding = -
 ; EnableUnicode
 ; EnableXP

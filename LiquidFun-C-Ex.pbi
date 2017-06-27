@@ -21,6 +21,18 @@ XIncludeFile "CSFML.pbi"
 
 ; #STRUCTURES# ===================================================================================================================
 
+Structure Vec2i
+  x.i
+  y.i
+EndStructure
+
+Structure Vec3f
+  x.f
+  y.f
+  z.f
+EndStructure
+
+
 ; A structure that combines Box2D Shapes and SFML Textures
 ;   The result is a texture with physical properties
 ;   created is a boolean indicating if the shape-texture has been created
@@ -86,11 +98,38 @@ Procedure b2Body_SetAngle(tmp_body.l, tmp_angle.d)
   b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), tmp_angle)
 EndProcedure
 
+
+Procedure b2Body_AddAngle(tmp_body.l, add_angle.d)
+  
+  Dim tmp_pos.f(2)
+  b2Body_GetPosition(tmp_body, tmp_pos())
+  curr_angle.d = b2Body_GetAngle(tmp_body)
+  b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), curr_angle + add_angle)
+EndProcedure
+
+Procedure b2Body_AddAngularVelocity(tmp_body.l, add_angle.d)
+  
+  velocity.d = b2Body_GetAngularVelocity(tmp_body)
+  velocity = velocity + add_angle
+  b2Body_SetAngularVelocity(tmp_body, velocity)
+EndProcedure
+
+Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
+  
+  velocity.d = b2Body_GetAngularVelocity(tmp_body)
+  velocity = velocity * (percent / 100)
+  b2Body_SetAngularVelocity(tmp_body, velocity)
+EndProcedure
+
+
+
+
+
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 40
-; FirstLine = 18
-; Folding = -
+; CursorPosition = 122
+; FirstLine = 85
+; Folding = --
 ; EnableUnicode
 ; EnableXP

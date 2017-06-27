@@ -69,11 +69,13 @@ ImportC "LiquidFun-C.lib"
   
   ; b2Body
   b2World_CreateBody.l (world.l, active.d, allowSleep.d, angle.d, angularVelocity.d, angularDamping.d, awake.d, bullet.d, fixedRotation.d, gravityScale.d, linearDamping.d, linearVelocityX.d, linearVelocityY.d, positionX.d, positionY.d, type.d, userData.l)
+	b2Body_GetAngularVelocity.d (body.l)
   b2Body_SetAngularVelocity (body.l, angle.d)
 	b2Body_GetPosition (body.l, arr.l)
 	b2Body_GetAngle.d (body.l)
 	b2Body_SetTransform (body.l, x.d, y.d, angle.d)
 	b2Body_ApplyForce (body.l, forceX.d, forceY.d, pointX.d, pointY.d, wake.d)
+	b2Body_ApplyTorque(body.l, force.d, wake.d)
 
   ; b2Fixture
   b2CircleShape_CreateFixture.l (body.l, density.d, friction.d, isSensor.d,	restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, px.d, py.d, radius.d)
@@ -92,11 +94,13 @@ ImportC "LiquidFun-C.lib"
   ; b2ParticleGroup
   b2CircleShape_CreateParticleGroup.l (particleSystem.l, angle.d, angularVelocity.d, colorR.d, colorG.d, colorB.d, colorA.d, flags.d, group.d, groupFlags.d, lifetime.d, linearVelocityX.d, linearVelocityY.d, positionX.d, positionY.d, positionData.d, particleCount.d, strength.d, stride.d, userData.d,	px.d, py.d,	radius.d)
   b2ParticleGroup_GetParticleCount.d (particleGroup.l)
+  b2ParticleGroup_DestroyParticles (particleGroup.l, flag.d)
+
 EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 76
-; FirstLine = 58
+; CursorPosition = 96
+; FirstLine = 61
 ; EnableUnicode
 ; EnableXP
