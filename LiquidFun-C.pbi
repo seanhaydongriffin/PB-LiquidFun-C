@@ -73,6 +73,7 @@ ImportC "LiquidFun-C.lib"
 	b2Body_GetPosition (body.l, arr.l)
 	b2Body_GetAngle.d (body.l)
 	b2Body_SetTransform (body.l, x.d, y.d, angle.d)
+	b2Body_ApplyForce (body.l, forceX.d, forceY.d, pointX.d, pointY.d, wake.d)
 
   ; b2Fixture
   b2CircleShape_CreateFixture.l (body.l, density.d, friction.d, isSensor.d,	restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, px.d, py.d, radius.d)
@@ -95,6 +96,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 37
+; CursorPosition = 76
+; FirstLine = 58
 ; EnableUnicode
 ; EnableXP
