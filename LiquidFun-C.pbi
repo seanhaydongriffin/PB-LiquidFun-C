@@ -69,7 +69,8 @@ ImportC "LiquidFun-C.lib"
   
   ; b2Body
   b2World_CreateBody.l (world.l, active.d, allowSleep.d, angle.d, angularVelocity.d, angularDamping.d, awake.d, bullet.d, fixedRotation.d, gravityScale.d, linearDamping.d, linearVelocityX.d, linearVelocityY.d, positionX.d, positionY.d, type.d, userData.l)
-	b2Body_GetAngularVelocity.d (body.l)
+	b2World_DestroyBody (world.l, body.l)
+  b2Body_GetAngularVelocity.d (body.l)
   b2Body_SetAngularVelocity (body.l, angle.d)
 	b2Body_GetPosition (body.l, arr.l)
 	b2Body_GetAngle.d (body.l)
@@ -80,6 +81,7 @@ ImportC "LiquidFun-C.lib"
   ; b2Fixture
   b2CircleShape_CreateFixture.l (body.l, density.d, friction.d, isSensor.d,	restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, px.d, py.d, radius.d)
   b2PolygonShape_CreateFixture_4.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d)
+	b2Body_DestroyFixture (body.l, fixture.l)
 
   ; b2ParticleSystem
   b2World_CreateParticleSystem.l (world.l, colorMixingStrength.d, dampingStrength.d, destroyByAge.d, ejectionStrength.d, elasticStrength.d, lifetimeGranularity.d, powderStrength.d, pressureStrength.d, radius.d, repulsiveStrength.d, springStrength.d, staticPressureIterations.d, staticPressureRelaxation.d, staticPressureStrength.d, surfaceTensionNormalStrength.d, surfaceTensionPressureStrength.d, viscousStrength.d)
@@ -100,7 +102,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 96
+; CursorPosition = 83
 ; FirstLine = 61
 ; EnableUnicode
 ; EnableXP

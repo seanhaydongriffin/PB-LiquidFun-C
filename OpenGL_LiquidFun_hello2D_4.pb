@@ -22,6 +22,10 @@ mouse_position\y = 0
 Global old_mouse_position.Vec2i
 old_mouse_position\x = -99999
 old_mouse_position\y = -99999
+Global particle_colour.Colour3f
+particle_colour\r = 0
+particle_colour\g = 0
+particle_colour\b = 0
 Global mouse_left_button_down.i = 0
 Global mouse_wheel_position.i = 0
 Global body_focused.i = 0
@@ -35,7 +39,8 @@ Global positionbuffer.l
 Declare keyboard_proc(*Value)
 Declare MyWindowCallback(WindowID,Message,wParam,lParam)
 Declare fps_timer_proc(*Value)
-Declare restart()
+Declare destroy_all()
+Declare create_all()
 
 
 
@@ -244,7 +249,8 @@ Repeat
     glDisable_( #GL_TEXTURE_2D );
     
     ; set particle colour
-    glColor3f_(1.0, 0.0, 0.0)
+;    glColor3f_(1.0, 0.0, 0.0)
+    glColor3f_(particle_colour\r, particle_colour\g, particle_colour\b)
     
     ; set particle size
     glPointSize_( 3.0 );
@@ -306,7 +312,8 @@ Repeat
           
         Case #PB_Shortcut_R
           
-          restart()
+          destroy_all()
+          create_all()
           
         Case #PB_Shortcut_K
           
@@ -514,6 +521,7 @@ Procedure fps_timer_proc(*Value)
                        "A, D, S, W - add linear force to crate" + Chr(10) +
                        "Q, E - add angular force to crate" + Chr(10) +
                        "K - re-drop the water" + Chr(10) +
+                       "R - restart" + Chr(10) +
                        "" + Chr(10) +
                        "Info" + Chr(10) +
                        "-------" + Chr(10) +
@@ -533,25 +541,47 @@ Procedure fps_timer_proc(*Value)
 
 EndProcedure
 
-Procedure restart()
+Procedure destroy_all()
   
-          
+  ; Bodies  
+  b2Body_DestroyFixture(groundBody, groundBodyFixture)
+  b2World_DestroyBody(world, groundBody)
+  b2Body_DestroyFixture(body, bodyFixture)
+  b2World_DestroyBody(world, body)
+  
+  ; Particles
   b2ParticleGroup_DestroyParticles(particlegroup, 0)
   
   ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
   b2World_Step(world, (1 / 60.0), 6, 2)
 
-  particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 1, 0.4, 0, 0, 0, 9)
-  particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
-  positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
   
 EndProcedure
 
+Procedure create_all()
+  
+  ; Bodies  
+  groundBody.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
+  b2Body_SetAngle(groundBody, Radian(-5))
+  groundBodyFixture.l = b2PolygonShape_CreateFixture_4(groundBody, 1, 0.1, 0, 0, 0, 1, 0, 65535, groundBody_shape(0)\x, groundBody_shape(0)\y, groundBody_shape(1)\x, groundBody_shape(1)\y, groundBody_shape(2)\x, groundBody_shape(2)\y, groundBody_shape(3)\x, groundBody_shape(3)\y)
+  body.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
+  b2Body_SetAngle(body, Radian(5))
+  bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
+  
+  ; Particles
+  particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 1, 0.4, 0, 0, 0, 9)
+  particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
+  positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
+  particle_colour\r = Random(100, 1) / 100
+  particle_colour\g = Random(100, 1) / 100
+  particle_colour\b = Random(100, 1) / 100
+  
+EndProcedure
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 544
-; FirstLine = 509
+; CursorPosition = 523
+; FirstLine = 499
 ; Folding = -
 ; EnableXP
-; Executable = OpenGL_LiquidFun_hello2D_3.exe
+; Executable = OpenGL_LiquidFun_hello2D_4.exe
 ; SubSystem = OpenGL

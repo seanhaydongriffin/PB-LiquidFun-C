@@ -32,6 +32,12 @@ Structure Vec3f
   z.f
 EndStructure
 
+Structure Colour3f
+  r.f
+  g.f
+  b.f
+EndStructure
+
 
 ; A structure that combines Box2D Shapes and SFML Textures
 ;   The result is a texture with physical properties
@@ -128,8 +134,7 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 122
-; FirstLine = 85
+; CursorPosition = 37
 ; Folding = --
 ; EnableUnicode
 ; EnableXP
