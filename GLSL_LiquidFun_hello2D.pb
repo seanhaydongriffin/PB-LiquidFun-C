@@ -4,8 +4,9 @@ XIncludeFile "LiquidFun-C.pbi"
 
 OpenWindow(0, 10, 10, 800, 600, "OpenGL demo")
 SetWindowColor(0, RGB(200,220,200))
-;OpenGLGadget(0, 20, 10, WindowWidth(0)-40 , WindowHeight(0)-20, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization)
-OpenGLGadget(0, 20, 10, WindowWidth(0)-40 , WindowHeight(0)-20, #PB_OpenGL_NoFlipSynchronization)
+OpenGLGadget(0, 20, 10, WindowWidth(0)-40 , WindowHeight(0)-20, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization)
+;OpenGLGadget(0, 20, 10, WindowWidth(0)-40 , WindowHeight(0)-20, #PB_OpenGL_NoDepthBuffer)
+;OpenGLGadget(0, 20, 10, WindowWidth(0)-40 , WindowHeight(0)-20)
 SetActiveGadget(0)
 
 IncludeFile "newFunctions.pbi"
@@ -106,8 +107,8 @@ Until Event = #PB_Event_CloseWindow Or quit = 1
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 74
-; FirstLine = 42
+; CursorPosition = 73
+; FirstLine = 70
 ; EnableXP
 ; Executable = GLSL_LiquidFun_hello2D.exe
 ; EnableUnicode

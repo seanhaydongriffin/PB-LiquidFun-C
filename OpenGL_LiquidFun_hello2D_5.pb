@@ -56,6 +56,10 @@ LoadImage(1, "crate128x128.png")
 crate_bitmap.BITMAP
 GetObject_(ImageID(1), SizeOf(BITMAP), @crate_bitmap)
 
+LoadImage(2, "waterparticle64x64.png")
+Global water_bitmap.BITMAP
+GetObject_(ImageID(2), SizeOf(BITMAP), @water_bitmap)
+
    
 
 ;OpenConsole()
@@ -67,31 +71,36 @@ OpenGLGadget(0, 0, 0, 800, 600, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchroniza
 glMatrixMode_(#GL_PROJECTION)
 gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
 glMatrixMode_(#GL_MODELVIEW)
-glTranslatef_(0, 0, -200.0)
+glTranslatef_(0, 0, -190.0)
 glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
 glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
 glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
+; the code below makes alpha channel work for Paint.NET PNG files
+glEnable_( #GL_ALPHA_TEST );
+glAlphaFunc_( #GL_NOTEQUAL, 0.0 );
 
 ; Info Text Window
+info_text_window_bgcolor = $006600
 SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
 GetWindowRect_(WindowID(0),win.RECT)
 OpenWindow(1,win\left+10,win\top+20,300,400,"Follower",#PB_Window_BorderLess, WindowID(0))
 Global info_text_window.l = WindowID(1)
-SetWindowColor(1,#White)
+SetWindowColor(1,info_text_window_bgcolor)
 SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
-SetLayeredWindowAttributes_(WindowID(1),#White,0,#LWA_COLORKEY)
+SetLayeredWindowAttributes_(WindowID(1),info_text_window_bgcolor,0,#LWA_COLORKEY)
 TextGadget(5, 10,  10, 300, 400, "")
-SetGadgetColor(5, #PB_Gadget_BackColor, #White)
+SetGadgetColor(5, #PB_Gadget_BackColor, info_text_window_bgcolor)
 SetGadgetColor(5, #PB_Gadget_FrontColor, #Black)
 SetActiveWindow(0)
 SetActiveGadget(0)
 
 
 ; OpenGL Info
-sgGlVersion = Trim(PeekS(glGetString_(#GL_VERSION),#PB_Ascii))
-sgGlExtn = Trim(PeekS(glGetString_(#GL_EXTENSIONS),#PB_Ascii))
-sgGlVendor = Trim(PeekS(glGetString_(#GL_VENDOR),#PB_Ascii))
-sgGlRender = Trim(PeekS(glGetString_(#GL_RENDERER),#PB_Ascii))
+
+sgGlVersion = StringField(PeekS(glGetString_(#GL_VERSION),-1,#PB_Ascii), 1, " ")
+sgGlExtn = StringField(PeekS(glGetString_(#GL_EXTENSIONS),-1,#PB_Ascii), 1, " ")
+sgGlVendor = StringField(PeekS(glGetString_(#GL_VENDOR),-1,#PB_Ascii), 1, " ")
+sgGlRender = StringField(PeekS(glGetString_(#GL_RENDERER),-1,#PB_Ascii), 1, " ")
 
 If(sgGlVersion = "") : sgGlVersion = "Not verified" : EndIf
 If(   sgGlExtn = "") :    sgGlExtn = "Not verified" : EndIf
@@ -148,19 +157,28 @@ Global bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1
 ; Particles
 
 ;particleradius.d = 0.1
-particleradius.d = 0.06
-dampingStrength.d = 1.5
-particledensity.d = 0.1
+Global particleradius.d = 0.06
+Global dampingStrength.d = 1.5
+Global particledensity.d = 0.1
+Global water_position_x.d = 0.0
+Global water_position_y.d = 40.0
+Global water_strength.d = 1.0
+Global water_stride.d = 0.3
+Global water_radius.d = 9.0
+
+
 
 ; Wave Machine Sean
 particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particleradius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
 b2ParticleSystem_SetDensity(particlesystem, particledensity)
-particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 1, 0.4, 0, 0, 0, 9)
+particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
 particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
 ;Debug(particlecount)
 positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
 ;Debug (positionbuffer)
 
+Global Dim triangles.Vec3f(Int(particlecount) * 4)
+Global Dim texVertices.b2Vec2(Int(particlecount) * 4)
 
 
 
@@ -187,7 +205,8 @@ Repeat
     
     ; reset colouring and clear the openglgadget
     glColor3f_(1.0, 1.0, 1.0)
-    glClearColor_(1, 1, 1, 1)
+;    glClearColor_(1, 1, 1, 1)
+    glClearColor_(0.7, 0.7, 0.7, 1)
     glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
     
     ; enable texture mapping
@@ -243,31 +262,82 @@ Repeat
     ; draw the Particles
     
     *positionbuffer_ptr.b2Vec2 = positionbuffer
-       
+    
+    
+    
+    
+ 
+ ; triangle_size.f = 0.07
+  triangle_size.f = 0.4
+
+  For i = 0 To (Int(particlecount) - 1)
+
+    texVertices((i * 4) + 0)\x = 1.0
+    texVertices((i * 4) + 0)\y = 1.0
+    triangles((i * 4) + 0)\x = *positionbuffer_ptr\x + triangle_size
+    triangles((i * 4) + 0)\y = *positionbuffer_ptr\y + triangle_size
+    triangles((i * 4) + 0)\z = 0.5
+    
+    texVertices((i * 4) + 1)\x = 0.0
+    texVertices((i * 4) + 1)\y = 1.0
+    triangles((i * 4) + 1)\x = *positionbuffer_ptr\x - triangle_size
+    triangles((i * 4) + 1)\y = *positionbuffer_ptr\y + triangle_size
+    triangles((i * 4) + 1)\z = 0.5
+    
+    texVertices((i * 4) + 2)\x = 0.0
+    texVertices((i * 4) + 2)\y = 0.0
+    triangles((i * 4) + 2)\x = *positionbuffer_ptr\x - triangle_size
+    triangles((i * 4) + 2)\y = *positionbuffer_ptr\y - triangle_size
+    triangles((i * 4) + 2)\z = 0.5
+    
+    texVertices((i * 4) + 3)\x = 1.0
+    texVertices((i * 4) + 3)\y = 0.0
+    triangles((i * 4) + 3)\x = *positionbuffer_ptr\x + triangle_size
+    triangles((i * 4) + 3)\y = *positionbuffer_ptr\y - triangle_size
+    triangles((i * 4) + 3)\z = 0.5
+           
+    ; point to the next particle
+    *positionbuffer_ptr + SizeOf(b2Vec2)
+
+  Next
+; 
+;   ; clear framebuffer And depth-buffer
+ ; glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
+  
+ ; glDisable_(#GL_LIGHTING)
+  
+  ; for the particle blending technique either use this line...
+ ;  glDisable_(#GL_DEPTH_TEST)
+  ; or these two lines ...   
+ ;  glEnable_(#GL_DEPTH_TEST)
+;   glDepthMask_(#GL_FALSE) 
+   
+ ;  glEnable_(#GL_TEXTURE_2D)
+   glEnable_(#GL_BLEND)
+   glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
+  ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
+ ;  glBlendFunc_(#GL_ONE_MINUS_SRC_ALPHA,#GL_ONE)
+  
+  ; enable texture mapping
+;  glEnable_(#GL_TEXTURE_2D)
+;  glBindTexture_(#GL_TEXTURE_2D, TextureID)
+   
+  glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(2), ImageHeight(2), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, water_bitmap\bmBits)
+  
+  glEnableClientState_(#GL_VERTEX_ARRAY )
+  glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @triangles(0)\x )
+  glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @texVertices(0)\x)
+  glDrawArrays_( #GL_QUADS, 0, ArraySize(triangles()) )
+  glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+  glDisableClientState_( #GL_VERTEX_ARRAY )
+   
+   glDisable_( #GL_BLEND );
+;   glEnable_( #GL_DEPTH_TEST );
+    
     ; disable texture mapping
-    glBindTexture_(#GL_TEXTURE_2D, 0)
-    glDisable_( #GL_TEXTURE_2D );
-    
-    ; set particle colour
-;    glColor3f_(1.0, 0.0, 0.0)
-    glColor3f_(particle_colour\r, particle_colour\g, particle_colour\b)
-    
-    ; set particle size
-    glPointSize_( 3.0 );
-    
-    glBegin_  (#GL_POINTS)
-  
-    For i = 0 To (particlecount - 1)
-      
-      ; NOTE! The 0.5 below is very important!  If set to 0.0 then the shape does not render at all on some computers.  I do not know why yet
-    
-      glVertex3f_ (*positionbuffer_ptr\x, *positionbuffer_ptr\y, 0.5)   
-      
-      ; point to the next particle
-      *positionbuffer_ptr + SizeOf(b2Vec2)
-    Next
-  
-    glEnd_()
+     glBindTexture_(#GL_TEXTURE_2D, 0)
+     glDisable_( #GL_TEXTURE_2D );
     
     ; update the display
     SetGadgetAttribute(Gadget, #PB_OpenGL_FlipBuffers, #True)
@@ -513,28 +583,33 @@ Procedure fps_timer_proc(*Value)
       fps = num_frames + 1
       num_frames = 0
       
-      SetGadgetText(5, "Keys & Mouse" + Chr(10) +
-                       "-----------------------" + Chr(10) +
-                       "Left Mouse Button & Drag - move camera" + Chr(10) +
-                       "Mouse Wheel - zoom camera in & out" + Chr(10) +
-                       "Z & X - rotate platform" + Chr(10) +
-                       "A, D, S, W - add linear force to crate" + Chr(10) +
-                       "Q, E - add angular force to crate" + Chr(10) +
-                       "K - re-drop the water" + Chr(10) +
-                       "R - restart" + Chr(10) +
-                       "" + Chr(10) +
-                       "Info" + Chr(10) +
-                       "-------" + Chr(10) +
-                       "OpenGL version = " + sgGlVersion + Chr(10) + 
-                       "OpenGL extensions = " + sgGlExtn + Chr(10) + 
-                       "OpenGL vendor = " + sgGlVendor + Chr(10) + 
-                       "OpenGL renderer = " + sgGlRender + Chr(10) + 
-                       "Camera position = " + Str(camera_position\x) + ", " + Str(camera_position\y) + ", " + Str(camera_position\z) + Chr(10) + 
-                       "Mouse position = " + Str(mouse_position\x) + ", " + Str(mouse_position\y) + Chr(10) + 
-          ;             "Mouse change = " + Str(mouse_position\x - old_mouse_position\x) + ", " + Str(mouse_position\y - old_mouse_position\y) + Chr(10) + 
-                       "FPS = " + Str(fps) + Chr(10) + 
-                       "# of bodies = " + Str(particlecount))
       
+      msg.s = "Keys & Mouse" + Chr(10) +
+              "-----------------------" + Chr(10) +
+              "Left Mouse Button & Drag - move camera" + Chr(10) +
+              "Mouse Wheel - zoom camera in & out" + Chr(10) +
+              "Z & X - rotate platform" + Chr(10) +
+              "A, D, S, W - add linear force to crate" + Chr(10) +
+              "Q, E - add angular force to crate" + Chr(10) +
+              "K - re-drop the water" + Chr(10) +
+              "R - restart" + Chr(10) +
+              "" + Chr(10) +
+              "Info" + Chr(10) +
+              "-------" + Chr(10) +
+              "OpenGL version = " + sgGlVersion + Chr(10) + 
+              "OpenGL extensions = " + sgGlExtn + Chr(10) + 
+              "OpenGL vendor = " + sgGlVendor + Chr(10) + 
+              "Camera position = " + Str(camera_position\x) + ", " + Str(camera_position\y) + ", " + Str(camera_position\z) + Chr(10) + 
+              "Mouse position = " + Str(mouse_position\x) + ", " + Str(mouse_position\y) + Chr(10) + 
+              "FPS = " + Str(fps) + Chr(10) + 
+              "# of bodies = " + Str(particlecount)
+
+      SetGadgetText(5, msg)
+      
+      ;              "OpenGL renderer = " + sgGlRender + Chr(10) + 
+
+                ;             "Mouse change = " + Str(mouse_position\x - old_mouse_position\x) + ", " + Str(mouse_position\y - old_mouse_position\y) + Chr(10) + 
+
     EndIf
   Wend
 
@@ -569,7 +644,7 @@ Procedure create_all()
   bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
   
   ; Particles
-  particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 1, 0.4, 0, 0, 0, 9)
+  particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
   particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
   positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
   particle_colour\r = Random(100, 1) / 100
@@ -579,9 +654,9 @@ Procedure create_all()
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 200
-; FirstLine = 193
+; CursorPosition = 644
+; FirstLine = 617
 ; Folding = -
 ; EnableXP
-; Executable = OpenGL_LiquidFun_hello2D_4.exe
+; Executable = OpenGL_LiquidFun_hello2D_5.exe
 ; SubSystem = OpenGL
