@@ -13,6 +13,10 @@ XIncludeFile "CSFML.pbi"
 
 
 ; #CONSTANTS# ===================================================================================================================
+#GL_VENDOR     = $1F00
+#GL_RENDERER   = $1F01
+#GL_VERSION    = $1F02
+#GL_EXTENSIONS = $1F03
 ; ===============================================================================================================================
 
 ; #ENUMERATIONS# ===================================================================================================================
@@ -317,20 +321,13 @@ Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f)
 EndProcedure
   
 
-Procedure glSetup()
-
-  
-  glMatrixMode_(#GL_PROJECTION)
-  gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
-  glMatrixMode_(#GL_MODELVIEW)
-  glTranslatef_(0, 0, -190.0)
-  glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
-  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
-  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
-  ; the code below makes alpha channel work for Paint.NET PNG files
-  glEnable_( #GL_ALPHA_TEST );
-  glAlphaFunc_( #GL_NOTEQUAL, 0.0 );
-  
+Procedure MyWindowCallback(WindowID,Message,wParam,lParam)
+  Result=#PB_ProcessPureBasicEvents
+  If Message=#WM_MOVE ; Main window is moving!
+    GetWindowRect_(WindowID(0),win.RECT) ; Store its dimensions in "win" structure.
+    SetWindowPos_(info_text_window,0,win\left+10,win\top+20,0,0,#SWP_NOSIZE|#SWP_NOACTIVATE) ; Dock other window.
+  EndIf
+  ProcedureReturn Result
 EndProcedure
 
 
@@ -350,13 +347,60 @@ Procedure GLGetInfo()
   If( sgGlRender = "") :  sgGlRender = "Not verified" : EndIf
 
 EndProcedure
+
+
+
+Procedure glSetupWindows()
+
+    
+  ; Setup the OpenGL Main Window
+  OpenWindow(0, 0, 0, 800, 600, "OpenGL Gadget", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
+  OpenGLGadget(0, 0, 0, 800, 600, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
   
+  
+  ; Setup the OpenGL Info Window
+  info_text_window_bgcolor = $006600
+  SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
+  GetWindowRect_(WindowID(0),win.RECT)
+  OpenWindow(1,win\left+10,win\top+20,300,400,"Follower",#PB_Window_BorderLess, WindowID(0))
+  Global info_text_window.l = WindowID(1)
+  SetWindowColor(1,info_text_window_bgcolor)
+  SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
+  SetLayeredWindowAttributes_(WindowID(1),info_text_window_bgcolor,0,#LWA_COLORKEY)
+  TextGadget(5, 10,  10, 300, 400, "")
+  SetGadgetColor(5, #PB_Gadget_BackColor, info_text_window_bgcolor)
+  SetGadgetColor(5, #PB_Gadget_FrontColor, #Black)
+  SetActiveWindow(0)
+  SetActiveGadget(0)
+  GLGetInfo()
+
+  
+EndProcedure
+
+
+Procedure glSetup()
+
+  
+  glMatrixMode_(#GL_PROJECTION)
+  gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
+  glMatrixMode_(#GL_MODELVIEW)
+  glTranslatef_(0, 0, -190.0)
+  glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
+  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
+  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
+  ; the code below makes alpha channel work for Paint.NET PNG files
+  glEnable_( #GL_ALPHA_TEST );
+  glAlphaFunc_( #GL_NOTEQUAL, 0.0 );
+  
+EndProcedure
+
+
+
 
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 330
-; FirstLine = 302
+; CursorPosition = 19
 ; Folding = ---
 ; EnableXP
 ; EnableUnicode

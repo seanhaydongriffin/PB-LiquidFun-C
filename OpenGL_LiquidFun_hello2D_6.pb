@@ -3,20 +3,21 @@ XIncludeFile "LiquidFun-C-Ex.pbi"
 
 UsePNGImageDecoder()
 
-#GL_VENDOR     = $1F00
-#GL_RENDERER   = $1F01
-#GL_VERSION    = $1F02
-#GL_EXTENSIONS = $1F03
+
 
 ; #GLOBALS# ===================================================================================================================
+
+Global Dim tmp_pos.f(2)
+Global num_frames.i = 0
+Global fps.i = 0
 
 ; Box2D Bodies
 Global groundBody.l
 Global body.l
 
 ; Box2D Fixtures
-groundBodyFixture.b2_4VertexFixture
-bodyFixture.b2_4VertexFixture
+Global groundBodyFixture.b2_4VertexFixture
+Global bodyFixture.b2_4VertexFixture
 
 ; LiquidFun Particle System
 Global particle_radius.d = 0.06
@@ -66,13 +67,18 @@ Global end_game.i = 0
 
 ; #FUNCTIONS# ===================================================================================================================
 Declare keyboard_mouse_proc(*Value)
-Declare MyWindowCallback(WindowID,Message,wParam,lParam)
 Declare fps_timer_proc(*Value)
 Declare destroy_all()
 Declare create_all()
 ; ===============================================================================================================================
 
+;OpenConsole()
 
+; Setup OpenGL Windows
+glSetupWindows()
+
+; Setup OpenGL
+glSetup()
 
 ; Setup the OpenGL Textures
 
@@ -84,69 +90,16 @@ glCreateTexture(groundBody_texture, "platform256x256.png")
 glCreateTexture(body_texture, "crate128x128.png")
 glCreateTexture(water_texture, "waterparticle64x64.png")
 
-
-;OpenConsole()
-
-; Setup the OpenGL Main Window
-OpenWindow(0, 0, 0, 800, 600, "OpenGL Gadget", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
-OpenGLGadget(0, 0, 0, 800, 600, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
-
-; Setup OpenGL
-glSetup()
-
-; Setup the OpenGL Info Window
-info_text_window_bgcolor = $006600
-SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
-GetWindowRect_(WindowID(0),win.RECT)
-OpenWindow(1,win\left+10,win\top+20,300,400,"Follower",#PB_Window_BorderLess, WindowID(0))
-Global info_text_window.l = WindowID(1)
-SetWindowColor(1,info_text_window_bgcolor)
-SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
-SetLayeredWindowAttributes_(WindowID(1),info_text_window_bgcolor,0,#LWA_COLORKEY)
-TextGadget(5, 10,  10, 300, 400, "")
-SetGadgetColor(5, #PB_Gadget_BackColor, info_text_window_bgcolor)
-SetGadgetColor(5, #PB_Gadget_FrontColor, #Black)
-SetActiveWindow(0)
-SetActiveGadget(0)
-GLGetInfo()
-
-; Setup the Box2D World
-; gravity_x, gravity_y
+; Setup the Box2D World (gravity_x, gravity_y)
 b2World_CreateEx(0.0, -10.0)
 
-; Setup the Box2D Bodies
-; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
-groundBody = b2World_CreateBody(world, 1, 1, Radian(-5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
-body = b2World_CreateBody(world, 1, 1, Radian(5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
-
-; Setup the Box2D Fixtures
-; fixture_struct, body_ptr, density, friction, isSensor,restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
-b2PolygonShape_Create4VertexFixture(groundBodyFixture, groundBody, 1, 0.1, 0, 0, 50, 10, -50, 10, -50, -10, 50, -10)
-b2PolygonShape_Create4VertexFixture(bodyFixture, body, 1, 0.1, 0, 0.5, 1, 1, -1, 1, -1, -1, 1, -1)
+; Create all Box2D Bodies and Fixtures and the LiquidFun Particle System
+create_all()
 
 
-
-
-; Wave Machine Sean
-particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particle_radius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
-b2ParticleSystem_SetDensity(particlesystem, particledensity)
-particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
-particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
-;Debug(particlecount)
-particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
-;Debug (particlepositionbuffer)
-
-ReDim particle_quad_vertice(Int(particlecount) * 4)
-ReDim particle_texture_vertice(Int(particlecount) * 4)
-
-
-
-Global Dim tmp_pos.f(2)
-frame_timer = ElapsedMilliseconds()
-Global num_frames.i = 0
-Global fps.i = 0
 CreateThread(@fps_timer_proc(), 1000)
 CreateThread(@keyboard_mouse_proc(), 1000)
+frame_timer = ElapsedMilliseconds()
 
 
 ; Animation loop
@@ -170,12 +123,11 @@ Repeat
     glEnable_(#GL_TEXTURE_2D)
     glBindTexture_(#GL_TEXTURE_2D, TextureID)
     
-    ; Draw the Box2D Bodies
+    ; Draw the Box2D Bodies (body, fixture, texture)
     glDrawBodyFixtureTexture(groundBody, groundBodyFixture, groundBody_texture)
     glDrawBodyFixtureTexture(body, bodyFixture, body_texture)
         
-    ; Draw the LiquidFun Particles
-    ; texture, particle_quad_size
+    ; Draw the LiquidFun Particles (texture, particle_quad_size)
     glDrawParticlesTexture(water_texture, 0.4)
 
     ; update the display
@@ -373,16 +325,6 @@ Procedure keyboard_mouse_proc(*Value)
 EndProcedure
 
 
-Procedure MyWindowCallback(WindowID,Message,wParam,lParam)
-  Result=#PB_ProcessPureBasicEvents
-  If Message=#WM_MOVE ; Main window is moving!
-    GetWindowRect_(WindowID(0),win.RECT) ; Store its dimensions in "win" structure.
-    SetWindowPos_(info_text_window,0,win\left+10,win\top+20,0,0,#SWP_NOSIZE|#SWP_NOACTIVATE) ; Dock other window.
-  EndIf
-  ProcedureReturn Result
-EndProcedure
-
-
 Procedure fps_timer_proc(*Value)
   
   fps_timer = ElapsedMilliseconds()
@@ -430,42 +372,51 @@ EndProcedure
 
 Procedure destroy_all()
   
-  ; Bodies  
-  b2Body_DestroyFixture(groundBody, groundBodyFixture)
+  ; Destroy the Box2D Fixtures  
+  b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
+  b2Body_DestroyFixture(body, bodyFixture\fixture_ptr)
+
+  ; Destroy the Box2D Bodies  
   b2World_DestroyBody(world, groundBody)
-  b2Body_DestroyFixture(body, bodyFixture)
   b2World_DestroyBody(world, body)
   
-  ; Particles
+  ; Destory the LiquidFun Particle System
   b2ParticleGroup_DestroyParticles(particlegroup, 0)
+  b2World_DestroyParticleSystem(world, particlesystem)
   
   ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
   b2World_Step(world, (1 / 60.0), 6, 2)
-
   
 EndProcedure
 
 Procedure create_all()
+
+  ; Create the Box2D Bodies
+  ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
+  groundBody = b2World_CreateBody(world, 1, 1, Radian(-5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
+  body = b2World_CreateBody(world, 1, 1, Radian(5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
   
-  ; Bodies  
-  groundBody.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
-  b2Body_SetAngle(groundBody, Radian(-5))
-;  groundBodyFixture.l = b2PolygonShape_CreateFixture_4(groundBody, 1, 0.1, 0, 0, 0, 1, 0, 65535, groundBody_shape(0)\x, groundBody_shape(0)\y, groundBody_shape(1)\x, groundBody_shape(1)\y, groundBody_shape(2)\x, groundBody_shape(2)\y, groundBody_shape(3)\x, groundBody_shape(3)\y)
-  body.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
-  b2Body_SetAngle(body, Radian(5))
-;  bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
-  
-  ; Particles
+  ; Create the Box2D Fixtures
+  ; fixture_struct, body_ptr, density, friction, isSensor,restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
+  b2PolygonShape_Create4VertexFixture(groundBodyFixture, groundBody, 1, 0.1, 0, 0, 50, 10, -50, 10, -50, -10, 50, -10)
+  b2PolygonShape_Create4VertexFixture(bodyFixture, body, 1, 0.1, 0, 0.5, 1, 1, -1, 1, -1, -1, 1, -1)
+
+  ; Create the Particle System
+  ; Wave Machine Sean
+  particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particle_radius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
+  b2ParticleSystem_SetDensity(particlesystem, particledensity)
   particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
   particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
   particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
+
+  ReDim particle_quad_vertice(Int(particlecount) * 4)
+  ReDim particle_texture_vertice(Int(particlecount) * 4)
   
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 93
-; FirstLine = 86
+; CursorPosition = 5
 ; Folding = -
 ; EnableXP
-; Executable = OpenGL_LiquidFun_hello2D_5.exe
+; Executable = OpenGL_LiquidFun_hello2D_6.exe
 ; SubSystem = OpenGL

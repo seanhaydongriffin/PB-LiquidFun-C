@@ -85,6 +85,7 @@ ImportC "LiquidFun-C.lib"
 
   ; b2ParticleSystem
   b2World_CreateParticleSystem.l (world.l, colorMixingStrength.d, dampingStrength.d, destroyByAge.d, ejectionStrength.d, elasticStrength.d, lifetimeGranularity.d, powderStrength.d, pressureStrength.d, radius.d, repulsiveStrength.d, springStrength.d, staticPressureIterations.d, staticPressureRelaxation.d, staticPressureStrength.d, surfaceTensionNormalStrength.d, surfaceTensionPressureStrength.d, viscousStrength.d)
+  b2World_DestroyParticleSystem (world.l, particleSystem.l)
   b2ParticleSystem_GetParticleCount.d (particleSystem.l) 
   b2ParticleSystem_GetPositionBuffer.l (particleSystem.l)
   b2ParticleSystem_SetDensity (particleSystem.l, density.d)
@@ -101,8 +102,8 @@ ImportC "LiquidFun-C.lib"
 EndImport
 ; ===============================================================================================================================
 
-; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 83
-; FirstLine = 61
-; EnableUnicode
+; IDE Options = PureBasic 5.60 (Windows - x86)
+; CursorPosition = 88
+; FirstLine = 65
 ; EnableXP
+; EnableUnicode
