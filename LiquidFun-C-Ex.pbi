@@ -21,6 +21,8 @@ XIncludeFile "CSFML.pbi"
 
 ; #STRUCTURES# ===================================================================================================================
 
+
+
 Structure Vec2i
   x.i
   y.i
@@ -36,6 +38,17 @@ Structure Colour3f
   r.f
   g.f
   b.f
+EndStructure
+
+Structure gl_Texture
+  image_number.i  
+  image_bitmap.BITMAP
+EndStructure
+
+Structure b2_4VertexFixture
+  fixture_ptr.l
+  vertex.b2Vec2[4]
+  
 EndStructure
 
 
@@ -55,7 +68,24 @@ EndStructure
 ; #GLOBALS# ===================================================================================================================
 ;Global sfBool.i
 Global window.l
+
+; Box2D Worlds
 Global world.l
+Global gravity.b2Vec2
+
+
+; OpenGL
+Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
+
+; LiquidFun Particle System
+Global particlesystem.l
+Global particlecount.d
+Global particlepositionbuffer.l
+
+; OpenGL Particles
+Global Dim particle_quad_vertice.Vec3f(0)
+Global Dim particle_texture_vertice.b2Vec2(0)
+
 
 ; ===============================================================================================================================
 
@@ -127,14 +157,206 @@ Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
   b2Body_SetAngularVelocity(tmp_body, velocity)
 EndProcedure
 
+Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
+  
+  gravity\x = gravity_x
+  gravity\y = gravity_y
+  world = b2World_Create(gravity\x, gravity\y)
+EndProcedure
+
+Procedure glCreateTexture(*tmp_gl_texture.gl_Texture, filename.s)
+  
+  *tmp_gl_texture\image_number = LoadImage(#PB_Any, filename)
+  GetObject_(ImageID(*tmp_gl_texture\image_number), SizeOf(BITMAP), @*tmp_gl_texture\image_bitmap)
+EndProcedure
+
+;Procedure b2PolygonShape_Create4VertexFixture_GLQuad()
+  
+  
+;EndProcedure
+
+Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d)
+  
+  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, 1, 0, 65535, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y)
+  *tmp_b2_fixture\vertex[0]\x = v0_x
+  *tmp_b2_fixture\vertex[0]\y = v0_y
+  *tmp_b2_fixture\vertex[1]\x = v1_x
+  *tmp_b2_fixture\vertex[1]\y = v1_y
+  *tmp_b2_fixture\vertex[2]\x = v2_x
+  *tmp_b2_fixture\vertex[2]\y = v2_y
+  *tmp_b2_fixture\vertex[3]\x = v3_x
+  *tmp_b2_fixture\vertex[3]\y = v3_y
+EndProcedure
 
 
 
+Procedure glDrawBodyFixtureTexture(tmp_body.l, *tmp_fixture.b2_4VertexFixture, *tmp_texture.gl_Texture)
+  
+    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+    Dim tmp_pos.f(2)
+    b2Body_GetPosition(tmp_body, tmp_pos())
+    tmp_angle.d = b2Body_GetAngle(tmp_body)
+    
+    glPushMatrix_()
+    
+    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+    
+    
+    Dim tmp_quad_vertice.Vec3f(4)
+    Dim tmp_texture_vertice.b2Vec2(4)
+
+    tmp_texture_vertice(0)\x = 1.0
+    tmp_texture_vertice(0)\y = 1.0
+    tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
+    tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
+    tmp_quad_vertice(0)\z = 0.5
+    
+    tmp_texture_vertice(1)\x = 0.0
+    tmp_texture_vertice(1)\y = 1.0
+    tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
+    tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
+    tmp_quad_vertice(1)\z = 0.5
+    
+    tmp_texture_vertice(2)\x = 0.0
+    tmp_texture_vertice(2)\y = 0.0
+    tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
+    tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
+    tmp_quad_vertice(2)\z = 0.5
+    
+    tmp_texture_vertice(3)\x = 1.0
+    tmp_texture_vertice(3)\y = 0.0
+    tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
+    tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
+    tmp_quad_vertice(3)\z = 0.5
+    
+    glEnableClientState_(#GL_VERTEX_ARRAY )
+    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
+    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
+    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
+    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+    glDisableClientState_( #GL_VERTEX_ARRAY )
+
+    glPopMatrix_()
+EndProcedure
+
+
+Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f)
+      
+  *positionbuffer_ptr.b2Vec2 = particlepositionbuffer
+ 
+  For i = 0 To (Int(particlecount) - 1)
+
+    particle_texture_vertice((i * 4) + 0)\x = 1.0
+    particle_texture_vertice((i * 4) + 0)\y = 1.0
+    particle_quad_vertice((i * 4) + 0)\x = *positionbuffer_ptr\x + particle_quad_size
+    particle_quad_vertice((i * 4) + 0)\y = *positionbuffer_ptr\y + particle_quad_size
+    particle_quad_vertice((i * 4) + 0)\z = 0.5
+    
+    particle_texture_vertice((i * 4) + 1)\x = 0.0
+    particle_texture_vertice((i * 4) + 1)\y = 1.0
+    particle_quad_vertice((i * 4) + 1)\x = *positionbuffer_ptr\x - particle_quad_size
+    particle_quad_vertice((i * 4) + 1)\y = *positionbuffer_ptr\y + particle_quad_size
+    particle_quad_vertice((i * 4) + 1)\z = 0.5
+    
+    particle_texture_vertice((i * 4) + 2)\x = 0.0
+    particle_texture_vertice((i * 4) + 2)\y = 0.0
+    particle_quad_vertice((i * 4) + 2)\x = *positionbuffer_ptr\x - particle_quad_size
+    particle_quad_vertice((i * 4) + 2)\y = *positionbuffer_ptr\y - particle_quad_size
+    particle_quad_vertice((i * 4) + 2)\z = 0.5
+    
+    particle_texture_vertice((i * 4) + 3)\x = 1.0
+    particle_texture_vertice((i * 4) + 3)\y = 0.0
+    particle_quad_vertice((i * 4) + 3)\x = *positionbuffer_ptr\x + particle_quad_size
+    particle_quad_vertice((i * 4) + 3)\y = *positionbuffer_ptr\y - particle_quad_size
+    particle_quad_vertice((i * 4) + 3)\z = 0.5
+           
+    ; point to the next particle
+    *positionbuffer_ptr + SizeOf(b2Vec2)
+  Next
+; 
+;   ; clear framebuffer And depth-buffer
+ ; glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
+  
+ ; glDisable_(#GL_LIGHTING)
+  
+  ; for the particle blending technique either use this line...
+ ;  glDisable_(#GL_DEPTH_TEST)
+  ; or these two lines ...   
+ ;  glEnable_(#GL_DEPTH_TEST)
+;   glDepthMask_(#GL_FALSE) 
+   
+ ;  glEnable_(#GL_TEXTURE_2D)
+   glEnable_(#GL_BLEND)
+   glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
+  ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
+ ;  glBlendFunc_(#GL_ONE_MINUS_SRC_ALPHA,#GL_ONE)
+  
+  ; enable texture mapping
+;  glEnable_(#GL_TEXTURE_2D)
+;  glBindTexture_(#GL_TEXTURE_2D, TextureID)
+   
+  glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+  
+  glEnableClientState_(#GL_VERTEX_ARRAY )
+  glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @particle_quad_vertice(0)\x )
+  glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @particle_texture_vertice(0)\x)
+  glDrawArrays_( #GL_QUADS, 0, ArraySize(particle_quad_vertice()) )
+  glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+  glDisableClientState_( #GL_VERTEX_ARRAY )
+   
+   glDisable_( #GL_BLEND );
+;   glEnable_( #GL_DEPTH_TEST );
+    
+    ; disable texture mapping
+     glBindTexture_(#GL_TEXTURE_2D, 0)
+     glDisable_( #GL_TEXTURE_2D );
+
+EndProcedure
+  
+
+Procedure glSetup()
+
+  
+  glMatrixMode_(#GL_PROJECTION)
+  gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
+  glMatrixMode_(#GL_MODELVIEW)
+  glTranslatef_(0, 0, -190.0)
+  glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
+  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
+  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
+  ; the code below makes alpha channel work for Paint.NET PNG files
+  glEnable_( #GL_ALPHA_TEST );
+  glAlphaFunc_( #GL_NOTEQUAL, 0.0 );
+  
+EndProcedure
+
+
+Procedure GLGetInfo()
+  
+    
+  ; OpenGL Info
+  
+  sgGlVersion = StringField(PeekS(glGetString_(#GL_VERSION),-1,#PB_Ascii), 1, " ")
+  sgGlExtn = StringField(PeekS(glGetString_(#GL_EXTENSIONS),-1,#PB_Ascii), 1, " ")
+  sgGlVendor = StringField(PeekS(glGetString_(#GL_VENDOR),-1,#PB_Ascii), 1, " ")
+  sgGlRender = StringField(PeekS(glGetString_(#GL_RENDERER),-1,#PB_Ascii), 1, " ")
+  
+  If(sgGlVersion = "") : sgGlVersion = "Not verified" : EndIf
+  If(   sgGlExtn = "") :    sgGlExtn = "Not verified" : EndIf
+  If( sgGlVendor = "") :  sgGlVendor = "Not verified" : EndIf
+  If( sgGlRender = "") :  sgGlRender = "Not verified" : EndIf
+
+EndProcedure
+  
 
 ; ===============================================================================================================================
 
-; IDE Options = PureBasic 5.40 LTS (Windows - x86)
-; CursorPosition = 37
-; Folding = --
-; EnableUnicode
+; IDE Options = PureBasic 5.60 (Windows - x86)
+; CursorPosition = 330
+; FirstLine = 302
+; Folding = ---
 ; EnableXP
+; EnableUnicode

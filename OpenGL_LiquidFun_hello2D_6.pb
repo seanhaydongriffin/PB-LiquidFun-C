@@ -8,6 +8,35 @@ UsePNGImageDecoder()
 #GL_VERSION    = $1F02
 #GL_EXTENSIONS = $1F03
 
+; #GLOBALS# ===================================================================================================================
+
+; Box2D Bodies
+Global groundBody.l
+Global body.l
+
+; Box2D Fixtures
+groundBodyFixture.b2_4VertexFixture
+bodyFixture.b2_4VertexFixture
+
+; LiquidFun Particle System
+Global particle_radius.d = 0.06
+Global dampingStrength.d = 1.5
+Global particledensity.d = 0.1
+Global water_position_x.d = 0.0
+Global water_position_y.d = 40.0
+Global water_strength.d = 1.0
+Global water_stride.d = 0.3
+Global water_radius.d = 9.0
+
+; LiquidFun Particle Groups
+Global particlegroup.l
+
+; OpenGL Textures
+Global groundBody_texture.gl_Texture
+Global body_texture.gl_Texture
+Global water_texture.gl_Texture
+
+; Game Controls
 Global camera_linearvelocity.Vec3f
 camera_linearvelocity\x = 0
 camera_linearvelocity\y = 0
@@ -22,64 +51,50 @@ mouse_position\y = 0
 Global old_mouse_position.Vec2i
 old_mouse_position\x = -99999
 old_mouse_position\y = -99999
-Global particle_colour.Colour3f
-particle_colour\r = 0
-particle_colour\g = 0
-particle_colour\b = 0
 Global mouse_left_button_down.i = 0
 Global mouse_wheel_position.i = 0
-Global body_focused.i = 0
 Global end_game.i = 0
-Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
-Global particlesystem.l
-Global particlegroup.l
-Global particlecount.d
-Global positionbuffer.l
 
+
+; ===============================================================================================================================
+
+
+; #VARIABLES# ===================================================================================================================
+
+
+; ===============================================================================================================================
+
+; #FUNCTIONS# ===================================================================================================================
 Declare keyboard_mouse_proc(*Value)
 Declare MyWindowCallback(WindowID,Message,wParam,lParam)
 Declare fps_timer_proc(*Value)
 Declare destroy_all()
 Declare create_all()
+; ===============================================================================================================================
 
 
+
+; Setup the OpenGL Textures
 
 ; Remember! In Paint.NET save images as 32-bit PNG for the below to work
-; Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions
-;   in powers of 2 - i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
+; Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions in powers of 2
+;   i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
 
-LoadImage(0, "platform256x256.png")
-platform_bitmap.BITMAP
-GetObject_(ImageID(0), SizeOf(BITMAP), @platform_bitmap)
+glCreateTexture(groundBody_texture, "platform256x256.png")
+glCreateTexture(body_texture, "crate128x128.png")
+glCreateTexture(water_texture, "waterparticle64x64.png")
 
-LoadImage(1, "crate128x128.png")
-crate_bitmap.BITMAP
-GetObject_(ImageID(1), SizeOf(BITMAP), @crate_bitmap)
-
-LoadImage(2, "waterparticle64x64.png")
-Global water_bitmap.BITMAP
-GetObject_(ImageID(2), SizeOf(BITMAP), @water_bitmap)
-
-   
 
 ;OpenConsole()
 
-; OpenGL Window
+; Setup the OpenGL Main Window
 OpenWindow(0, 0, 0, 800, 600, "OpenGL Gadget", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
 OpenGLGadget(0, 0, 0, 800, 600, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
 
-glMatrixMode_(#GL_PROJECTION)
-gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
-glMatrixMode_(#GL_MODELVIEW)
-glTranslatef_(0, 0, -190.0)
-glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
-glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
-glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
-; the code below makes alpha channel work for Paint.NET PNG files
-glEnable_( #GL_ALPHA_TEST );
-glAlphaFunc_( #GL_NOTEQUAL, 0.0 );
+; Setup OpenGL
+glSetup()
 
-; Info Text Window
+; Setup the OpenGL Info Window
 info_text_window_bgcolor = $006600
 SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
 GetWindowRect_(WindowID(0),win.RECT)
@@ -93,93 +108,36 @@ SetGadgetColor(5, #PB_Gadget_BackColor, info_text_window_bgcolor)
 SetGadgetColor(5, #PB_Gadget_FrontColor, #Black)
 SetActiveWindow(0)
 SetActiveGadget(0)
+GLGetInfo()
 
+; Setup the Box2D World
+; gravity_x, gravity_y
+b2World_CreateEx(0.0, -10.0)
 
-; OpenGL Info
-
-sgGlVersion = StringField(PeekS(glGetString_(#GL_VERSION),-1,#PB_Ascii), 1, " ")
-sgGlExtn = StringField(PeekS(glGetString_(#GL_EXTENSIONS),-1,#PB_Ascii), 1, " ")
-sgGlVendor = StringField(PeekS(glGetString_(#GL_VENDOR),-1,#PB_Ascii), 1, " ")
-sgGlRender = StringField(PeekS(glGetString_(#GL_RENDERER),-1,#PB_Ascii), 1, " ")
-
-If(sgGlVersion = "") : sgGlVersion = "Not verified" : EndIf
-If(   sgGlExtn = "") :    sgGlExtn = "Not verified" : EndIf
-If( sgGlVendor = "") :  sgGlVendor = "Not verified" : EndIf
-If( sgGlRender = "") :  sgGlRender = "Not verified" : EndIf
-
-
-
-; setup gravity
-Global gravity.b2Vec2
-gravity\x = 0.0
-gravity\y = -10.0
-  
-; setup the world
-world = b2World_Create(gravity\x, gravity\y)
-  
-; setup the ground body
+; Setup the Box2D Bodies
 ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
-Global groundBody.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
-b2Body_SetAngle(groundBody, Radian(-5))
+groundBody = b2World_CreateBody(world, 1, 1, Radian(-5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
+body = b2World_CreateBody(world, 1, 1, Radian(5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
 
-; setup the ground shape and fixture
-; body, density, friction, isSensor,	restitution, userData, categoryBits, groupIndex, maskBits, px, py, radius)
-Global Dim groundBody_shape.b2Vec2(4)
-groundBody_shape(0)\x = 50
-groundBody_shape(0)\y = 10
-groundBody_shape(1)\x = -50
-groundBody_shape(1)\y = 10
-groundBody_shape(2)\x = -50
-groundBody_shape(2)\y = -10
-groundBody_shape(3)\x = 50
-groundBody_shape(3)\y = -10
-Global groundBodyFixture.l = b2PolygonShape_CreateFixture_4(groundBody, 1, 0.1, 0, 0, 0, 1, 0, 65535, groundBody_shape(0)\x, groundBody_shape(0)\y, groundBody_shape(1)\x, groundBody_shape(1)\y, groundBody_shape(2)\x, groundBody_shape(2)\y, groundBody_shape(3)\x, groundBody_shape(3)\y)
+; Setup the Box2D Fixtures
+; fixture_struct, body_ptr, density, friction, isSensor,restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
+b2PolygonShape_Create4VertexFixture(groundBodyFixture, groundBody, 1, 0.1, 0, 0, 50, 10, -50, 10, -50, -10, 50, -10)
+b2PolygonShape_Create4VertexFixture(bodyFixture, body, 1, 0.1, 0, 0.5, 1, 1, -1, 1, -1, -1, 1, -1)
 
-; setup the body body
-; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
-Global body.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
-b2Body_SetAngle(body, Radian(5))
-
-; setup the body shape and fixture
-; body, density, friction, isSensor,	restitution, userData, categoryBits, groupIndex, maskBits, px, py, radius)
-Global Dim body_shape.b2Vec2(4)
-body_shape(0)\x = 1
-body_shape(0)\y = 1
-body_shape(1)\x = -1
-body_shape(1)\y = 1
-body_shape(2)\x = -1
-body_shape(2)\y = -1
-body_shape(3)\x = 1
-body_shape(3)\y = -1
-Global bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
-
-
-; Particles
-
-;particleradius.d = 0.1
-Global particleradius.d = 0.06
-Global dampingStrength.d = 1.5
-Global particledensity.d = 0.1
-Global water_position_x.d = 0.0
-Global water_position_y.d = 40.0
-Global water_strength.d = 1.0
-Global water_stride.d = 0.3
-Global water_radius.d = 9.0
 
 
 
 ; Wave Machine Sean
-particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particleradius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
+particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particle_radius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
 b2ParticleSystem_SetDensity(particlesystem, particledensity)
 particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
 particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
 ;Debug(particlecount)
-positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
-;Debug (positionbuffer)
+particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
+;Debug (particlepositionbuffer)
 
-Global Dim triangles.Vec3f(Int(particlecount) * 4)
-Global Dim texVertices.b2Vec2(Int(particlecount) * 4)
-
+ReDim particle_quad_vertice(Int(particlecount) * 4)
+ReDim particle_texture_vertice(Int(particlecount) * 4)
 
 
 
@@ -212,132 +170,14 @@ Repeat
     glEnable_(#GL_TEXTURE_2D)
     glBindTexture_(#GL_TEXTURE_2D, TextureID)
     
-    ; draw the groundBody
-    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(0), ImageHeight(0), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, platform_bitmap\bmBits)
-    b2Body_GetPosition(groundBody, tmp_pos())
-    tmp_angle.d = b2Body_GetAngle(groundBody)
-    glPushMatrix_()
-    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-    glBegin_  (#GL_QUADS)
-;    glBegin_  (#GL_LINE_LOOP)
-;    glVertex3f_ (groundBody_shape(0)\x, groundBody_shape(0)\y, 0.5)   
-;    glVertex3f_ (groundBody_shape(1)\x, groundBody_shape(1)\y, 0.5)   
-;    glVertex3f_ (groundBody_shape(2)\x, groundBody_shape(2)\y, 0.5)   
-;    glVertex3f_ (groundBody_shape(3)\x, groundBody_shape(3)\y, 0.5)   
-    
-;    glTexCoord2f_(1.0, 1.0) : glVertex3f_( 1.0, 1.0, 1.0) ; Top right of cube (Front)
-;    glTexCoord2f_(0.0, 1.0) : glVertex3f_(-1.0, 1.0, 1.0) ; Top left of cube (Front) 
-;    glTexCoord2f_(0.0, 0.0) : glVertex3f_(-1.0,-1.0, 1.0) ; Bottom left of cube (Front)
-;    glTexCoord2f_(1.0, 0.0) : glVertex3f_( 1.0,-1.0, 1.0) ; Bottom right of cube (Front)
-    
-    glTexCoord2f_(1.0, 1.0) : glVertex3f_(groundBody_shape(0)\x, groundBody_shape(0)\y, 0.5) ; Top right of cube (Front)
-    glTexCoord2f_(0.0, 1.0) : glVertex3f_(groundBody_shape(1)\x, groundBody_shape(1)\y, 0.5) ; Top left of cube (Front) 
-    glTexCoord2f_(0.0, 0.0) : glVertex3f_(groundBody_shape(2)\x, groundBody_shape(2)\y, 0.5) ; Bottom left of cube (Front)
-    glTexCoord2f_(1.0, 0.0) : glVertex3f_(groundBody_shape(3)\x, groundBody_shape(3)\y, 0.5) ; Bottom right of cube (Front)
-    glEnd_()
-    glPopMatrix_()
-
-    ; draw the body
-    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(1), ImageHeight(1), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, crate_bitmap\bmBits)
-    b2Body_GetPosition(body, tmp_pos())
-    tmp_angle.d = b2Body_GetAngle(body)
-    glPushMatrix_()
-    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-    glBegin_  (#GL_QUADS)
-;    glBegin_  (#GL_LINE_LOOP)
-;    glVertex3f_ (body_shape(0)\x, body_shape(0)\y, 0.5)   
-;    glVertex3f_ (body_shape(1)\x, body_shape(1)\y, 0.5)   
-;    glVertex3f_ (body_shape(2)\x, body_shape(2)\y, 0.5)   
-;    glVertex3f_ (body_shape(3)\x, body_shape(3)\y, 0.5)   
-    glTexCoord2f_(1.0, 1.0) : glVertex3f_(body_shape(0)\x, body_shape(0)\y, 0.5) ; Top right of cube (Front)
-    glTexCoord2f_(0.0, 1.0) : glVertex3f_(body_shape(1)\x, body_shape(1)\y, 0.5) ; Top left of cube (Front) 
-    glTexCoord2f_(0.0, 0.0) : glVertex3f_(body_shape(2)\x, body_shape(2)\y, 0.5) ; Bottom left of cube (Front)
-    glTexCoord2f_(1.0, 0.0) : glVertex3f_(body_shape(3)\x, body_shape(3)\y, 0.5) ; Bottom right of cube (Front)
-    glEnd_()
-    glPopMatrix_()
+    ; Draw the Box2D Bodies
+    glDrawBodyFixtureTexture(groundBody, groundBodyFixture, groundBody_texture)
+    glDrawBodyFixtureTexture(body, bodyFixture, body_texture)
         
-    ; draw the Particles
-    
-    *positionbuffer_ptr.b2Vec2 = positionbuffer
-    
-    
-    
-    
- 
- ; triangle_size.f = 0.07
-  triangle_size.f = 0.4
+    ; Draw the LiquidFun Particles
+    ; texture, particle_quad_size
+    glDrawParticlesTexture(water_texture, 0.4)
 
-  For i = 0 To (Int(particlecount) - 1)
-
-    texVertices((i * 4) + 0)\x = 1.0
-    texVertices((i * 4) + 0)\y = 1.0
-    triangles((i * 4) + 0)\x = *positionbuffer_ptr\x + triangle_size
-    triangles((i * 4) + 0)\y = *positionbuffer_ptr\y + triangle_size
-    triangles((i * 4) + 0)\z = 0.5
-    
-    texVertices((i * 4) + 1)\x = 0.0
-    texVertices((i * 4) + 1)\y = 1.0
-    triangles((i * 4) + 1)\x = *positionbuffer_ptr\x - triangle_size
-    triangles((i * 4) + 1)\y = *positionbuffer_ptr\y + triangle_size
-    triangles((i * 4) + 1)\z = 0.5
-    
-    texVertices((i * 4) + 2)\x = 0.0
-    texVertices((i * 4) + 2)\y = 0.0
-    triangles((i * 4) + 2)\x = *positionbuffer_ptr\x - triangle_size
-    triangles((i * 4) + 2)\y = *positionbuffer_ptr\y - triangle_size
-    triangles((i * 4) + 2)\z = 0.5
-    
-    texVertices((i * 4) + 3)\x = 1.0
-    texVertices((i * 4) + 3)\y = 0.0
-    triangles((i * 4) + 3)\x = *positionbuffer_ptr\x + triangle_size
-    triangles((i * 4) + 3)\y = *positionbuffer_ptr\y - triangle_size
-    triangles((i * 4) + 3)\z = 0.5
-           
-    ; point to the next particle
-    *positionbuffer_ptr + SizeOf(b2Vec2)
-
-  Next
-; 
-;   ; clear framebuffer And depth-buffer
- ; glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
-  
- ; glDisable_(#GL_LIGHTING)
-  
-  ; for the particle blending technique either use this line...
- ;  glDisable_(#GL_DEPTH_TEST)
-  ; or these two lines ...   
- ;  glEnable_(#GL_DEPTH_TEST)
-;   glDepthMask_(#GL_FALSE) 
-   
- ;  glEnable_(#GL_TEXTURE_2D)
-   glEnable_(#GL_BLEND)
-   glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
-  ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
- ;  glBlendFunc_(#GL_ONE_MINUS_SRC_ALPHA,#GL_ONE)
-  
-  ; enable texture mapping
-;  glEnable_(#GL_TEXTURE_2D)
-;  glBindTexture_(#GL_TEXTURE_2D, TextureID)
-   
-  glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(2), ImageHeight(2), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, water_bitmap\bmBits)
-  
-  glEnableClientState_(#GL_VERTEX_ARRAY )
-  glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
-  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @triangles(0)\x )
-  glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @texVertices(0)\x)
-  glDrawArrays_( #GL_QUADS, 0, ArraySize(triangles()) )
-  glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
-  glDisableClientState_( #GL_VERTEX_ARRAY )
-   
-   glDisable_( #GL_BLEND );
-;   glEnable_( #GL_DEPTH_TEST );
-    
-    ; disable texture mapping
-     glBindTexture_(#GL_TEXTURE_2D, 0)
-     glDisable_( #GL_TEXTURE_2D );
-    
     ; update the display
     SetGadgetAttribute(Gadget, #PB_OpenGL_FlipBuffers, #True)
     
@@ -393,7 +233,7 @@ Repeat
 
           particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 1, 0.4, 0, 0, 0, 9)
           particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
-          positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
+          particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
       EndSelect
       
     Case #PB_EventType_MouseMove
@@ -610,24 +450,21 @@ Procedure create_all()
   ; Bodies  
   groundBody.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
   b2Body_SetAngle(groundBody, Radian(-5))
-  groundBodyFixture.l = b2PolygonShape_CreateFixture_4(groundBody, 1, 0.1, 0, 0, 0, 1, 0, 65535, groundBody_shape(0)\x, groundBody_shape(0)\y, groundBody_shape(1)\x, groundBody_shape(1)\y, groundBody_shape(2)\x, groundBody_shape(2)\y, groundBody_shape(3)\x, groundBody_shape(3)\y)
+;  groundBodyFixture.l = b2PolygonShape_CreateFixture_4(groundBody, 1, 0.1, 0, 0, 0, 1, 0, 65535, groundBody_shape(0)\x, groundBody_shape(0)\y, groundBody_shape(1)\x, groundBody_shape(1)\y, groundBody_shape(2)\x, groundBody_shape(2)\y, groundBody_shape(3)\x, groundBody_shape(3)\y)
   body.l = b2World_CreateBody(world, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
   b2Body_SetAngle(body, Radian(5))
-  bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
+;  bodyFixture.l = b2PolygonShape_CreateFixture_4(body, 1, 0.1, 0, 0.5, 0, 1, 0, 65535, body_shape(0)\x, body_shape(0)\y, body_shape(1)\x, body_shape(1)\y, body_shape(2)\x, body_shape(2)\y, body_shape(3)\x, body_shape(3)\y)
   
   ; Particles
   particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
   particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
-  positionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
-  particle_colour\r = Random(100, 1) / 100
-  particle_colour\g = Random(100, 1) / 100
-  particle_colour\b = Random(100, 1) / 100
+  particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
   
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 579
-; FirstLine = 552
+; CursorPosition = 93
+; FirstLine = 86
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_hello2D_5.exe
