@@ -179,17 +179,30 @@ EndProcedure
   
 ;EndProcedure
 
-Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d)
+Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, body_offset_x.d, body_offset_y.d)
   
-  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, 1, 0, 65535, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y)
-  *tmp_b2_fixture\vertex[0]\x = v0_x
-  *tmp_b2_fixture\vertex[0]\y = v0_y
-  *tmp_b2_fixture\vertex[1]\x = v1_x
-  *tmp_b2_fixture\vertex[1]\y = v1_y
-  *tmp_b2_fixture\vertex[2]\x = v2_x
-  *tmp_b2_fixture\vertex[2]\y = v2_y
-  *tmp_b2_fixture\vertex[3]\x = v3_x
-  *tmp_b2_fixture\vertex[3]\y = v3_y
+  *tmp_b2_fixture\vertex[0]\x = v0_x + body_offset_x
+  *tmp_b2_fixture\vertex[0]\y = v0_y + body_offset_y
+  *tmp_b2_fixture\vertex[1]\x = v1_x + body_offset_x
+  *tmp_b2_fixture\vertex[1]\y = v1_y + body_offset_y
+  *tmp_b2_fixture\vertex[2]\x = v2_x + body_offset_x
+  *tmp_b2_fixture\vertex[2]\y = v2_y + body_offset_y
+  *tmp_b2_fixture\vertex[3]\x = v3_x + body_offset_x
+  *tmp_b2_fixture\vertex[3]\y = v3_y + body_offset_y
+  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+EndProcedure
+
+Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_box_width.d, tmp_box_height.d, body_offset_x.d, body_offset_y.d)
+  
+  *tmp_b2_fixture\vertex[0]\x = 0 + (tmp_box_width / 2) + body_offset_x
+  *tmp_b2_fixture\vertex[0]\y = 0 + (tmp_box_height / 2) + body_offset_y
+  *tmp_b2_fixture\vertex[1]\x = 0 - (tmp_box_width / 2) + body_offset_x
+  *tmp_b2_fixture\vertex[1]\y = 0 + (tmp_box_height / 2) + body_offset_y
+  *tmp_b2_fixture\vertex[2]\x = 0 - (tmp_box_width / 2) + body_offset_x
+  *tmp_b2_fixture\vertex[2]\y = 0 - (tmp_box_height / 2) + body_offset_y
+  *tmp_b2_fixture\vertex[3]\x = 0 + (tmp_box_width / 2) + body_offset_x
+  *tmp_b2_fixture\vertex[3]\y = 0 - (tmp_box_height / 2) + body_offset_y
+  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
 EndProcedure
 
 
@@ -246,7 +259,7 @@ Procedure glDrawBodyFixtureTexture(tmp_body.l, *tmp_fixture.b2_4VertexFixture, *
 EndProcedure
 
 
-Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f)
+Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f, blending.i)
       
   *positionbuffer_ptr.b2Vec2 = particlepositionbuffer
  
@@ -279,9 +292,6 @@ Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f)
     ; point to the next particle
     *positionbuffer_ptr + SizeOf(b2Vec2)
   Next
-; 
-;   ; clear framebuffer And depth-buffer
- ; glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
   
  ; glDisable_(#GL_LIGHTING)
   
@@ -291,16 +301,15 @@ Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f)
  ;  glEnable_(#GL_DEPTH_TEST)
 ;   glDepthMask_(#GL_FALSE) 
    
- ;  glEnable_(#GL_TEXTURE_2D)
-   glEnable_(#GL_BLEND)
-   glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
+  ;  glEnable_(#GL_TEXTURE_2D)
+  
+  If blending = 1
+    glEnable_(#GL_BLEND)
+    glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
+  EndIf
   ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
  ;  glBlendFunc_(#GL_ONE_MINUS_SRC_ALPHA,#GL_ONE)
   
-  ; enable texture mapping
-;  glEnable_(#GL_TEXTURE_2D)
-;  glBindTexture_(#GL_TEXTURE_2D, TextureID)
-   
   glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
   
   glEnableClientState_(#GL_VERTEX_ARRAY )
@@ -350,48 +359,46 @@ EndProcedure
 
 
 
-Procedure glSetupWindows()
-
+Procedure glSetupWindows(main_window_x.i, main_window_y.i, main_window_width.i, main_window_height.i, main_window_title.s, openglgadget_x.i, openglgadget_y.i, openglgadget_width.i, openglgadget_height.i, text_window_width.i, text_window_height.i, text_window_background_colour.i, text_window_text_colour.i, open_console_window.i)
     
   ; Setup the OpenGL Main Window
-  OpenWindow(0, 0, 0, 800, 600, "OpenGL Gadget", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
-  OpenGLGadget(0, 0, 0, 800, 600, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
-  
+  OpenWindow(0, main_window_x, main_window_y, main_window_width, main_window_height, main_window_title, #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
+  OpenGLGadget(0, openglgadget_x, openglgadget_y, openglgadget_width, openglgadget_height, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
   
   ; Setup the OpenGL Info Window
-  info_text_window_bgcolor = $006600
   SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
   GetWindowRect_(WindowID(0),win.RECT)
-  OpenWindow(1,win\left+10,win\top+20,300,400,"Follower",#PB_Window_BorderLess, WindowID(0))
+  OpenWindow(1, win\left+10, win\top+20, text_window_width, text_window_height, "Follower", #PB_Window_BorderLess, WindowID(0))
   Global info_text_window.l = WindowID(1)
-  SetWindowColor(1,info_text_window_bgcolor)
+  SetWindowColor(1, text_window_background_colour)
   SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
-  SetLayeredWindowAttributes_(WindowID(1),info_text_window_bgcolor,0,#LWA_COLORKEY)
-  TextGadget(5, 10,  10, 300, 400, "")
-  SetGadgetColor(5, #PB_Gadget_BackColor, info_text_window_bgcolor)
-  SetGadgetColor(5, #PB_Gadget_FrontColor, #Black)
+  SetLayeredWindowAttributes_(WindowID(1), text_window_background_colour,0,#LWA_COLORKEY)
+  TextGadget(5, 10,  10, text_window_width, text_window_height, "")
+  SetGadgetColor(5, #PB_Gadget_BackColor, text_window_background_colour)
+  SetGadgetColor(5, #PB_Gadget_FrontColor, text_window_text_colour)
   SetActiveWindow(0)
   SetActiveGadget(0)
   GLGetInfo()
-
+  
+  If open_console_window = 1
+    
+    OpenConsole()
+  EndIf
   
 EndProcedure
 
 
-Procedure glSetup()
-
+Procedure glSetupWorld(field_of_view.d, aspect_ratio.d, viewer_to_near_clipping_plane_distance.d, viewer_to_far_clipping_plane_distance.d, camera_x.f, camera_y.f, camera_z.f)
   
   glMatrixMode_(#GL_PROJECTION)
-  gluPerspective_(30.0, 200/200, 1.0, 1000.0) 
+  gluPerspective_(field_of_view, aspect_ratio, viewer_to_near_clipping_plane_distance, viewer_to_far_clipping_plane_distance) 
   glMatrixMode_(#GL_MODELVIEW)
-  glTranslatef_(0, 0, -190.0)
-  glEnable_(#GL_CULL_FACE)    ; This will enhance the rendering speed as all the back face will be
-  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)
-  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)
-  ; the code below makes alpha channel work for Paint.NET PNG files
-  glEnable_( #GL_ALPHA_TEST );
-  glAlphaFunc_( #GL_NOTEQUAL, 0.0 );
-  
+  glTranslatef_(camera_x, camera_y, camera_z)
+  glEnable_(#GL_CULL_FACE)                                              ; Will enhance the rendering speed as all the back face will be culled
+  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)  ; For texture mapping
+  glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)  ; For texture mapping
+  glEnable_( #GL_ALPHA_TEST )                                           ; Makes alpha channel work for Paint.NET PNG files
+  glAlphaFunc_( #GL_NOTEQUAL, 0.0 )                                     ; Makes alpha channel work for Paint.NET PNG files
 EndProcedure
 
 
@@ -400,7 +407,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 19
+; CursorPosition = 307
+; FirstLine = 288
 ; Folding = ---
 ; EnableXP
 ; EnableUnicode
