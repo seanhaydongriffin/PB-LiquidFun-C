@@ -482,12 +482,58 @@ EndProcedure
 
 
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2Vec2_Distance
+; Description ...: Gets the distance between two vectors.
+; Syntax.........: _Box2C_b2Vec2_Distance($x1, $y1, $x2, $y2)
+; Parameters ....: $x1 - horizontal component (pixel position) of the vector
+;				   $y1 - vertical component (pixel position) of the vector
+;				   $x2 - horizontal component (pixel position) of the vector
+;				   $y3 - vertical component (pixel position) of the vector
+; Return values .: Success - the length of the vector
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure.f _Box2C_b2Vec2_Distance (x1.f, y1.f, x2.f, y2.f)
+
+	ProcedureReturn Sqr(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)))
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2Vec2_Vector_at_Angle_Distance
+; Description ...: Gets the distance between two vectors.
+; Syntax.........: _Box2C_b2Vec2_Vector_at_Angle_Distance($x1, $y1, $x2, $y2)
+; Parameters ....: x1 - horizontal component (pixel position) of the vector
+;				           y1 - vertical component (pixel position) of the vector
+;				           angle - must be in radians
+;				           distance - vertical component (pixel position) of the vector
+; Return values .: Success - the length of the vector
+;				   Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure _Box2C_b2Vec2_Vector_at_Angle_Distance (x1.f, y1.f, angle.f, distance.f, *tmpvec.b2Vec2)
+  
+  *tmpvec\x = x1 - (Cos(angle) * Abs(distance))
+  *tmpvec\y = y1 + (Sin(angle) * Abs(distance)) 
+  
+EndProcedure
+
 
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 403
-; FirstLine = 375
-; Folding = ---
+; CursorPosition = 526
+; FirstLine = 494
+; Folding = ----
 ; EnableXP
 ; EnableUnicode

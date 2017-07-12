@@ -84,7 +84,7 @@ Declare b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system
 glSetupWindows(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
 
 ; Setup the OpenGL World (field_of_view, aspect_ratio, viewer_to_near_clipping_plane_distance, viewer_to_far_clipping_plane_distance, camera_x, camera_y, camera_z)
-glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, 0, -190.0)
+glSetupWorld(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
 
 ; =====================
 ; Setup OpenGL Textures
@@ -562,81 +562,15 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
   If create_particle_system = 1
     
     ; Water (wave machine) parameters
-;    particle_flags.i = #b2_waterParticle
-;    particle_density = 1.1
-;    particle_powder_strength = 0.5
-;    particle_pressure_strength = 0.05
-;    particle_radius = 0.06
-;    particle_group_flags.i = #b2_solidParticleGroup
-;    particle_group_strength = 1.0
-;    particle_group_stride = 0.3
-;    particle_group_radius = 9.0
-    
-    ; Elastic parameters
-;    particle_flags.i = #b2_elasticParticle
-;    particle_density = 0.1
-;    particle_powder_strength = 0.5
-;    particle_pressure_strength = 0
-;    particle_radius = 0.3
-;    particle_group_flags.i = #b2_solidParticleGroup
-;    particle_group_strength = 1
-;    particle_group_stride = 0
-;    particle_group_radius = 10
-    
-    ; Spring parameters
-;    particle_flags.i = #b2_springParticle
-;    particle_density = 0.1
-;    particle_powder_strength = 0.5
-;    particle_pressure_strength = 1
-;    particle_radius = 0.3
-;    particle_group_flags.i = #b2_solidParticleGroup
-;    particle_group_strength = 1
-;    particle_group_stride = 0
-;    particle_group_radius = 10
-    
-    ; Viscous parameters
-;    particle_flags.i = #b2_viscousParticle
-;    particle_density = 0.1
-;    particle_powder_strength = 0.5
-;    particle_pressure_strength = 0
-;    particle_radius = 0.3
-;    particle_group_flags.i = #b2_solidParticleGroup
-;    particle_group_strength = 1
-;    particle_group_stride = 0
-;    particle_group_radius = 10
-    
-    ; Powder parameters
-;    particle_flags.i = #b2_viscousParticle
-;    particle_density = 0.1
-;    particle_powder_strength = 0.5
-;    particle_pressure_strength = 1
-;    particle_radius = 0.3
-;    particle_group_flags.i = #b2_solidParticleGroup
-;    particle_group_strength = 1
-;    particle_group_stride = 0
-;    particle_group_radius = 10
-    
-    ; Tensile parameters
-;    particle_flags.i = #b2_tensileParticle
-;    particle_density = 0.1
-;    particle_powder_strength = 0.5
-;    particle_pressure_strength = 1
-;    particle_radius = 0.3
-;    particle_group_flags.i = #b2_solidParticleGroup
-;    particle_group_strength = 1
-;    particle_group_stride = 0
-;    particle_group_radius = 10
-    
-    ; Barrier parameters
-    particle_flags.i = #b2_barrierParticle
-    particle_density = 0.1
+    particle_flags.i = #b2_waterParticle
+    particle_density = 1.1
     particle_powder_strength = 0.5
-    particle_pressure_strength = 1
-    particle_radius = 0.3
+    particle_pressure_strength = 0.05
+    particle_radius = 0.06
     particle_group_flags.i = #b2_solidParticleGroup
-    particle_group_strength = 1
-    particle_group_stride = 0
-    particle_group_radius = 10
+    particle_group_strength = 1.0
+    particle_group_stride = 0.3
+    particle_group_radius = 9.0
     
     ; Create the Particle System
     ; world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, radius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength
@@ -660,8 +594,8 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 86
-; FirstLine = 75
+; CursorPosition = 573
+; FirstLine = 543
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_hello2D_6.exe
