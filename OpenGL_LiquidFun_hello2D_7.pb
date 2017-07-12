@@ -23,16 +23,20 @@ Global groundBodySubFixture2.b2_4VertexFixture
 Global bodyFixture.b2_4VertexFixture
 
 ; LiquidFun Particle System
+Global particle_flags.i
+Global particle_group_flags.i
+Global particle_powder_strength.d
+Global particle_pressure_strength.d
 Global particle_radius.d = 0.06
 Global dampingStrength.d = 1.5
 Global particle_size.f = 0.4
 Global particle_blending.i = 1
-Global particledensity.d = 1.1
-Global water_position_x.d = 0.0
-Global water_position_y.d = 40.0
-Global water_strength.d = 1.0
-Global water_stride.d = 0.3
-Global water_radius.d = 9.0
+Global particle_density.d
+Global particle_group_position_x.d = 0.0
+Global particle_group_position_y.d = 40.0
+Global particle_group_strength.d = 1.0
+Global particle_group_stride.d = 0.3
+Global particle_group_radius.d = 9.0
 
 ; LiquidFun Particle Groups
 Global particlegroup.l
@@ -92,7 +96,8 @@ glSetupWorld(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
 
 glCreateTexture(groundBody_texture, "platform256x256.png")
 glCreateTexture(body_texture, "crate128x128.png")
-glCreateTexture(water_texture, "waterparticle64x64.png")
+;glCreateTexture(water_texture, "waterparticle64x64.png")
+glCreateTexture(water_texture, "waterparticle-3-64x64.png")
 
 ; =======================
 ; Setup Box2D / LiquidFun
@@ -555,15 +560,95 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
   EndIf
   
   If create_particle_system = 1
-  
-    ; Create the Particle System (LiquidFun Wave Machine parameters)
+    
+    ; Water (wave machine) parameters
+;    particle_flags.i = #b2_waterParticle
+;    particle_density = 1.1
+;    particle_powder_strength = 0.5
+;    particle_pressure_strength = 0.05
+;    particle_radius = 0.06
+;    particle_group_flags.i = #b2_solidParticleGroup
+;    particle_group_strength = 1.0
+;    particle_group_stride = 0.3
+;    particle_group_radius = 9.0
+    
+    ; Elastic parameters
+;    particle_flags.i = #b2_elasticParticle
+;    particle_density = 0.1
+;    particle_powder_strength = 0.5
+;    particle_pressure_strength = 0
+;    particle_radius = 0.3
+;    particle_group_flags.i = #b2_solidParticleGroup
+;    particle_group_strength = 1
+;    particle_group_stride = 0
+;    particle_group_radius = 10
+    
+    ; Spring parameters
+;    particle_flags.i = #b2_springParticle
+;    particle_density = 0.1
+;    particle_powder_strength = 0.5
+;    particle_pressure_strength = 1
+;    particle_radius = 0.3
+;    particle_group_flags.i = #b2_solidParticleGroup
+;    particle_group_strength = 1
+;    particle_group_stride = 0
+;    particle_group_radius = 10
+    
+    ; Viscous parameters
+;    particle_flags.i = #b2_viscousParticle
+;    particle_density = 0.1
+;    particle_powder_strength = 0.5
+;    particle_pressure_strength = 0
+;    particle_radius = 0.3
+;    particle_group_flags.i = #b2_solidParticleGroup
+;    particle_group_strength = 1
+;    particle_group_stride = 0
+;    particle_group_radius = 10
+    
+    ; Powder parameters
+;    particle_flags.i = #b2_viscousParticle
+;    particle_density = 0.1
+;    particle_powder_strength = 0.5
+;    particle_pressure_strength = 1
+;    particle_radius = 0.3
+;    particle_group_flags.i = #b2_solidParticleGroup
+;    particle_group_strength = 1
+;    particle_group_stride = 0
+;    particle_group_radius = 10
+    
+    ; Tensile parameters
+;    particle_flags.i = #b2_tensileParticle
+;    particle_density = 0.1
+;    particle_powder_strength = 0.5
+;    particle_pressure_strength = 1
+;    particle_radius = 0.3
+;    particle_group_flags.i = #b2_solidParticleGroup
+;    particle_group_strength = 1
+;    particle_group_stride = 0
+;    particle_group_radius = 10
+    
+    ; Barrier parameters
+    particle_flags.i = #b2_barrierParticle
+    particle_density = 0.1
+    particle_powder_strength = 0.5
+    particle_pressure_strength = 1
+    particle_radius = 0.3
+    particle_group_flags.i = #b2_solidParticleGroup
+    particle_group_strength = 1
+    particle_group_stride = 0
+    particle_group_radius = 10
+    
+    ; Create the Particle System
     ; world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, radius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength
-    particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, 0.5, 0.05, particle_radius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
-    b2ParticleSystem_SetDensity(particlesystem, particledensity)
+    particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, particle_powder_strength, particle_pressure_strength, particle_radius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
+    b2ParticleSystem_SetDensity(particlesystem, particle_density)
     
     ; Create the Particle Group
     ; particleSystem, angle, angularVelocity, colorR, colorG, colorB, colorA, flags, group, groupFlags, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData, px, py,	radius
-    particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, water_position_x, water_position_y, 0, 0, water_strength, water_stride, 0, 0, 0, water_radius)
+  ;  Debug(flags)
+    particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, particle_flags, 0, particle_group_flags, 0, 0, 0, particle_group_position_x, particle_group_position_y, 0, 0, particle_group_strength, particle_group_stride, 0, 0, 0, particle_group_radius)
+    
+    
     
     particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
     particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
@@ -575,8 +660,8 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
 EndProcedure
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 142
-; FirstLine = 132
+; CursorPosition = 630
+; FirstLine = 602
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_hello2D_6.exe

@@ -52,7 +52,8 @@ EndStructure
 Structure b2_4VertexFixture
   fixture_ptr.l
   vertex.b2Vec2[4]
-  
+  body_ptr.l
+  texture_ptr.l
 EndStructure
 
 
@@ -179,7 +180,7 @@ EndProcedure
   
 ;EndProcedure
 
-Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, body_offset_x.d, body_offset_y.d)
+Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
   
   *tmp_b2_fixture\vertex[0]\x = v0_x + body_offset_x
   *tmp_b2_fixture\vertex[0]\y = v0_y + body_offset_y
@@ -190,9 +191,16 @@ Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture,
   *tmp_b2_fixture\vertex[3]\x = v3_x + body_offset_x
   *tmp_b2_fixture\vertex[3]\y = v3_y + body_offset_y
   *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+  *tmp_b2_fixture\body_ptr = tmp_body
+  
+  If tmp_texture > -1
+    
+    *tmp_b2_fixture\texture_ptr = tmp_texture
+  EndIf
+  
 EndProcedure
 
-Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_box_width.d, tmp_box_height.d, body_offset_x.d, body_offset_y.d)
+Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_box_width.d, tmp_box_height.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
   
   *tmp_b2_fixture\vertex[0]\x = 0 + (tmp_box_width / 2) + body_offset_x
   *tmp_b2_fixture\vertex[0]\y = 0 + (tmp_box_height / 2) + body_offset_y
@@ -203,6 +211,76 @@ Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp
   *tmp_b2_fixture\vertex[3]\x = 0 + (tmp_box_width / 2) + body_offset_x
   *tmp_b2_fixture\vertex[3]\y = 0 - (tmp_box_height / 2) + body_offset_y
   *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+  *tmp_b2_fixture\body_ptr = tmp_body
+  
+  If tmp_texture > -1
+    
+    *tmp_b2_fixture\texture_ptr = tmp_texture
+  EndIf
+  
+EndProcedure
+
+
+
+Procedure glDrawFixtureTexture(*tmp_fixture.b2_4VertexFixture, tmp_texture_ptr.l = -1)
+  
+    tmp_body.l = *tmp_fixture\body_ptr
+
+    If tmp_texture_ptr > -1
+      
+      *tmp_texture.gl_Texture = tmp_texture_ptr
+    Else
+      
+      *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
+    EndIf
+  
+    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+    Dim tmp_pos.f(2)
+    b2Body_GetPosition(tmp_body, tmp_pos())
+    tmp_angle.d = b2Body_GetAngle(tmp_body)
+    
+    glPushMatrix_()
+    
+    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+    
+    
+    Dim tmp_quad_vertice.Vec3f(4)
+    Dim tmp_texture_vertice.b2Vec2(4)
+
+    tmp_texture_vertice(0)\x = 1.0
+    tmp_texture_vertice(0)\y = 1.0
+    tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
+    tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
+    tmp_quad_vertice(0)\z = 0.5
+    
+    tmp_texture_vertice(1)\x = 0.0
+    tmp_texture_vertice(1)\y = 1.0
+    tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
+    tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
+    tmp_quad_vertice(1)\z = 0.5
+    
+    tmp_texture_vertice(2)\x = 0.0
+    tmp_texture_vertice(2)\y = 0.0
+    tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
+    tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
+    tmp_quad_vertice(2)\z = 0.5
+    
+    tmp_texture_vertice(3)\x = 1.0
+    tmp_texture_vertice(3)\y = 0.0
+    tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
+    tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
+    tmp_quad_vertice(3)\z = 0.5
+    
+    glEnableClientState_(#GL_VERTEX_ARRAY )
+    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
+    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
+    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
+    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+    glDisableClientState_( #GL_VERTEX_ARRAY )
+
+    glPopMatrix_()
 EndProcedure
 
 
@@ -296,18 +374,19 @@ Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f, 
  ; glDisable_(#GL_LIGHTING)
   
   ; for the particle blending technique either use this line...
- ;  glDisable_(#GL_DEPTH_TEST)
+  ; glDisable_(#GL_DEPTH_TEST)
   ; or these two lines ...   
- ;  glEnable_(#GL_DEPTH_TEST)
+;   glEnable_(#GL_DEPTH_TEST)
 ;   glDepthMask_(#GL_FALSE) 
    
-  ;  glEnable_(#GL_TEXTURE_2D)
+    glEnable_(#GL_TEXTURE_2D)
   
   If blending = 1
     glEnable_(#GL_BLEND)
-    glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
+    glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE_MINUS_SRC_ALPHA)
+;    glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
   EndIf
-  ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
+ ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
  ;  glBlendFunc_(#GL_ONE_MINUS_SRC_ALPHA,#GL_ONE)
   
   glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
@@ -407,8 +486,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 307
-; FirstLine = 288
+; CursorPosition = 403
+; FirstLine = 375
 ; Folding = ---
 ; EnableXP
 ; EnableUnicode
