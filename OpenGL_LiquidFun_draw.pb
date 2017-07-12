@@ -54,7 +54,7 @@ Global particle_powder_strength.d
 Global particle_pressure_strength.d
 Global particle_radius.d = 0.06
 Global dampingStrength.d = 1.5
-Global particle_size.f = 0.4
+Global particle_size.f = 0.5
 Global particle_blending.i = 1
 Global particle_density.d
 Global particle_group_position_x.d = 0.0
@@ -738,8 +738,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 627
-; FirstLine = 602
+; CursorPosition = 56
+; FirstLine = 53
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw.exe
