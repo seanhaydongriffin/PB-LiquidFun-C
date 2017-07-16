@@ -49,11 +49,30 @@ Structure gl_Texture
   image_bitmap.BITMAP
 EndStructure
 
+Structure b2_1VertexFixture
+  fixture_ptr.l
+  radius.f
+  vertex.b2Vec2
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
 Structure b2_4VertexFixture
   fixture_ptr.l
   vertex.b2Vec2[4]
   body_ptr.l
   texture_ptr.l
+EndStructure
+
+Structure b2_128VertexFixture
+  fixture_ptr.l
+  line_width.f
+  line_red.f
+  line_green.f
+  line_blue.f
+  vertex.b2Vec2[128]
+  num_vertices.i
+  body_ptr.l
 EndStructure
 
 
@@ -90,6 +109,8 @@ Global particlepositionbuffer.l
 ; OpenGL Particles
 Global Dim particle_quad_vertice.Vec3f(0)
 Global Dim particle_texture_vertice.b2Vec2(0)
+
+Global __clockwise.i
 
 
 ; ===============================================================================================================================
@@ -180,6 +201,21 @@ EndProcedure
   
 ;EndProcedure
 
+Procedure b2PolygonShape_Create1VertexFixture(*tmp_b2_fixture.b2_1VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, radius.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
+  
+  *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, radius)
+  *tmp_b2_fixture\body_ptr = tmp_body
+  *tmp_b2_fixture\radius = radius
+  *tmp_b2_fixture\vertex\x = body_offset_x
+  *tmp_b2_fixture\vertex\y = body_offset_y
+  
+  If tmp_texture > -1
+    
+    *tmp_b2_fixture\texture_ptr = tmp_texture
+  EndIf
+  
+EndProcedure
+
 Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
   
   *tmp_b2_fixture\vertex[0]\x = v0_x + body_offset_x
@@ -220,6 +256,37 @@ Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp
   
 EndProcedure
 
+
+Procedure b2PolygonShape_CreateCircleFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_circle_radius.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
+  
+  *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, tmp_circle_radius)
+  *tmp_b2_fixture\body_ptr = tmp_body
+  *tmp_b2_fixture\vertex[0]\x = 0 + tmp_circle_radius + body_offset_x
+  *tmp_b2_fixture\vertex[0]\y = 0 + tmp_circle_radius + body_offset_y
+  *tmp_b2_fixture\vertex[1]\x = 0 - tmp_circle_radius + body_offset_x
+  *tmp_b2_fixture\vertex[1]\y = 0 + tmp_circle_radius + body_offset_y
+  *tmp_b2_fixture\vertex[2]\x = 0 - tmp_circle_radius + body_offset_x
+  *tmp_b2_fixture\vertex[2]\y = 0 - tmp_circle_radius + body_offset_y
+  *tmp_b2_fixture\vertex[3]\x = 0 + tmp_circle_radius + body_offset_x
+  *tmp_b2_fixture\vertex[3]\y = 0 - tmp_circle_radius + body_offset_y
+  
+  If tmp_texture > -1
+    
+    *tmp_b2_fixture\texture_ptr = tmp_texture
+  EndIf
+  
+EndProcedure
+
+Procedure b2PolygonShape_CreateChainFixture(*tmp_b2_fixture.b2_128VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_num_vertices.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f)
+  
+    *tmp_b2_fixture\fixture_ptr = b2ChainShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, @*tmp_b2_fixture\vertex[0]\x, tmp_num_vertices * 2)
+    *tmp_b2_fixture\body_ptr = tmp_body
+    *tmp_b2_fixture\line_width = tmp_line_width
+    *tmp_b2_fixture\line_red = tmp_line_red
+    *tmp_b2_fixture\line_green = tmp_line_green
+    *tmp_b2_fixture\line_blue = tmp_line_blue
+    *tmp_b2_fixture\num_vertices = tmp_num_vertices
+EndProcedure
 
 
 Procedure glDrawFixtureTexture(*tmp_fixture.b2_4VertexFixture, tmp_texture_ptr.l = -1)
@@ -281,6 +348,40 @@ Procedure glDrawFixtureTexture(*tmp_fixture.b2_4VertexFixture, tmp_texture_ptr.l
     glDisableClientState_( #GL_VERTEX_ARRAY )
 
     glPopMatrix_()
+EndProcedure
+
+
+Procedure glDrawChainFixture(*tmp_fixture.b2_128VertexFixture)
+    
+  glLineWidth_(*tmp_fixture\line_width)
+  glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
+  
+  tmp_body.l = *tmp_fixture\body_ptr
+ 
+  Dim tmp_pos.f(2)
+  b2Body_GetPosition(tmp_body, tmp_pos())
+  tmp_angle.d = b2Body_GetAngle(tmp_body)
+    
+  glPushMatrix_()
+  
+  glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+  glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+    
+  Dim tmp_chain_vertice.Vec3f(*tmp_fixture\num_vertices)
+    
+  For i = 0 To (*tmp_fixture\num_vertices - 1)
+    
+    tmp_chain_vertice(i)\x = *tmp_fixture\vertex[i]\x
+    tmp_chain_vertice(i)\y = *tmp_fixture\vertex[i]\y
+    tmp_chain_vertice(i)\z = 0.5
+  Next
+
+  glEnableClientState_(#GL_VERTEX_ARRAY )
+  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
+  glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
+  glDisableClientState_( #GL_VERTEX_ARRAY )
+
+  glPopMatrix_()
 EndProcedure
 
 
@@ -529,11 +630,184 @@ Procedure _Box2C_b2Vec2_Vector_at_Angle_Distance (x1.f, y1.f, angle.f, distance.
 EndProcedure
 
 
+
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2Vec2_GetAngleBetweenThreePoints
+; Description ...:
+; Syntax.........: _Box2C_b2Vec2_GetAngleBetweenThreePoints($x1, $y1, $x2, $y2, $x3, $y3, ByRef $clockwise)
+; Parameters ....: $x1 - the first point
+;				           $y1 - the first point
+;				           $x2 - the second point
+;				           $y2 - the second point
+;				           $x3 - the third point
+;				           $y3 - the third point
+;				           $clockwise - returns True if the angle indicates a clockwise movement through the points, otherwise False
+; Return values .: The angle (degrees)
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+;Procedure _Box2C_b2Vec2_GetAngleBetweenThreePoints(x1.f, y1.f, x2.f, y2.f, x3.f, y3.f, *clockwise.i)
+Procedure _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector1.b2Vec2, *vector2.b2Vec2, *vector3.b2Vec2)
+  
+	angle1.f = ATan2(*vector1\y - *vector2\y, *vector1\x - *vector2\x)
+	angle2.f = ATan2(*vector3\y - *vector2\y, *vector3\x - *vector2\x)
+	angle.f =  angle1 - angle2
+	deg.f = Degree(angle)
+;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $deg = ' & $deg & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+	__clockwise = 1
+	
+
+	If deg < 0
+
+	  deg = 360 + deg
+	EndIf
+	
+	If deg > 180
+
+	  __clockwise = 0
+	EndIf
+	
+;	if $deg > 180 Then
+
+;		clockwise = 0
+;		$deg = 360 - $deg
+;	Else
+
+;		if $deg < 0 Then
+
+;			$deg = 0 - $deg
+;		EndIf
+;	EndIf
+
+	ProcedureReturn deg
+EndProcedure
+
+
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2Vec2Array_IsConvexAndClockwise
+; Description ...: Check whether an array of vertices (a polygon) is convex and in a clockwise direction.
+;					This is a requirement for a the vertices of a Box2D shape.
+; Syntax.........: _Box2C_b2Vec2Array_IsConvexAndClockwise($vertices)
+; Parameters ....: $vertices - an array of vertices
+; Return values .: True if convex, otherwise False
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+;Procedure _Box2C_b2Vec2Array_IsConvexAndClockwise($vertices)
+Procedure.i _Box2C_b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vertices.i)
+
+  edited_angle.f
+  angles.s
+  edited_total_angles.f = 0 
+  clockwise.i
+  
+  *first_vector_ptr.b2Vec2
+  *second_vector_ptr.b2Vec2
+  *vector_1_ptr.b2Vec2
+  *vector_2_ptr.b2Vec2
+  *vector_3_ptr.b2Vec2
+  
+  If num_vertices < 3
+    
+		ProcedureReturn 0
+	EndIf
+
+	; angle at points #2 and more
+
+	For i = 0 To (num_vertices - 3)
+	  
+	  If i > 0
+	    
+	    *vector_ptr + SizeOf(b2Vec2)      ; move to the next vector
+	  EndIf
+	      
+	  *vector_1_ptr = *vector_ptr
+	  *vector_2_ptr = *vector_ptr + SizeOf(b2Vec2)
+	  *vector_3_ptr = *vector_ptr + SizeOf(b2Vec2) + SizeOf(b2Vec2)
+
+	  If i = 0
+	    
+	    *first_vector_ptr = *vector_1_ptr
+	    *second_vector_ptr = *vector_2_ptr
+	  EndIf
+	  
+		edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector_1_ptr, *vector_2_ptr, *vector_3_ptr)
+
+	;	If __clockwise = 1
+
+		;	ProcedureReturn 0
+		;EndIf
+
+		angles = angles + ", #" + i + " = " + StrF(edited_angle)
+		edited_total_angles = edited_total_angles + edited_angle
+	Next
+	
+	
+	; angle at the last point
+	edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector_2_ptr, *vector_3_ptr, *first_vector_ptr)
+
+	;	If __clockwise = 1
+
+		;	ProcedureReturn 0
+		;EndIf
+;	Debug(edited_angle)
+; ;	$edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 2][0], $vertices[UBound($vertices) - 2][1], $vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $clockwise)
+ 	angles = angles + ", last # = " + StrF(edited_angle)
+ 	edited_total_angles = edited_total_angles + edited_angle
+
+	; angle at the first point
+
+	edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector_3_ptr, *first_vector_ptr, *second_vector_ptr)
+
+		;If __clockwise = 1
+
+;			ProcedureReturn 0
+	;	EndIf
+;	$edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $vertices[1][0], $vertices[1][1], $clockwise)
+	angles = "first # = " + StrF(edited_angle) + angles
+	edited_total_angles = edited_total_angles + edited_angle
+;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $edited_total_angles = ' & $edited_total_angles & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+
+;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $angles = ' & $angles & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+	
+;	Debug(StrF(edited_total_angles, 4) + "; " + angles + "; " + Str(__clockwise))
+	;Debug(angles)
+	;Debug(__clockwise)
+	
+	expected_edited_total_angles.i = ((num_vertices - 2) * 180)
+	
+	If edited_total_angles >= expected_edited_total_angles - 1 And edited_total_angles <= expected_edited_total_angles + 1
+
+		ProcedureReturn 1
+	EndIf
+ 	
+ 	
+	ProcedureReturn 0
+
+EndProcedure
+
+
+
+
+
+
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 526
-; FirstLine = 494
-; Folding = ----
+; CursorPosition = 281
+; FirstLine = 254
+; Folding = -----
 ; EnableXP
 ; EnableUnicode

@@ -51,6 +51,7 @@ Structure b2Vec2 Align #PB_Structure_AlignC
   x.f
   y.f 
 EndStructure
+
 ; ===============================================================================================================================
 
 ; #GLOBALS# ===================================================================================================================
@@ -85,6 +86,7 @@ ImportC "LiquidFun-C.lib"
   ; b2Fixture
   b2CircleShape_CreateFixture.l (body.l, density.d, friction.d, isSensor.d,	restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, px.d, py.d, radius.d)
   b2PolygonShape_CreateFixture_4.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d)
+  b2ChainShape_CreateFixture.l (body.l,	density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d,	*vertices.b2Vec2, length.d)
 	b2Body_DestroyFixture (body.l, fixture.l)
 
   ; b2ParticleSystem
@@ -107,7 +109,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 27
-; FirstLine = 10
+; CursorPosition = 53
+; FirstLine = 34
 ; EnableXP
 ; EnableUnicode
