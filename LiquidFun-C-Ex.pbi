@@ -799,15 +799,165 @@ Procedure.i _Box2C_b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vert
 EndProcedure
 
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2PolygonShape_CrossProductVectorVector
+; Description ...:
+; Syntax.........: _Box2C_b2PolygonShape_CrossProductVectorVector($x1, $y1, $x2, $y2)
+; Parameters ....: $x1 -
+;				   $y1 -
+;				   $x2 -
+;				   $y2 -
+; Return values .:
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure.f _Box2C_b2PolygonShape_CrossProductVectorVector(x1.f, y1.f, x2.f, y2.f)
 
+	ProcedureReturn x1 * y2 - y1 * x2
+EndProcedure
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2PolygonShape_ComputeCentroid
+; Description ...:
+; Syntax.........: _Box2C_b2PolygonShape_ComputeCentroid($vertices)
+; Parameters ....: $x -
+;				   $y -
+; Return values .: A vector (2D element array) of the centroid of the vertices
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+;Procedure _Box2C_b2PolygonShape_ComputeCentroid($vertices)
+Procedure _Box2C_b2PolygonShape_ComputeCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
+
+	area.f = 0
+  *vector_1_ptr.b2Vec2
+  *vector_2_ptr.b2Vec2
+  *next_vector_ptr.b2Vec2
+
+	*vector_1_ptr = *vector_ptr
+  *vector_2_ptr = *vector_ptr + SizeOf(b2Vec2)
+	  ;*vector_3_ptr = *vector_ptr + SizeOf(b2Vec2) + SizeOf(b2Vec2)
+
+	If num_vertices = 2
+
+		*centroid_ptr\x = 0.5 * (*vector_1_ptr\x + *vector_2_ptr\x)
+		*centroid_ptr\y = 0.5 * (*vector_1_ptr\y + *vector_2_ptr\y)
+	EndIf
+
+	; pRef is the reference point for forming triangles.
+	; It's location doesn't change the result (except for rounding error).
+	
+	pRef.b2Vec2
+	pRef\x = 0
+	pRef\y = 0
+	inv3.f = 1 / 3
+	p1.b2Vec2
+	p2.b2Vec2
+	p3.b2Vec2
+	e1.b2Vec2
+	e2.b2Vec2
+
+	For i = 0 To (num_vertices - 1)
+	  
+	  If i > 0
+	    
+	    *vector_ptr + SizeOf(b2Vec2)      ; move to the next vector
+	  EndIf
+
+		p1\x = pRef\x
+		p1\y = pRef\y
+		p2\x = *vector_ptr\x
+		p2\y = *vector_ptr\y
+
+		If (i + 1) < num_vertices
+		  
+		  *next_vector_ptr = *vector_ptr + SizeOf(b2Vec2)
+			p3\x = *next_vector_ptr\x
+			p3\y = *next_vector_ptr\y
+		Else
+
+			p3\x = *vector_ptr\x
+			p3\y = *vector_ptr\y
+		EndIf
+
+		e1\x = p2\x - p1\x
+		e1\y = p2\y - p1\y
+		e2\x = p3\x - p1\x
+		e2\y = p3\y - p1\y
+
+		D.f = _Box2C_b2PolygonShape_CrossProductVectorVector(e1\x, e1\y, e2\x, e2\y)
+
+		triangleArea.f = 0.5 * D
+		area = area + triangleArea
+
+		; Area weighted centroid
+		*centroid_ptr\x = *centroid_ptr\x + (triangleArea * inv3 * (p1\x + p2\x + p3\x))
+		*centroid_ptr\y = *centroid_ptr\y + (triangleArea * inv3 * (p1\y + p2\y + p3\y))
+	Next
+
+	*centroid_ptr\x = *centroid_ptr\x * (1 / area)
+	*centroid_ptr\y = *centroid_ptr\y * (1 / area)
+
+EndProcedure
+
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Box2C_b2PolygonShape_MoveToZeroCentroid
+; Description ...: Computes the centroid of the shape and moves the vertices such that the centroid becomes 0,0.
+; Syntax.........: _Box2C_b2PolygonShape_MoveToZeroCentroid($vertices)
+; Parameters ....: $vertices
+;				   $format - a StringFormat string to make a vertices smaller.  Try "%4.2f".
+; Return values .: the centroid
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......: In the calling script you can apply the returned centroid to understand where the shap has moved to.
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+;Func _Box2C_b2PolygonShape_MoveToZeroCentroid(ByRef $vertices, $format = "%4.2f", $first_vertex_x = 0, $first_vertex_y = 0)
+Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(ByRef $vertices, $format = "%4.2f", $first_vertex_x = 0, $first_vertex_y = 0)
+
+	; Compute the polygon centroid.
+
+	Local $centroid = _Box2C_b2PolygonShape_ComputeCentroid($vertices)
+
+	; Shift the shape, meaning it's center and therefore it's centroid, to the world position of 0,0, such that rotations and calculations are easier
+
+	For $vertice_num = 0 To (UBound($vertices) - 1)
+
+		$vertices[$vertice_num][0] = StringFormat($format, $vertices[$vertice_num][0] - $centroid[0])
+		$vertices[$vertice_num][1] = StringFormat($format, $vertices[$vertice_num][1] - $centroid[1])
+	Next
+
+	; If the first vertex in $vertices is 0,0 then we can add the $centroid position above to the $first_vertex_x and $first_vertex_y
+	;	to arrive at the real-world centroid position, which is then returned
+
+	$centroid[0] = $first_vertex_x - $vertices[0][0]
+	$centroid[1] = $first_vertex_y - $vertices[0][1]
+	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $first_vertex_y = ' & $first_vertex_y & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $vertices[0][1] = ' & $vertices[0][1] & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+
+	Return $centroid
+EndProcedure
 
 
 
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 281
-; FirstLine = 254
+; CursorPosition = 930
+; FirstLine = 913
 ; Folding = -----
 ; EnableXP
 ; EnableUnicode

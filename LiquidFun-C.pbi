@@ -85,7 +85,12 @@ ImportC "LiquidFun-C.lib"
 
   ; b2Fixture
   b2CircleShape_CreateFixture.l (body.l, density.d, friction.d, isSensor.d,	restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, px.d, py.d, radius.d)
+  b2PolygonShape_CreateFixture_3.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d)
   b2PolygonShape_CreateFixture_4.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d)
+  b2PolygonShape_CreateFixture_5.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d, x4.d, y4.d)
+  b2PolygonShape_CreateFixture_6.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d, x4.d, y4.d, x5.d, y5.d)
+  b2PolygonShape_CreateFixture_7.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d, x4.d, y4.d, x5.d, y5.d, x6.d, y6.d)
+  b2PolygonShape_CreateFixture_8.l (body.l, density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d, x0.d, y0.d,	x1.d, y1.d, x2.d, y2.d, x3.d, y3.d, x4.d, y4.d, x5.d, y5.d, x6.d, y6.d, x7.d, y7.d)
   b2ChainShape_CreateFixture.l (body.l,	density.d, friction.d, isSensor.d, restitution.d, userData.d, categoryBits.d, groupIndex.d, maskBits.d,	*vertices.b2Vec2, length.d)
 	b2Body_DestroyFixture (body.l, fixture.l)
 
@@ -109,7 +114,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 53
-; FirstLine = 34
+; CursorPosition = 92
+; FirstLine = 64
 ; EnableXP
 ; EnableUnicode
