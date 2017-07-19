@@ -43,6 +43,22 @@ Enumeration b2ParticleGroupFlag
   #b2_particleGroupNeedsUpdateDepth = 1 << 4
   #b2_particleGroupInternalMask
 EndEnumeration
+
+Enumeration b2ShapeType
+    #b2_circle
+    #b2_edge
+    #b2_polygon
+    #b2_chain
+    #b2_box
+    #b2_sprite
+EndEnumeration
+
+Enumeration b2BodyType
+    #b2_staticBody
+    #b2_kinematicBody
+    #b2_dynamicBody
+EndEnumeration
+
 ; ===============================================================================================================================
 
 
@@ -114,7 +130,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 92
-; FirstLine = 64
+; CursorPosition = 52
+; FirstLine = 31
 ; EnableXP
 ; EnableUnicode

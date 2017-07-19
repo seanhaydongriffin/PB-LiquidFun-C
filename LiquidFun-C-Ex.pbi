@@ -20,6 +20,19 @@ XIncludeFile "CSFML.pbi"
 ; ===============================================================================================================================
 
 ; #ENUMERATIONS# ===================================================================================================================
+
+
+Enumeration b2DrawType
+    #b2_texture
+    #b2_wireframe
+EndEnumeration
+
+Enumeration glMode
+    #gl_texture2
+    #gl_line_strip2
+    #gl_line_loop2
+EndEnumeration
+
 ; ===============================================================================================================================
 
 
@@ -48,6 +61,21 @@ Structure gl_Texture
   image_number.i  
   image_bitmap.BITMAP
 EndStructure
+    
+Structure b2_Fixture
+  fixture_ptr.l
+  radius.f
+  shape_type.i
+  vertex.b2Vec2[128]
+  num_vertices.i
+  sprite_vertex.b2Vec2[4]
+  body_ptr.l
+  line_width.f
+  line_red.f
+  line_green.f
+  line_blue.f
+  texture_ptr.l
+EndStructure
 
 Structure b2_1VertexFixture
   fixture_ptr.l
@@ -57,9 +85,61 @@ Structure b2_1VertexFixture
   texture_ptr.l
 EndStructure
 
+Structure b2_2VertexFixture
+  fixture_ptr.l
+  radius.f
+  vertex.b2Vec2[2]
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
+Structure b2_3VertexFixture
+  fixture_ptr.l
+  radius.f
+  vertex.b2Vec2[3]
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
 Structure b2_4VertexFixture
   fixture_ptr.l
   vertex.b2Vec2[4]
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
+Structure b2_5VertexFixture
+  fixture_ptr.l
+  line_width.f
+  line_red.f
+  line_green.f
+  line_blue.f
+  radius.f
+  vertex.b2Vec2[5]
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
+Structure b2_6VertexFixture
+  fixture_ptr.l
+  radius.f
+  vertex.b2Vec2[6]
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
+Structure b2_7VertexFixture
+  fixture_ptr.l
+  radius.f
+  vertex.b2Vec2[7]
+  body_ptr.l
+  texture_ptr.l
+EndStructure
+
+Structure b2_8VertexFixture
+  fixture_ptr.l
+  radius.f
+  vertex.b2Vec2[8]
   body_ptr.l
   texture_ptr.l
 EndStructure
@@ -201,22 +281,9 @@ EndProcedure
   
 ;EndProcedure
 
-Procedure b2PolygonShape_Create1VertexFixture(*tmp_b2_fixture.b2_1VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, radius.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
-  
-  *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, radius)
-  *tmp_b2_fixture\body_ptr = tmp_body
-  *tmp_b2_fixture\radius = radius
-  *tmp_b2_fixture\vertex\x = body_offset_x
-  *tmp_b2_fixture\vertex\y = body_offset_y
-  
-  If tmp_texture > -1
-    
-    *tmp_b2_fixture\texture_ptr = tmp_texture
-  EndIf
-  
-EndProcedure
 
-Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
+
+Procedure b2PolygonShape_Create5VertexFixture(*tmp_b2_fixture.b2_5VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, v4_x.d, v4_y.d, body_offset_x.d, body_offset_y.d, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, tmp_texture.l = -1)
   
   *tmp_b2_fixture\vertex[0]\x = v0_x + body_offset_x
   *tmp_b2_fixture\vertex[0]\y = v0_y + body_offset_y
@@ -226,29 +293,15 @@ Procedure b2PolygonShape_Create4VertexFixture(*tmp_b2_fixture.b2_4VertexFixture,
   *tmp_b2_fixture\vertex[2]\y = v2_y + body_offset_y
   *tmp_b2_fixture\vertex[3]\x = v3_x + body_offset_x
   *tmp_b2_fixture\vertex[3]\y = v3_y + body_offset_y
-  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+  *tmp_b2_fixture\vertex[4]\x = v4_x + body_offset_x
+  *tmp_b2_fixture\vertex[4]\y = v4_y + body_offset_y
+  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_5(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y, *tmp_b2_fixture\vertex[4]\x, *tmp_b2_fixture\vertex[4]\y)
   *tmp_b2_fixture\body_ptr = tmp_body
-  
-  If tmp_texture > -1
-    
-    *tmp_b2_fixture\texture_ptr = tmp_texture
-  EndIf
-  
-EndProcedure
+  *tmp_b2_fixture\line_width = tmp_line_width
+  *tmp_b2_fixture\line_red = tmp_line_red
+  *tmp_b2_fixture\line_green = tmp_line_green
+  *tmp_b2_fixture\line_blue = tmp_line_blue
 
-Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_box_width.d, tmp_box_height.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
-  
-  *tmp_b2_fixture\vertex[0]\x = 0 + (tmp_box_width / 2) + body_offset_x
-  *tmp_b2_fixture\vertex[0]\y = 0 + (tmp_box_height / 2) + body_offset_y
-  *tmp_b2_fixture\vertex[1]\x = 0 - (tmp_box_width / 2) + body_offset_x
-  *tmp_b2_fixture\vertex[1]\y = 0 + (tmp_box_height / 2) + body_offset_y
-  *tmp_b2_fixture\vertex[2]\x = 0 - (tmp_box_width / 2) + body_offset_x
-  *tmp_b2_fixture\vertex[2]\y = 0 - (tmp_box_height / 2) + body_offset_y
-  *tmp_b2_fixture\vertex[3]\x = 0 + (tmp_box_width / 2) + body_offset_x
-  *tmp_b2_fixture\vertex[3]\y = 0 - (tmp_box_height / 2) + body_offset_y
-  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
-  *tmp_b2_fixture\body_ptr = tmp_body
-  
   If tmp_texture > -1
     
     *tmp_b2_fixture\texture_ptr = tmp_texture
@@ -257,35 +310,132 @@ Procedure b2PolygonShape_CreateBoxFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp
 EndProcedure
 
 
-Procedure b2PolygonShape_CreateCircleFixture(*tmp_b2_fixture.b2_4VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_circle_radius.d, body_offset_x.d, body_offset_y.d, tmp_texture.l = -1)
-  
-  *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, tmp_circle_radius)
-  *tmp_b2_fixture\body_ptr = tmp_body
-  *tmp_b2_fixture\vertex[0]\x = 0 + tmp_circle_radius + body_offset_x
-  *tmp_b2_fixture\vertex[0]\y = 0 + tmp_circle_radius + body_offset_y
-  *tmp_b2_fixture\vertex[1]\x = 0 - tmp_circle_radius + body_offset_x
-  *tmp_b2_fixture\vertex[1]\y = 0 + tmp_circle_radius + body_offset_y
-  *tmp_b2_fixture\vertex[2]\x = 0 - tmp_circle_radius + body_offset_x
-  *tmp_b2_fixture\vertex[2]\y = 0 - tmp_circle_radius + body_offset_y
-  *tmp_b2_fixture\vertex[3]\x = 0 + tmp_circle_radius + body_offset_x
-  *tmp_b2_fixture\vertex[3]\y = 0 - tmp_circle_radius + body_offset_y
-  
-  If tmp_texture > -1
-    
-    *tmp_b2_fixture\texture_ptr = tmp_texture
-  EndIf
-  
-EndProcedure
 
-Procedure b2PolygonShape_CreateChainFixture(*tmp_b2_fixture.b2_128VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_num_vertices.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f)
+
+Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
   
-    *tmp_b2_fixture\fixture_ptr = b2ChainShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, @*tmp_b2_fixture\vertex[0]\x, tmp_num_vertices * 2)
+  If tmp_shape_type = #b2_circle
+
+    ParseJSON(0, tmp_vertices)    
+    tmp_circle_radius.f = GetJSONDouble(GetJSONElement(JSONValue(0), 0))
+    
+    *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, tmp_circle_radius)
     *tmp_b2_fixture\body_ptr = tmp_body
-    *tmp_b2_fixture\line_width = tmp_line_width
-    *tmp_b2_fixture\line_red = tmp_line_red
-    *tmp_b2_fixture\line_green = tmp_line_green
-    *tmp_b2_fixture\line_blue = tmp_line_blue
-    *tmp_b2_fixture\num_vertices = tmp_num_vertices
+    *tmp_b2_fixture\vertex[0]\x = 0 + tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[0]\y = 0 + tmp_circle_radius + body_offset_y
+    *tmp_b2_fixture\vertex[1]\x = 0 - tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[1]\y = 0 + tmp_circle_radius + body_offset_y
+    *tmp_b2_fixture\vertex[2]\x = 0 - tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[2]\y = 0 - tmp_circle_radius + body_offset_y
+    *tmp_b2_fixture\vertex[3]\x = 0 + tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[3]\y = 0 - tmp_circle_radius + body_offset_y
+    
+    If tmp_texture > -1
+      
+      *tmp_b2_fixture\texture_ptr = tmp_texture
+    EndIf
+  EndIf
+
+  
+  If tmp_shape_type = #b2_polygon Or tmp_shape_type = #b2_sprite
+    
+    ParseJSON(0, tmp_vertices)    
+    *tmp_b2_fixture\num_vertices = JSONArraySize(JSONValue(0)) / 2
+      
+    Dim tmp_vertex.b2Vec2(*tmp_b2_fixture\num_vertices)
+    
+    vertex_num.i = -1
+    
+    For i = 0 To ((*tmp_b2_fixture\num_vertices * 2) - 1) Step 2
+      
+      vertex_num = vertex_num + 1
+      *tmp_b2_fixture\vertex[vertex_num]\x = GetJSONDouble(GetJSONElement(JSONValue(0), i)) + body_offset_x
+      *tmp_b2_fixture\vertex[vertex_num]\y = GetJSONDouble(GetJSONElement(JSONValue(0), i + 1)) + body_offset_y
+    Next i
+    
+    If tmp_shape_type = #b2_sprite
+      
+      *tmp_b2_fixture\sprite_vertex[0]\x = 0 + (tmp_sprite_size / 2) + body_offset_x
+      *tmp_b2_fixture\sprite_vertex[0]\y = 0 + (tmp_sprite_size / 2) + body_offset_y
+      *tmp_b2_fixture\sprite_vertex[1]\x = 0 - (tmp_sprite_size / 2) + body_offset_x
+      *tmp_b2_fixture\sprite_vertex[1]\y = 0 + (tmp_sprite_size / 2) + body_offset_y
+      *tmp_b2_fixture\sprite_vertex[2]\x = 0 - (tmp_sprite_size / 2) + body_offset_x
+      *tmp_b2_fixture\sprite_vertex[2]\y = 0 - (tmp_sprite_size / 2) + body_offset_y
+      *tmp_b2_fixture\sprite_vertex[3]\x = 0 + (tmp_sprite_size / 2) + body_offset_x
+      *tmp_b2_fixture\sprite_vertex[3]\y = 0 - (tmp_sprite_size / 2) + body_offset_y
+    EndIf
+    
+    If *tmp_b2_fixture\num_vertices = 3
+      
+      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_3(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y)
+    EndIf
+    
+    If *tmp_b2_fixture\num_vertices = 4
+      
+      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+    EndIf
+    
+    If *tmp_b2_fixture\num_vertices = 5
+      
+      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_5(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y, *tmp_b2_fixture\vertex[4]\x, *tmp_b2_fixture\vertex[4]\y)
+    EndIf
+    
+    If tmp_texture > -1
+      
+      *tmp_b2_fixture\texture_ptr = tmp_texture
+    EndIf
+  
+  EndIf
+  
+  
+  If tmp_shape_type = #b2_box
+    
+    ParseJSON(0, tmp_vertices)    
+    tmp_box_width.f = GetJSONDouble(GetJSONElement(JSONValue(0), 0))
+    tmp_box_height.f = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
+    
+    *tmp_b2_fixture\vertex[0]\x = 0 + (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[0]\y = 0 + (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\vertex[1]\x = 0 - (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[1]\y = 0 + (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\vertex[2]\x = 0 - (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[2]\y = 0 - (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\vertex[3]\x = 0 + (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[3]\y = 0 - (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\num_vertices = 4
+    *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+    
+    If tmp_texture > -1
+      
+      *tmp_b2_fixture\texture_ptr = tmp_texture
+    EndIf
+  
+  EndIf
+    
+  If tmp_shape_type = #b2_chain
+
+    ParseJSON(0, tmp_vertices)    
+    *tmp_b2_fixture\num_vertices = JSONArraySize(JSONValue(0)) / 2
+    Dim tmp_vertex.b2Vec2(*tmp_b2_fixture\num_vertices)
+    
+    vertex_num.i = -1
+    
+    For i = 0 To ((*tmp_b2_fixture\num_vertices * 2) - 1) Step 2
+      
+      vertex_num = vertex_num + 1
+      *tmp_b2_fixture\vertex[vertex_num]\x = GetJSONDouble(GetJSONElement(JSONValue(0), i)) + body_offset_x
+      *tmp_b2_fixture\vertex[vertex_num]\y = GetJSONDouble(GetJSONElement(JSONValue(0), i + 1)) + body_offset_y
+    Next i
+    
+    *tmp_b2_fixture\fixture_ptr = b2ChainShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, @*tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\num_vertices * 2)
+  EndIf
+  
+  *tmp_b2_fixture\body_ptr = tmp_body
+  *tmp_b2_fixture\shape_type = tmp_shape_type
+  *tmp_b2_fixture\line_width = tmp_line_width
+  *tmp_b2_fixture\line_red = tmp_line_red
+  *tmp_b2_fixture\line_green = tmp_line_green
+  *tmp_b2_fixture\line_blue = tmp_line_blue
 EndProcedure
 
 
@@ -351,8 +501,72 @@ Procedure glDrawFixtureTexture(*tmp_fixture.b2_4VertexFixture, tmp_texture_ptr.l
 EndProcedure
 
 
-Procedure glDrawChainFixture(*tmp_fixture.b2_128VertexFixture)
+Procedure glDrawFixtureTexture2(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
+  
+     tmp_body.l = *tmp_fixture\body_ptr
+     
+     If tmp_texture_ptr > -1
+       
+       *tmp_texture.gl_Texture = tmp_texture_ptr
+     Else
+       
+       *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
+     EndIf
+   
+    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+    Dim tmp_pos.f(2)
+    b2Body_GetPosition(tmp_body, tmp_pos())
+    tmp_angle.d = b2Body_GetAngle(tmp_body)
     
+    glPushMatrix_()
+    
+    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+    
+    
+    Dim tmp_quad_vertice.Vec3f(4)
+    Dim tmp_texture_vertice.b2Vec2(4)
+
+    tmp_texture_vertice(0)\x = 1.0
+    tmp_texture_vertice(0)\y = 1.0
+    tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
+    tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
+    tmp_quad_vertice(0)\z = 0.5
+    
+    tmp_texture_vertice(1)\x = 0.0
+    tmp_texture_vertice(1)\y = 1.0
+    tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
+    tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
+    tmp_quad_vertice(1)\z = 0.5
+    
+    tmp_texture_vertice(2)\x = 0.0
+    tmp_texture_vertice(2)\y = 0.0
+    tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
+    tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
+    tmp_quad_vertice(2)\z = 0.5
+    
+    tmp_texture_vertice(3)\x = 1.0
+    tmp_texture_vertice(3)\y = 0.0
+    tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
+    tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
+    tmp_quad_vertice(3)\z = 0.5
+    
+    glEnableClientState_(#GL_VERTEX_ARRAY )
+    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
+    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
+    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
+    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+    glDisableClientState_( #GL_VERTEX_ARRAY )
+
+    glPopMatrix_()
+EndProcedure
+
+
+
+Procedure glDraw5VertexFixtureTexture(*tmp_fixture.b2_5VertexFixture) ;, tmp_texture_ptr.l = -1)
+  
+  
   glLineWidth_(*tmp_fixture\line_width)
   glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
   
@@ -367,9 +581,10 @@ Procedure glDrawChainFixture(*tmp_fixture.b2_128VertexFixture)
   glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
   glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
     
-  Dim tmp_chain_vertice.Vec3f(*tmp_fixture\num_vertices)
+  Dim tmp_chain_vertice.Vec3f(5) ;(*tmp_fixture\num_vertices)
     
-  For i = 0 To (*tmp_fixture\num_vertices - 1)
+;  For i = 0 To (*tmp_fixture\num_vertices - 1)
+  For i = 0 To (5 - 1)
     
     tmp_chain_vertice(i)\x = *tmp_fixture\vertex[i]\x
     tmp_chain_vertice(i)\y = *tmp_fixture\vertex[i]\y
@@ -382,6 +597,248 @@ Procedure glDrawChainFixture(*tmp_fixture.b2_128VertexFixture)
   glDisableClientState_( #GL_VERTEX_ARRAY )
 
   glPopMatrix_()
+  
+;   
+;     tmp_body.l = *tmp_fixture\body_ptr
+; 
+;     If tmp_texture_ptr > -1
+;       
+;       *tmp_texture.gl_Texture = tmp_texture_ptr
+;     Else
+;       
+;       *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
+;     EndIf
+;   
+;     glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+;     Dim tmp_pos.f(2)
+;     b2Body_GetPosition(tmp_body, tmp_pos())
+;     tmp_angle.d = b2Body_GetAngle(tmp_body)
+;     
+;     glPushMatrix_()
+;     
+;     glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+;     glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+;     
+;     
+;     Dim tmp_quad_vertice.Vec3f(4)
+;     Dim tmp_texture_vertice.b2Vec2(4)
+; 
+;     tmp_texture_vertice(0)\x = 1.0
+;     tmp_texture_vertice(0)\y = 1.0
+;     tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
+;     tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
+;     tmp_quad_vertice(0)\z = 0.5
+;     
+;     tmp_texture_vertice(1)\x = 0.0
+;     tmp_texture_vertice(1)\y = 1.0
+;     tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
+;     tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
+;     tmp_quad_vertice(1)\z = 0.5
+;     
+;     tmp_texture_vertice(2)\x = 0.0
+;     tmp_texture_vertice(2)\y = 0.0
+;     tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
+;     tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
+;     tmp_quad_vertice(2)\z = 0.5
+;     
+;     tmp_texture_vertice(3)\x = 1.0
+;     tmp_texture_vertice(3)\y = 0.0
+;     tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
+;     tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
+;     tmp_quad_vertice(3)\z = 0.5
+;     
+;     glEnableClientState_(#GL_VERTEX_ARRAY )
+;     glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+;     glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
+;     glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
+;     glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
+;     glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+;     glDisableClientState_( #GL_VERTEX_ARRAY )
+; 
+;     glPopMatrix_()
+EndProcedure
+
+Procedure glDrawFixture2(*tmp_fixture.b2_5VertexFixture)
+  
+  ; if the drawing is wireframe
+  
+ ; If tmp_texture_ptr = #gl_line_strip2 Or tmp_texture_ptr = #gl_line_loop2
+  
+    glLineWidth_(*tmp_fixture\line_width)
+    glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
+    
+    tmp_body.l = *tmp_fixture\body_ptr
+   
+    Dim tmp_pos.f(2)
+    b2Body_GetPosition(tmp_body, tmp_pos())
+    tmp_angle.d = b2Body_GetAngle(tmp_body)
+      
+    glPushMatrix_()
+    
+    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+      
+    Dim tmp_chain_vertice.Vec3f(5)
+      
+    For i = 0 To (5 - 1)
+      
+      tmp_chain_vertice(i)\x = *tmp_fixture\vertex[i]\x
+      tmp_chain_vertice(i)\y = *tmp_fixture\vertex[i]\y
+      tmp_chain_vertice(i)\z = 0.5
+    Next
+  
+    glEnableClientState_(#GL_VERTEX_ARRAY )
+    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
+    
+    If tmp_texture_ptr = #gl_line_strip2
+      
+      glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
+    Else
+      
+      glDrawArrays_( #GL_LINE_LOOP, 0, ArraySize(tmp_chain_vertice()) )
+    EndIf
+    
+    glDisableClientState_( #GL_VERTEX_ARRAY )
+  
+    glPopMatrix_()
+  ;EndIf
+
+EndProcedure
+
+
+
+Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = 0)
+  
+  ; if the drawing is texture
+  
+  If tmp_texture_ptr = #b2_texture Or tmp_texture_ptr > #gl_line_loop2
+    
+     tmp_body.l = *tmp_fixture\body_ptr
+     
+     If tmp_texture_ptr > #gl_line_loop2
+       
+       *tmp_texture.gl_Texture = tmp_texture_ptr
+     Else
+       
+       *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
+     EndIf
+        
+    glEnable_(#GL_TEXTURE_2D)
+     
+    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+    Dim tmp_pos.f(2)
+    b2Body_GetPosition(tmp_body, tmp_pos())
+    tmp_angle.d = b2Body_GetAngle(tmp_body)
+    
+    glPushMatrix_()
+    
+    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+    
+    Dim tmp_quad_vertice.Vec3f(4)
+    Dim tmp_texture_vertice.b2Vec2(4)
+
+    tmp_texture_vertice(0)\x = 1.0
+    tmp_texture_vertice(0)\y = 1.0
+    tmp_texture_vertice(1)\x = 0.0
+    tmp_texture_vertice(1)\y = 1.0
+    tmp_texture_vertice(2)\x = 0.0
+    tmp_texture_vertice(2)\y = 0.0
+    tmp_texture_vertice(3)\x = 1.0
+    tmp_texture_vertice(3)\y = 0.0
+    
+    If *tmp_fixture\shape_type = #b2_sprite
+      
+      tmp_quad_vertice(0)\x = *tmp_fixture\sprite_vertex[0]\x
+      tmp_quad_vertice(0)\y = *tmp_fixture\sprite_vertex[0]\y
+      tmp_quad_vertice(1)\x = *tmp_fixture\sprite_vertex[1]\x
+      tmp_quad_vertice(1)\y = *tmp_fixture\sprite_vertex[1]\y
+      tmp_quad_vertice(2)\x = *tmp_fixture\sprite_vertex[2]\x
+      tmp_quad_vertice(2)\y = *tmp_fixture\sprite_vertex[2]\y
+      tmp_quad_vertice(3)\x = *tmp_fixture\sprite_vertex[3]\x
+      tmp_quad_vertice(3)\y = *tmp_fixture\sprite_vertex[3]\y
+    Else
+    
+      tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
+      tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
+      tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
+      tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
+      tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
+      tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
+      tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
+      tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
+    EndIf
+    
+    tmp_quad_vertice(0)\z = 0.5
+    tmp_quad_vertice(1)\z = 0.5
+    tmp_quad_vertice(2)\z = 0.5
+    tmp_quad_vertice(3)\z = 0.5
+    
+    glEnableClientState_(#GL_VERTEX_ARRAY )
+    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
+    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
+    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
+    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
+    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
+    glDisableClientState_( #GL_VERTEX_ARRAY )
+
+    glPopMatrix_()
+        
+    ; disable texture mapping
+     glBindTexture_(#GL_TEXTURE_2D, 0)
+     glDisable_( #GL_TEXTURE_2D );
+
+  EndIf
+
+  
+  
+  ; if the drawing is wireframe
+  
+  If tmp_texture_ptr = #gl_line_strip2 Or tmp_texture_ptr = #gl_line_loop2
+  
+    glLineWidth_(*tmp_fixture\line_width)
+    glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
+    
+    tmp_body.l = *tmp_fixture\body_ptr
+   
+    Dim tmp_pos.f(2)
+    b2Body_GetPosition(tmp_body, tmp_pos())
+    tmp_angle.d = b2Body_GetAngle(tmp_body)
+      
+    glPushMatrix_()
+    
+    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
+    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
+      
+    Dim tmp_chain_vertice.Vec3f(*tmp_fixture\num_vertices)
+      
+    For i = 0 To (*tmp_fixture\num_vertices - 1)
+      
+      tmp_chain_vertice(i)\x = *tmp_fixture\vertex[i]\x
+      tmp_chain_vertice(i)\y = *tmp_fixture\vertex[i]\y
+      tmp_chain_vertice(i)\z = 0.5
+    Next
+  
+    glEnableClientState_(#GL_VERTEX_ARRAY )
+    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
+    
+    If tmp_texture_ptr = #gl_line_strip2
+      
+      glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
+    Else
+      
+      glDrawArrays_( #GL_LINE_LOOP, 0, ArraySize(tmp_chain_vertice()) )
+    EndIf
+    
+    glDisableClientState_( #GL_VERTEX_ARRAY )
+  
+    glPopMatrix_()
+    
+    ; set no colour
+    glColor3f_(1.0, 1.0, 1.0)
+
+  EndIf
+
 EndProcedure
 
 
@@ -926,29 +1383,41 @@ EndProcedure
 ; Example .......:
 ; ===============================================================================================================================
 ;Func _Box2C_b2PolygonShape_MoveToZeroCentroid(ByRef $vertices, $format = "%4.2f", $first_vertex_x = 0, $first_vertex_y = 0)
-Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(ByRef $vertices, $format = "%4.2f", $first_vertex_x = 0, $first_vertex_y = 0)
-
+Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
+  
+  centroid.b2Vec2
+  
 	; Compute the polygon centroid.
 
-	Local $centroid = _Box2C_b2PolygonShape_ComputeCentroid($vertices)
-
+	;Local $centroid = _Box2C_b2PolygonShape_ComputeCentroid($vertices)
+  _Box2C_b2PolygonShape_ComputeCentroid(*vector_ptr, num_vertices, @centroid\x)
+  
+  Debug (Str(centroid\x) + ", " + Str(centroid\y))
 	; Shift the shape, meaning it's center and therefore it's centroid, to the world position of 0,0, such that rotations and calculations are easier
 
-	For $vertice_num = 0 To (UBound($vertices) - 1)
+	For vertice_num = 0 To (num_vertices - 1)
+	  
+	  If vertice_num > 0
+	    
+	    *vector_ptr + SizeOf(b2Vec2)      ; move to the next vector
+	  EndIf
 
-		$vertices[$vertice_num][0] = StringFormat($format, $vertices[$vertice_num][0] - $centroid[0])
-		$vertices[$vertice_num][1] = StringFormat($format, $vertices[$vertice_num][1] - $centroid[1])
+;		*vector_ptr\x = StringFormat($format, *vector_ptr\x - centroid\x)
+;		*vector_ptr\y = StringFormat($format, *vector_ptr\y - centroid\y)
+		*vector_ptr\x = *vector_ptr\x - centroid\x
+		*vector_ptr\y = *vector_ptr\y - centroid\y
 	Next
 
 	; If the first vertex in $vertices is 0,0 then we can add the $centroid position above to the $first_vertex_x and $first_vertex_y
 	;	to arrive at the real-world centroid position, which is then returned
 
-	$centroid[0] = $first_vertex_x - $vertices[0][0]
-	$centroid[1] = $first_vertex_y - $vertices[0][1]
-	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $first_vertex_y = ' & $first_vertex_y & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
-	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $vertices[0][1] = ' & $vertices[0][1] & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
-
-	Return $centroid
+;	$centroid[0] = $first_vertex_x - $vertices[0][0]
+;	$centroid[1] = $first_vertex_y - $vertices[0][1]
+;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $first_vertex_y = ' & $first_vertex_y & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $vertices[0][1] = ' & $vertices[0][1] & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
+	
+	*centroid_ptr = @centroid\x
+;	Return $centroid
 EndProcedure
 
 
@@ -956,8 +1425,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 930
-; FirstLine = 913
+; CursorPosition = 367
+; FirstLine = 349
 ; Folding = -----
 ; EnableXP
 ; EnableUnicode

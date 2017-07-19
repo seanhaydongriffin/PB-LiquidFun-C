@@ -22,16 +22,17 @@ Global body_user_applied_linear_force.d = 100
 Global body_user_applied_angular_force.d = 10
 
 ; Box2D Fixtures
-Global bucketBody2Fixture.b2_128VertexFixture
-Global bucketBodyFixture12.b2_4VertexFixture
-Global bucketBodyFixture13.b2_4VertexFixture
-Global bucketBodyFixture14.b2_4VertexFixture
-Global bucketBallBodyFixture.b2_1VertexFixture
-Global groundBodyFixture.b2_4VertexFixture
-Global groundBodySubFixture1.b2_4VertexFixture
-Global groundBodySubFixture2.b2_4VertexFixture
-Global bodyFixture.b2_4VertexFixture
-Global boatFixture.b2_5VertexFixture
+;Global bucketBody2Fixture.b2_128VertexFixture
+Global bucketBody2Fixture.b2_Fixture
+Global bucketBodyFixture12.b2_Fixture
+Global bucketBodyFixture13.b2_Fixture
+Global bucketBodyFixture14.b2_Fixture
+Global bucketBallBodyFixture.b2_Fixture
+Global groundBodyFixture.b2_Fixture
+Global groundBodySubFixture1.b2_Fixture
+Global groundBodySubFixture2.b2_Fixture
+Global bodyFixture.b2_Fixture
+Global boatFixture.b2_Fixture
 Global Dim tmp_fixture_vector.b2Vec2(50)
 Global Dim tmp_quad.b2Vec2(2)
 Global tmp_fixture_vector_num = -1
@@ -170,20 +171,26 @@ Repeat
     glClearColor_(0.7, 0.7, 0.7, 1)
     glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
     
+            
+    ; Draw the LiquidFun Particles (texture, particle_quad_size)
+    glDrawParticlesTexture(water_texture, particle_size, particle_blending)
+
     ; Enable Texture Mapping
-    glEnable_(#GL_TEXTURE_2D)
-    glBindTexture_(#GL_TEXTURE_2D, TextureID)
+ ;   glEnable_(#GL_TEXTURE_2D)
+ ;   glBindTexture_(#GL_TEXTURE_2D, TextureID)
     
     ; Draw the Box2D Bodies (body, fixture, texture)
-    glDrawFixtureTexture(groundBodyFixture)
-    glDrawFixtureTexture(groundBodySubFixture1)
-    glDrawFixtureTexture(groundBodySubFixture2)
-    glDrawFixtureTexture(bodyFixture)
-    glDrawFixtureTexture(bucketBodyFixture12)
-    glDrawFixtureTexture(bucketBodyFixture13)
-    glDrawFixtureTexture(bucketBodyFixture14)
-    glDrawFixtureTexture(bucketBallBodyFixture)
-    
+    glDrawFixture(groundBodyFixture, #b2_texture)
+    glDrawFixture(groundBodySubFixture1, #b2_texture)
+    glDrawFixture(groundBodySubFixture2, #b2_texture)
+    glDrawFixture(bodyFixture, #gl_line_loop2)
+    glDrawFixture(bucketBody2Fixture, #gl_line_strip2)
+    glDrawFixture(bucketBodyFixture12, #b2_texture)
+    glDrawFixture(bucketBodyFixture13, #b2_texture)
+    glDrawFixture(bucketBodyFixture14, #b2_texture)
+    glDrawFixture(bucketBallBodyFixture, #b2_texture)
+    glDrawFixture(boatFixture);, #gl_line_loop2)
+
     
     
         
@@ -249,18 +256,10 @@ Repeat
       glDisableClientState_( #GL_VERTEX_ARRAY )
 
     EndIf
-        
-    ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    glDrawParticlesTexture(water_texture, particle_size, particle_blending)
     
     
     
-    ; chain shape
-    
-    glDrawChainFixture(bucketBody2Fixture)
 
-    ; boat shape
-    glDraw5VertexFixtureTexture(boatFixture)
 
     If fixture_drawing_mode = 1
 
@@ -819,6 +818,7 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
     b2Body_DestroyFixture(bucketBody, bucketBodyFixture13\fixture_ptr)
     b2Body_DestroyFixture(bucketBody, bucketBodyFixture14\fixture_ptr)
     b2Body_DestroyFixture(bucketBallBody, bucketBallBodyFixture\fixture_ptr)
+    b2Body_DestroyFixture(boatBody, boatFixture\fixture_ptr)
   EndIf
   
   If destroy_bodies = 1
@@ -828,6 +828,7 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
     b2World_DestroyBody(world, body)
     b2World_DestroyBody(world, bucketBody)
     b2World_DestroyBody(world, bucketBallBody)
+    b2World_DestroyBody(world, boatBody)
   EndIf
   
   If destroy_particle_system = 1
@@ -871,7 +872,7 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
     bucketBallBody = b2World_CreateBody(world, 1, 1, Radian(0), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 21, 1, 0)
     
     ; boat
-    boatBody = b2World_CreateBody(world, 1, 1, Radian(0), 0, 0, 1, 0, 0, 1, 0, 0, 0, 48, 16, 2, 0)
+    boatBody = b2World_CreateBody(world, 1, 1, Radian(0), 0, 0, 1, 0, 0, 1, 0, 0, 0, 48, 18, 2, 0)
     
   EndIf
   
@@ -879,31 +880,25 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
 
     ; Create the Box2D Fixtures
     ; fixture_struct, body_ptr, density, friction, isSensor, restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
-    b2PolygonShape_Create4VertexFixture(groundBodyFixture, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, 50, 10, -50, 10, -50, -10, 50, -10, 0, 0, @groundBody_texture)
-    b2PolygonShape_CreateBoxFixture(groundBodySubFixture1, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, 2, 4, -12, 12, @body_texture)
-    b2PolygonShape_CreateBoxFixture(groundBodySubFixture2, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, 2, 4, 12, 12, @body_texture)
-    b2PolygonShape_Create4VertexFixture(bodyFixture, body, 0.1, 0.1, 0, 0.5, 1, 0, 65535, 1, 1, -1, 1, -1, -1, 1, -1, 0, 0, @body_texture)
+    b2PolygonShape_CreateFixture(groundBodyFixture, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[100, 20]", 0, 2.5, 1.0, 0, 0, 0, 0, @groundBody_texture)
+    b2PolygonShape_CreateFixture(groundBodySubFixture1, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, -12, 12, @body_texture)
+    b2PolygonShape_CreateFixture(groundBodySubFixture2, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, 12, 12, @body_texture)
+    b2PolygonShape_CreateFixture(bodyFixture, body, 0.1, 0.1, 0, 0.5, 1, 0, 65535, #b2_box, "[2, 2]", 0, 2.5, 1.0, 0, 0, 0, 0, @body_texture)
     
     ; bucket body
-    bucketBody2Fixture\vertex[0]\x = -12
-    bucketBody2Fixture\vertex[0]\y = 12
-    bucketBody2Fixture\vertex[1]\x = -5
-    bucketBody2Fixture\vertex[1]\y = 0
-    bucketBody2Fixture\vertex[2]\x = 5
-    bucketBody2Fixture\vertex[2]\y = 0
-    bucketBody2Fixture\vertex[3]\x = 12
-    bucketBody2Fixture\vertex[3]\y = 12
-    b2PolygonShape_CreateChainFixture(bucketBody2Fixture, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, 4, 2.5, 1.0, 0.0, 0.0)
-    b2PolygonShape_CreateBoxFixture(bucketBodyFixture12, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, 0.5, 4, -2.5, -2, @body_texture)
-    b2PolygonShape_CreateBoxFixture(bucketBodyFixture13, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, 0.5, 4, 2.5, -2, @body_texture)
-    b2PolygonShape_CreateBoxFixture(bucketBodyFixture14, bucketBody, 100, 0.1, 0, 0, 1, 0, 65535, 6, 1, 0, -4, @body_texture)
+    b2PolygonShape_CreateFixture(bucketBody2Fixture, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_chain, "[-12, 12, -5, 0, 5, 0, 12, 12]", 0, 2.5, 1.0, 0.0, 0.0)
+    b2PolygonShape_CreateFixture(bucketBodyFixture12, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, -2.5, -2, @body_texture)
+    b2PolygonShape_CreateFixture(bucketBodyFixture13, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, 2.5, -2, @body_texture)
+    b2PolygonShape_CreateFixture(bucketBodyFixture14, bucketBody, 100, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[6, 1]", 0, 2.5, 1.0, 0, 0, 0, -4, @body_texture)
+    
+
     
     ; bucket pivot
-    b2PolygonShape_CreateCircleFixture(bucketBallBodyFixture, bucketBallBody, 1, 0.1, 0, 0, 1, 0, 65535, 1.5, 0, 0, @bucket_ball_texture)
+    b2PolygonShape_CreateFixture(bucketBallBodyFixture, bucketBallBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_circle, "[1.5]", 0, 2.5, 1.0, 0, 0, 0, 0, @bucket_ball_texture)
     
     ; boat
-    b2PolygonShape_Create5VertexFixture(boatFixture, boatBody, 1, 0.1, 0, 0, 1, 0, 65535, -4.56, 9.21, -26.83, 4.11, -31.08, -9.15, 20.09, -8.47, 32.84, -1.67, 0, 0, 2.5, 1.0, 0.0, 0.0, @tmpbody_texture)
-    
+    b2PolygonShape_CreateFixture(boatFixture, boatBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_sprite, "[-4.56, 9.21, -26.83, 4.11, -31.08, -9.15, 20.09, -8.47, 32.84, -1.67]", 62, 2.5, 1.0, 0, 0, 0, 0, @speed_boat_texture)
+
   EndIf
   
   If create_particle_system = 1
@@ -942,9 +937,9 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 873
-; FirstLine = 845
+; CursorPosition = 823
+; FirstLine = 802
 ; Folding = -
 ; EnableXP
-; Executable = OpenGL_LiquidFun_draw2.exe
+; Executable = OpenGL_LiquidFun_draw4.exe
 ; SubSystem = OpenGL
