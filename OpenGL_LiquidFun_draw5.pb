@@ -17,17 +17,6 @@ Global body_user_applied_linear_force.d = 100
 Global body_user_applied_angular_force.d = 10
 
 ; Box2D Fixtures
-;Global bucketBody2Fixture.b2_128VertexFixture
-Global bucketBody2Fixture.b2_Fixture
-Global bucketBodyFixture12.b2_Fixture
-Global bucketBodyFixture13.b2_Fixture
-Global bucketBodyFixture14.b2_Fixture
-Global bucketBallBodyFixture.b2_Fixture
-Global groundBodyFixture.b2_Fixture
-Global groundBodySubFixture1.b2_Fixture
-Global groundBodySubFixture2.b2_Fixture
-Global bodyFixture.b2_Fixture
-Global boatFixture.b2_Fixture
 Global Dim tmp_fixture_vector.b2Vec2(50)
 Global Dim tmp_quad.b2Vec2(2)
 Global tmp_fixture_vector_num = -1
@@ -174,23 +163,23 @@ Repeat
     
             
     ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    glDrawParticlesTexture(texture_struct("water_texture"), particle_size, particle_blending)
+    glDrawParticlesTexture(texture_struct("water"), particle_size, particle_blending)
 
     ; Enable Texture Mapping
  ;   glEnable_(#GL_TEXTURE_2D)
  ;   glBindTexture_(#GL_TEXTURE_2D, TextureID)
     
     ; Draw the Box2D Bodies (body, fixture, texture)
-    glDrawFixture(groundBodyFixture, #b2_texture)
-    glDrawFixture(groundBodySubFixture1, #b2_texture)
-    glDrawFixture(groundBodySubFixture2, #b2_texture)
-    glDrawFixture(bodyFixture, #gl_line_loop2)
-    glDrawFixture(bucketBody2Fixture, #gl_line_strip2)
-    glDrawFixture(bucketBodyFixture12, #b2_texture)
-    glDrawFixture(bucketBodyFixture13, #b2_texture)
-    glDrawFixture(bucketBodyFixture14, #b2_texture)
-    glDrawFixture(bucketBallBodyFixture, #b2_texture)
-    glDrawFixture(boatFixture);, #gl_line_loop2)
+    glDrawFixture(fixture_struct("ground main"), #b2_texture)
+    glDrawFixture(fixture_struct("ground post 1"), #b2_texture)
+    glDrawFixture(fixture_struct("ground post 2"), #b2_texture)
+    glDrawFixture(fixture_struct("body"), #gl_line_loop2)
+    glDrawFixture(fixture_struct("bucket main"), #gl_line_strip2)
+    glDrawFixture(fixture_struct("bucket under box 1"), #b2_texture)
+    glDrawFixture(fixture_struct("bucket under box 2"), #b2_texture)
+    glDrawFixture(fixture_struct("bucket under box 3"), #b2_texture)
+    glDrawFixture(fixture_struct("bucket ball"), #b2_texture)
+    glDrawFixture(fixture_struct("boat"));, #gl_line_loop2)
 
     
     
@@ -220,7 +209,7 @@ Repeat
       
       glEnable_(#GL_TEXTURE_2D)
 
-      glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture_struct("speed_boat_texture")\image_number), ImageHeight(texture_struct("speed_boat_texture")\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture_struct("speed_boat_texture")\image_bitmap\bmBits)
+      glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture_struct("speed boat")\image_number), ImageHeight(texture_struct("speed boat")\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture_struct("speed boat")\image_bitmap\bmBits)
       
       ;50, 10, -50, 10, -50, -10, 50, -10
       Dim tmp_quad_vertice.Vec3f(4)
@@ -328,7 +317,7 @@ Repeat
     
     glTranslatef_(camera_linearvelocity\x, camera_linearvelocity\y, camera_linearvelocity\z)
     
-    b2Body_SetAngularVelocityPercent(body_ptr("groundBody"), 99)
+    b2Body_SetAngularVelocityPercent(body_ptr("ground"), 99)
     
     body_mass.d = b2Body_GetMass(body_ptr("body"))
     
@@ -580,12 +569,12 @@ Procedure keyboard_mouse_handler(*Value)
                   
       If GetAsyncKeyState_(#VK_Z)
         
-        b2Body_AddAngularVelocity(body_ptr("groundBody"), Radian(1))
+        b2Body_AddAngularVelocity(body_ptr("ground"), Radian(1))
       EndIf
       
       If GetAsyncKeyState_(#VK_X)
         
-        b2Body_AddAngularVelocity(body_ptr("groundBody"), Radian(-1))
+        b2Body_AddAngularVelocity(body_ptr("ground"), Radian(-1))
       EndIf
 
       ; body control (keyboard)
@@ -764,23 +753,23 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
 ;    b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture1\fixture_ptr)
  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture2\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("body"), bodyFixture\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBody2Fixture\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBodyFixture12\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBodyFixture13\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBodyFixture14\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucketBallBody"), bucketBallBodyFixture\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("boatBody"), boatFixture\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("body"), fixture_struct("body")\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket main")\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 1")\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 2")\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 3")\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucket ball"), fixture_struct("bucket ball")\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("boat"), fixture_struct("boat")\fixture_ptr)
   EndIf
   
   If destroy_bodies = 1
   
     ; Destroy the Box2D Bodies  
-    b2World_DestroyBody(world, body_ptr("groundBody"))
+    b2World_DestroyBody(world, body_ptr("ground"))
     b2World_DestroyBody(world, body_ptr("body"))
-    b2World_DestroyBody(world, body_ptr("bucketBody"))
-    b2World_DestroyBody(world, body_ptr("bucketBallBody"))
-    b2World_DestroyBody(world, body_ptr("boatBody"))
+    b2World_DestroyBody(world, body_ptr("bucket"))
+    b2World_DestroyBody(world, body_ptr("bucket ball"))
+    b2World_DestroyBody(world, body_ptr("boat"))
   EndIf
   
   If destroy_particle_system = 1
@@ -821,30 +810,7 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
   If create_fixtures = 1
 
     ; Create the Box2D Fixtures
-    ; fixture_struct, body_ptr, density, friction, isSensor, restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
-    b2PolygonShape_CreateFixture(groundBodyFixture, body_ptr("groundBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[100, 20]", 0, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("groundBody_texture"))
-    b2PolygonShape_CreateFixture(groundBodySubFixture1, body_ptr("groundBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, -12, 12, @texture_struct("body_texture"))
-    b2PolygonShape_CreateFixture(groundBodySubFixture2, body_ptr("groundBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, 12, 12, @texture_struct("body_texture"))
-    b2PolygonShape_CreateFixture(bodyFixture, body_ptr("body"), 0.1, 0.1, 0, 0.5, 1, 0, 65535, #b2_box, "[2, 2]", 0, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("body_texture"))
-    
-    ; bucket body
-    b2PolygonShape_CreateFixture(bucketBody2Fixture, body_ptr("bucketBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_chain, "[-12, 12, -5, 0, 5, 0, 12, 12]", 0, 2.5, 1.0, 0.0, 0.0)
-    b2PolygonShape_CreateFixture(bucketBodyFixture12, body_ptr("bucketBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, -2.5, -2, @texture_struct("body_texture"))
-    b2PolygonShape_CreateFixture(bucketBodyFixture13, body_ptr("bucketBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, 2.5, -2, @texture_struct("body_texture"))
-    b2PolygonShape_CreateFixture(bucketBodyFixture14, body_ptr("bucketBody"), 100, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[6, 1]", 0, 2.5, 1.0, 0, 0, 0, -4, @texture_struct("body_texture"))
-    
-
-    
-    ; bucket pivot
-    b2PolygonShape_CreateFixture(bucketBallBodyFixture, body_ptr("bucketBallBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_circle, "[1.5]", 0, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("bucket_ball_texture"))
-    
-    ; boat
-    b2PolygonShape_CreateFixture(boatFixture, body_ptr("boatBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_sprite, "[-4.56, 9.21, -26.83, 4.11, -31.08, -9.15, 20.09, -8.47, 32.84, -1.67]", 62, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("speed_boat_texture"))
-    
-    
-;    b2World_CreateFixtures()
-
-    
+    b2World_CreateFixtures()
   EndIf
   
   If create_particle_system = 1
@@ -883,8 +849,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 820
-; FirstLine = 809
+; CursorPosition = 761
+; FirstLine = 758
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw4.exe

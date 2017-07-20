@@ -1436,7 +1436,7 @@ Procedure b2World_CreateBodies()
     body_name = MapKey(body())
   ;  Debug body_name
     
-    If body_name <> "header"
+    If body_name <> "body name"
     
       ParseJSON(0, body(body_name))
       active.d            = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
@@ -1481,10 +1481,10 @@ Procedure b2World_CreateFixtures()
     fixture_name = MapKey(fixture())
   ;  Debug body_name
     
-    If fixture_name <> "header"
+    If fixture_name <> "fixture name"
       
           ; fixture_struct, body_ptr, density, friction, isSensor, restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
-      Debug fixture_name
+    ;  Debug fixture_name
       ParseJSON(1, fixture(fixture_name))
       body_name.s         = GetJSONString(GetJSONElement(JSONValue(1), 0))
       density.d           = GetJSONDouble(GetJSONElement(JSONValue(1), 1))
@@ -1543,11 +1543,11 @@ Procedure b2World_CreateFixtures()
       ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
    ;   tmp_body_ptr.l = b2World_CreateBody(world, active, allowSleep, Radian(angle), angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
       
-      b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @groundBody_texture)
+      b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @texture_struct(texture_name))
       
     ;  Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
 
-      
+
     EndIf
     
   Next
@@ -1565,7 +1565,7 @@ Procedure b2World_CreateTextures()
     
     texture_name = MapKey(texture())
     
-    If texture_name <> "header"
+    If texture_name <> "texture name"
       
       file_name.s = texture(texture_name)
       AddMapElement(texture_struct(), texture_name)
@@ -1579,8 +1579,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1566
-; FirstLine = 1542
+; CursorPosition = 1438
+; FirstLine = 1428
 ; Folding = ------
 ; EnableXP
 ; EnableUnicode

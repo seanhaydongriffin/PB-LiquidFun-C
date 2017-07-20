@@ -1,9 +1,9 @@
 {
-  "header": "world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData",
+  "body name":      "world,       active, allowSleep, angle,  angularVelocity,  angularDamping, awake,  bullet, fixedRotation,  gravityScale,   linearDamping,  linearVelocityX,  linearVelocityY,  positionX,  positionY,  type, userData",
 
-  "groundBody": "[\"world\", 1, 1, -5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0]", 
-  "body": "[\"world\", 1, 1, 5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0]", 
-  "bucketBody": "[\"world\", 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 25, 2, 0]",
-  "bucketBallBody": "[\"world\", 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 21, 1, 0]",
-  "boatBody": "[\"world\", 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 48, 18, 2, 0]"
+  "ground":         "[\"world\",  1,      1,          -5,     0,                0,              1,      0,      0,              1,              0,              0,                0,                0,          -10,        1,    0]", 
+  "body":           "[\"world\",  1,      1,          5,      0,                0,              1,      0,      0,              1,              0,              0,                0,                0,          4,          2,    0]", 
+  "bucket":         "[\"world\",  1,      1,          0,      0,                0,              1,      0,      0,              1,              0,              0,                0,                0,          25,         2,    0]",
+  "bucket ball":    "[\"world\",  1,      1,          0,      0,                0,              1,      0,      0,              1,              0,              0,                0,                0,          21,         1,    0]",
+  "boat":           "[\"world\",  1,      1,          0,      0,                0,              1,      0,      0,              1,              0,              0,                0,                48,         18,         2,    0]"
 }
