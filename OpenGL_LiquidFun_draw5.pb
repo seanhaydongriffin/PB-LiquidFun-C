@@ -11,7 +11,6 @@ Global animation_speed.f = 1.0
 Global is_convex_and_clockwise.i
 
 ; Box2D Bodies
-Global bucketBody2.l
 Global body_mass.d
 Global body_user_applied_linear_force.d = 100
 Global body_user_applied_angular_force.d = 10
@@ -82,22 +81,18 @@ Declare b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_sy
 Declare b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system.i)
 ; ===============================================================================================================================
 
+  
+; =======================
+; Setup Box2D / LiquidFun
+; =======================
 
+; Setup the Box2D World (gravity_x, gravity_y, and load texture, body and fixture JSON files)
+b2World_CreateEx(0.0, -10.0)
 
-LoadJSON(0, "body.json")
-;Debug JSONErrorMessage()
-ExtractJSONMap(JSONValue(0), body())       
+; Create the Box2D Bodies, Fixtures and the LiquidFun Particle System
+b2CreateScene(1, 1, 1)
 
-LoadJSON(1, "fixture.json")
-;Debug JSONErrorMessage()
-ExtractJSONMap(JSONValue(1), fixture())       
-
-LoadJSON(2, "texture.json")
-;Debug JSONErrorMessage()
-ExtractJSONMap(JSONValue(2), texture())       
-
-
-
+  
 ; ============
 ; Setup OpenGL
 ; ============
@@ -109,26 +104,13 @@ glSetupWindows(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $0066
 ;glSetupWorld(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
 glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, 0, -190.0)
 
-; =====================
 ; Setup OpenGL Textures
-; =====================
-
 ; Remember! In Paint.NET save images as 32-bit PNG for the below to work
 ; Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions in powers of 2
 ;   i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
 
 b2World_CreateTextures()
 
-
-; =======================
-; Setup Box2D / LiquidFun
-; =======================
-
-; Setup the Box2D World (gravity_x, gravity_y)
-b2World_CreateEx(0.0, -10.0)
-
-; Create the Box2D Bodies, Fixtures and the LiquidFun Particle System
-b2CreateScene(1, 1, 1)
 
 ; ========================
 ; Setup Threads and Timers
@@ -849,8 +831,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 761
-; FirstLine = 758
+; CursorPosition = 818
+; FirstLine = 794
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw4.exe

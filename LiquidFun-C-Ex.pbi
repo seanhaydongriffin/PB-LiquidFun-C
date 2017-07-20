@@ -273,6 +273,18 @@ Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
 EndProcedure
 
 Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
+
+  LoadJSON(0, "body.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(0), body())       
+  
+  LoadJSON(1, "fixture.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(1), fixture())       
+  
+  LoadJSON(2, "texture.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(2), texture())   
   
   gravity\x = gravity_x
   gravity\y = gravity_y
@@ -1579,8 +1591,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1438
-; FirstLine = 1428
+; CursorPosition = 275
+; FirstLine = 271
 ; Folding = ------
 ; EnableXP
 ; EnableUnicode
