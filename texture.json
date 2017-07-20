@@ -1,0 +1,9 @@
+{
+  "header": "filename",
+
+  "groundBody_texture": "platform256x256.png", 
+  "body_texture": "crate128x128.png", 
+  "water_texture": "waterparticle-3-64x64.png",
+  "bucket_ball_texture": "bucketball128x128.png",
+  "speed_boat_texture": "speedboat256x256.png"
+}

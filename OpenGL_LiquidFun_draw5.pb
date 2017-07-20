@@ -11,12 +11,7 @@ Global animation_speed.f = 1.0
 Global is_convex_and_clockwise.i
 
 ; Box2D Bodies
-Global bucketBody.l
 Global bucketBody2.l
-Global bucketBallBody.l
-Global groundBody.l
-Global body.l
-Global boatBody.l
 Global body_mass.d
 Global body_user_applied_linear_force.d = 100
 Global body_user_applied_angular_force.d = 10
@@ -58,12 +53,6 @@ Global particle_group_radius.d = 9.0
 ; LiquidFun Particle Groups
 Global particlegroup.l
 
-; OpenGL Textures
-Global groundBody_texture.gl_Texture
-Global body_texture.gl_Texture
-Global water_texture.gl_Texture
-Global bucket_ball_texture.gl_Texture
-Global speed_boat_texture.gl_Texture
 
 ; Game Controls
 Global camera_linearvelocity.Vec3f
@@ -104,6 +93,22 @@ Declare b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_sy
 Declare b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system.i)
 ; ===============================================================================================================================
 
+
+
+LoadJSON(0, "body.json")
+;Debug JSONErrorMessage()
+ExtractJSONMap(JSONValue(0), body())       
+
+LoadJSON(1, "fixture.json")
+;Debug JSONErrorMessage()
+ExtractJSONMap(JSONValue(1), fixture())       
+
+LoadJSON(2, "texture.json")
+;Debug JSONErrorMessage()
+ExtractJSONMap(JSONValue(2), texture())       
+
+
+
 ; ============
 ; Setup OpenGL
 ; ============
@@ -123,12 +128,8 @@ glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, 0, -190.0)
 ; Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions in powers of 2
 ;   i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
 
-glCreateTexture(groundBody_texture, "platform256x256.png")
-glCreateTexture(body_texture, "crate128x128.png")
-;glCreateTexture(water_texture, "waterparticle64x64.png")
-glCreateTexture(water_texture, "waterparticle-3-64x64.png")
-glCreateTexture(bucket_ball_texture, "bucketball128x128.png")
-glCreateTexture(speed_boat_texture, "speedboat256x256.png")
+b2World_CreateTextures()
+
 
 ; =======================
 ; Setup Box2D / LiquidFun
@@ -173,7 +174,7 @@ Repeat
     
             
     ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    glDrawParticlesTexture(water_texture, particle_size, particle_blending)
+    glDrawParticlesTexture(texture_struct("water_texture"), particle_size, particle_blending)
 
     ; Enable Texture Mapping
  ;   glEnable_(#GL_TEXTURE_2D)
@@ -219,7 +220,7 @@ Repeat
       
       glEnable_(#GL_TEXTURE_2D)
 
-      glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(speed_boat_texture\image_number), ImageHeight(speed_boat_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, speed_boat_texture\image_bitmap\bmBits)
+      glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture_struct("speed_boat_texture")\image_number), ImageHeight(texture_struct("speed_boat_texture")\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture_struct("speed_boat_texture")\image_bitmap\bmBits)
       
       ;50, 10, -50, 10, -50, -10, 50, -10
       Dim tmp_quad_vertice.Vec3f(4)
@@ -327,9 +328,9 @@ Repeat
     
     glTranslatef_(camera_linearvelocity\x, camera_linearvelocity\y, camera_linearvelocity\z)
     
-    b2Body_SetAngularVelocityPercent(groundBody, 99)
+    b2Body_SetAngularVelocityPercent(body_ptr("groundBody"), 99)
     
-    body_mass.d = b2Body_GetMass(body)
+    body_mass.d = b2Body_GetMass(body_ptr("body"))
     
     num_frames = num_frames + 1
   EndIf
@@ -417,11 +418,11 @@ Repeat
           
         Case #PB_Shortcut_F
           
-          b2Body_SetMassData(body, body_mass - 1.0, 0, 0, 0)
+          b2Body_SetMassData(body_ptr("body"), body_mass - 1.0, 0, 0, 0)
           
         Case #PB_Shortcut_G
           
-          b2Body_SetMassData(body, body_mass + 1.0, 0, 0, 0)
+          b2Body_SetMassData(body_ptr("body"), body_mass + 1.0, 0, 0, 0)
           
         Case #PB_Shortcut_Y
           
@@ -579,48 +580,48 @@ Procedure keyboard_mouse_handler(*Value)
                   
       If GetAsyncKeyState_(#VK_Z)
         
-        b2Body_AddAngularVelocity(groundBody, Radian(1))
+        b2Body_AddAngularVelocity(body_ptr("groundBody"), Radian(1))
       EndIf
       
       If GetAsyncKeyState_(#VK_X)
         
-        b2Body_AddAngularVelocity(groundBody, Radian(-1))
+        b2Body_AddAngularVelocity(body_ptr("groundBody"), Radian(-1))
       EndIf
 
       ; body control (keyboard)
 
       If GetAsyncKeyState_(#VK_A)
         
-        b2Body_GetPosition(body, tmp_pos())
-        b2Body_ApplyForce(body, body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_GetPosition(body_ptr("body"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("body"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_D)
         
-        b2Body_GetPosition(body, tmp_pos())
-        b2Body_ApplyForce(body, body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_GetPosition(body_ptr("body"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("body"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_W)
         
-        b2Body_GetPosition(body, tmp_pos())
-        b2Body_ApplyForce(body, 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_GetPosition(body_ptr("body"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("body"), 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_S)
         
-        b2Body_GetPosition(body, tmp_pos())
-        b2Body_ApplyForce(body, 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_GetPosition(body_ptr("body"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("body"), 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_Q)
         
-        b2Body_ApplyTorque(body, body_mass * body_user_applied_angular_force, 1)
+        b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_E)
         
-        b2Body_ApplyTorque(body, body_mass * -body_user_applied_angular_force, 1)
+        b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
       EndIf
       
       ; camera control (mouse)
@@ -763,23 +764,23 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
 ;    b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture1\fixture_ptr)
  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture2\fixture_ptr)
-    b2Body_DestroyFixture(body, bodyFixture\fixture_ptr)
-    b2Body_DestroyFixture(bucketBody, bucketBody2Fixture\fixture_ptr)
-    b2Body_DestroyFixture(bucketBody, bucketBodyFixture12\fixture_ptr)
-    b2Body_DestroyFixture(bucketBody, bucketBodyFixture13\fixture_ptr)
-    b2Body_DestroyFixture(bucketBody, bucketBodyFixture14\fixture_ptr)
-    b2Body_DestroyFixture(bucketBallBody, bucketBallBodyFixture\fixture_ptr)
-    b2Body_DestroyFixture(boatBody, boatFixture\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("body"), bodyFixture\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBody2Fixture\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBodyFixture12\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBodyFixture13\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucketBody"), bucketBodyFixture14\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("bucketBallBody"), bucketBallBodyFixture\fixture_ptr)
+    b2Body_DestroyFixture(body_ptr("boatBody"), boatFixture\fixture_ptr)
   EndIf
   
   If destroy_bodies = 1
   
     ; Destroy the Box2D Bodies  
-    b2World_DestroyBody(world, groundBody)
-    b2World_DestroyBody(world, body)
-    b2World_DestroyBody(world, bucketBody)
-    b2World_DestroyBody(world, bucketBallBody)
-    b2World_DestroyBody(world, boatBody)
+    b2World_DestroyBody(world, body_ptr("groundBody"))
+    b2World_DestroyBody(world, body_ptr("body"))
+    b2World_DestroyBody(world, body_ptr("bucketBody"))
+    b2World_DestroyBody(world, body_ptr("bucketBallBody"))
+    b2World_DestroyBody(world, body_ptr("boatBody"))
   EndIf
   
   If destroy_particle_system = 1
@@ -814,41 +815,34 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
   If create_bodies = 1
 
     ; Create the Box2D Bodies
-    ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
-    groundBody = b2World_CreateBody(world, 1, 1, Radian(-5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -10, 1, 0)
-    body = b2World_CreateBody(world, 1, 1, Radian(5), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 4, 2, 0)
-    
-    ; bucket
-    bucketBody = b2World_CreateBody(world, 1, 1, Radian(0), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 25, 2, 0)
-    bucketBallBody = b2World_CreateBody(world, 1, 1, Radian(0), 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 21, 1, 0)
-    
-    ; boat
-    boatBody = b2World_CreateBody(world, 1, 1, Radian(0), 0, 0, 1, 0, 0, 1, 0, 0, 0, 48, 18, 2, 0)
-    
+    b2World_CreateBodies()
   EndIf
   
   If create_fixtures = 1
 
     ; Create the Box2D Fixtures
     ; fixture_struct, body_ptr, density, friction, isSensor, restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
-    b2PolygonShape_CreateFixture(groundBodyFixture, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[100, 20]", 0, 2.5, 1.0, 0, 0, 0, 0, @groundBody_texture)
-    b2PolygonShape_CreateFixture(groundBodySubFixture1, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, -12, 12, @body_texture)
-    b2PolygonShape_CreateFixture(groundBodySubFixture2, groundBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, 12, 12, @body_texture)
-    b2PolygonShape_CreateFixture(bodyFixture, body, 0.1, 0.1, 0, 0.5, 1, 0, 65535, #b2_box, "[2, 2]", 0, 2.5, 1.0, 0, 0, 0, 0, @body_texture)
+    b2PolygonShape_CreateFixture(groundBodyFixture, body_ptr("groundBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[100, 20]", 0, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("groundBody_texture"))
+    b2PolygonShape_CreateFixture(groundBodySubFixture1, body_ptr("groundBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, -12, 12, @texture_struct("body_texture"))
+    b2PolygonShape_CreateFixture(groundBodySubFixture2, body_ptr("groundBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[2, 4]", 0, 2.5, 1.0, 0, 0, 12, 12, @texture_struct("body_texture"))
+    b2PolygonShape_CreateFixture(bodyFixture, body_ptr("body"), 0.1, 0.1, 0, 0.5, 1, 0, 65535, #b2_box, "[2, 2]", 0, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("body_texture"))
     
     ; bucket body
-    b2PolygonShape_CreateFixture(bucketBody2Fixture, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_chain, "[-12, 12, -5, 0, 5, 0, 12, 12]", 0, 2.5, 1.0, 0.0, 0.0)
-    b2PolygonShape_CreateFixture(bucketBodyFixture12, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, -2.5, -2, @body_texture)
-    b2PolygonShape_CreateFixture(bucketBodyFixture13, bucketBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, 2.5, -2, @body_texture)
-    b2PolygonShape_CreateFixture(bucketBodyFixture14, bucketBody, 100, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[6, 1]", 0, 2.5, 1.0, 0, 0, 0, -4, @body_texture)
+    b2PolygonShape_CreateFixture(bucketBody2Fixture, body_ptr("bucketBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_chain, "[-12, 12, -5, 0, 5, 0, 12, 12]", 0, 2.5, 1.0, 0.0, 0.0)
+    b2PolygonShape_CreateFixture(bucketBodyFixture12, body_ptr("bucketBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, -2.5, -2, @texture_struct("body_texture"))
+    b2PolygonShape_CreateFixture(bucketBodyFixture13, body_ptr("bucketBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[0.5, 4]", 0, 2.5, 1.0, 0, 0, 2.5, -2, @texture_struct("body_texture"))
+    b2PolygonShape_CreateFixture(bucketBodyFixture14, body_ptr("bucketBody"), 100, 0.1, 0, 0, 1, 0, 65535, #b2_box, "[6, 1]", 0, 2.5, 1.0, 0, 0, 0, -4, @texture_struct("body_texture"))
     
 
     
     ; bucket pivot
-    b2PolygonShape_CreateFixture(bucketBallBodyFixture, bucketBallBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_circle, "[1.5]", 0, 2.5, 1.0, 0, 0, 0, 0, @bucket_ball_texture)
+    b2PolygonShape_CreateFixture(bucketBallBodyFixture, body_ptr("bucketBallBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_circle, "[1.5]", 0, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("bucket_ball_texture"))
     
     ; boat
-    b2PolygonShape_CreateFixture(boatFixture, boatBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_sprite, "[-4.56, 9.21, -26.83, 4.11, -31.08, -9.15, 20.09, -8.47, 32.84, -1.67]", 62, 2.5, 1.0, 0, 0, 0, 0, @speed_boat_texture)
+    b2PolygonShape_CreateFixture(boatFixture, body_ptr("boatBody"), 1, 0.1, 0, 0, 1, 0, 65535, #b2_sprite, "[-4.56, 9.21, -26.83, 4.11, -31.08, -9.15, 20.09, -8.47, 32.84, -1.67]", 62, 2.5, 1.0, 0, 0, 0, 0, @texture_struct("speed_boat_texture"))
+    
+    
+;    b2World_CreateFixtures()
 
     
   EndIf
@@ -889,8 +883,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 722
-; FirstLine = 712
+; CursorPosition = 820
+; FirstLine = 809
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw4.exe

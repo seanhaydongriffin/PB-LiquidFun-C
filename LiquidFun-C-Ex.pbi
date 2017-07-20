@@ -192,6 +192,15 @@ Global Dim particle_texture_vertice.b2Vec2(0)
 
 Global __clockwise.i
 
+Global NewMap body.s()
+Global NewMap body_ptr.l()
+
+Global NewMap fixture.s()
+Global NewMap fixture_struct.b2_Fixture()
+
+Global NewMap texture.s()
+Global NewMap texture_struct.gl_Texture()
+
 
 ; ===============================================================================================================================
 
@@ -1235,9 +1244,6 @@ Procedure.i _Box2C_b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vert
 ;	$edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $vertices[1][0], $vertices[1][1], $clockwise)
 	angles = "first # = " + StrF(edited_angle) + angles
 	edited_total_angles = edited_total_angles + edited_angle
-;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $edited_total_angles = ' & $edited_total_angles & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
-
-;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $angles = ' & $angles & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
 	
 ;	Debug(StrF(edited_total_angles, 4) + "; " + angles + "; " + Str(__clockwise))
 	;Debug(angles)
@@ -1392,7 +1398,7 @@ Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_verti
 	;Local $centroid = _Box2C_b2PolygonShape_ComputeCentroid($vertices)
   _Box2C_b2PolygonShape_ComputeCentroid(*vector_ptr, num_vertices, @centroid\x)
   
-  Debug (Str(centroid\x) + ", " + Str(centroid\y))
+;  Debug (Str(centroid\x) + ", " + Str(centroid\y))
 	; Shift the shape, meaning it's center and therefore it's centroid, to the world position of 0,0, such that rotations and calculations are easier
 
 	For vertice_num = 0 To (num_vertices - 1)
@@ -1421,12 +1427,160 @@ Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_verti
 EndProcedure
 
 
+Procedure b2World_CreateBodies()
+  
+  body_name.s
+  
+  ForEach body()
+    
+    body_name = MapKey(body())
+  ;  Debug body_name
+    
+    If body_name <> "header"
+    
+      ParseJSON(0, body(body_name))
+      active.d            = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
+      allowSleep.d        = GetJSONDouble(GetJSONElement(JSONValue(0), 2))
+      angle.d             = GetJSONDouble(GetJSONElement(JSONValue(0), 3))
+      angularVelocity.d   = GetJSONDouble(GetJSONElement(JSONValue(0), 4))
+      angularDamping.d    = GetJSONDouble(GetJSONElement(JSONValue(0), 5))
+      awake.d             = GetJSONDouble(GetJSONElement(JSONValue(0), 6))
+      bullet.d            = GetJSONDouble(GetJSONElement(JSONValue(0), 7))
+      fixedRotation.d     = GetJSONDouble(GetJSONElement(JSONValue(0), 8))
+      gravityScale.d      = GetJSONDouble(GetJSONElement(JSONValue(0), 9))
+      linearDamping.d     = GetJSONDouble(GetJSONElement(JSONValue(0), 10))
+      linearVelocityX.d   = GetJSONDouble(GetJSONElement(JSONValue(0), 11))
+      linearVelocityY.d   = GetJSONDouble(GetJSONElement(JSONValue(0), 12))
+      positionX.d         = GetJSONDouble(GetJSONElement(JSONValue(0), 13))
+      positionY.d         = GetJSONDouble(GetJSONElement(JSONValue(0), 14))
+      type.d              = GetJSONDouble(GetJSONElement(JSONValue(0), 15))
+      userData.d          = GetJSONDouble(GetJSONElement(JSONValue(0), 16))
+  
+      ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
+      tmp_body_ptr.l = b2World_CreateBody(world, active, allowSleep, Radian(angle), angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
+      
+      AddMapElement(body_ptr(), body_name)
+      body_ptr() = tmp_body_ptr
+    EndIf
+    
+  Next
+
+  
+
+EndProcedure
+
+
+
+
+Procedure b2World_CreateFixtures()
+  
+  fixture_name.s
+  
+  ForEach fixture()
+    
+    fixture_name = MapKey(fixture())
+  ;  Debug body_name
+    
+    If fixture_name <> "header"
+      
+          ; fixture_struct, body_ptr, density, friction, isSensor, restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
+      Debug fixture_name
+      ParseJSON(1, fixture(fixture_name))
+      body_name.s         = GetJSONString(GetJSONElement(JSONValue(1), 0))
+      density.d           = GetJSONDouble(GetJSONElement(JSONValue(1), 1))
+      friction.d          = GetJSONDouble(GetJSONElement(JSONValue(1), 2))
+      isSensor.d          = GetJSONDouble(GetJSONElement(JSONValue(1), 3))
+      restitution.d       = GetJSONDouble(GetJSONElement(JSONValue(1), 4))
+      categoryBits.d      = GetJSONDouble(GetJSONElement(JSONValue(1), 5))
+      groupIndex.d        = GetJSONDouble(GetJSONElement(JSONValue(1), 6))
+      maskBits.d          = GetJSONDouble(GetJSONElement(JSONValue(1), 7))
+      shape_type.S        = GetJSONString(GetJSONElement(JSONValue(1), 8))
+      vertices.s          = GetJSONString(GetJSONElement(JSONValue(1), 9))
+      sprite_size.f       = GetJSONFloat(GetJSONElement(JSONValue(1), 10))
+      line_width.f        = GetJSONFloat(GetJSONElement(JSONValue(1), 11))
+      line_red.f          = GetJSONFloat(GetJSONElement(JSONValue(1), 12))
+      line_green.f        = GetJSONFloat(GetJSONElement(JSONValue(1), 13))
+      line_blue.f         = GetJSONFloat(GetJSONElement(JSONValue(1), 14))
+      body_offset_x.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 15))
+      body_offset_y.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 16))
+      texture_name.s      = GetJSONString(GetJSONElement(JSONValue(1), 17))
+      
+      shape_type_int.i
+      
+      If shape_type = "#b2_circle"
+        
+        shape_type_int = #b2_circle
+      EndIf
+      
+      If shape_type = "#b2_edge"
+        
+        shape_type_int = #b2_edge
+      EndIf
+      
+      If shape_type = "#b2_polygon"
+        
+        shape_type_int = #b2_polygon
+      EndIf
+      
+      If shape_type = "#b2_chain"
+        
+        shape_type_int = #b2_chain
+      EndIf
+      
+      If shape_type = "#b2_box"
+        
+        shape_type_int = #b2_box
+      EndIf
+      
+      If shape_type = "#b2_sprite"
+        
+        shape_type_int = #b2_sprite
+      EndIf
+      
+      
+      AddMapElement(fixture_struct(), fixture_name)
+
+      ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
+   ;   tmp_body_ptr.l = b2World_CreateBody(world, active, allowSleep, Radian(angle), angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
+      
+      b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @groundBody_texture)
+      
+    ;  Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
+
+      
+    EndIf
+    
+  Next
+
+  
+
+EndProcedure
+
+
+Procedure b2World_CreateTextures()
+  
+  texture_name.s
+  
+  ForEach texture()
+    
+    texture_name = MapKey(texture())
+    
+    If texture_name <> "header"
+      
+      file_name.s = texture(texture_name)
+      AddMapElement(texture_struct(), texture_name)
+      glCreateTexture(texture_struct(), file_name)
+    EndIf
+  Next
+
+EndProcedure
+
 
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 367
-; FirstLine = 349
-; Folding = -----
+; CursorPosition = 1566
+; FirstLine = 1542
+; Folding = ------
 ; EnableXP
 ; EnableUnicode
