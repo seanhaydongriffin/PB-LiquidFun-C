@@ -736,11 +736,11 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
   If destroy_particle_system = 1
 
     ; Destroy the LiquidFun Particle Groups
-    ResetMap(particle_group_ptr())
+    ResetMap(particle_group_struct())
     
-    While NextMapElement(particle_group_ptr())
+    While NextMapElement(particle_group_struct())
       
-      b2ParticleGroup_DestroyParticles(particle_group_ptr(), 0)
+      b2ParticleGroup_DestroyParticles(particle_group_struct()\particle_group_ptr, 0)
     Wend
 
     ; Destroy the LiquidFun Particle Systems
@@ -748,7 +748,6 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
     
     While NextMapElement(particle_system_struct())
       
-;      b2ParticleGroup_DestroyParticles(particle_group_ptr(), 0)
       b2World_DestroyParticleSystem(world, particle_system_struct()\particle_system_ptr)
     Wend
 
@@ -799,8 +798,15 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
     b2World_CreateParticleGroups()
     
     ; Update the Particle System with the latest info
-    particle_system_struct("particlesystem")\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct("particlesystem")\particle_system_ptr)
-    particle_system_struct("particlesystem")\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct("particlesystem")\particle_system_ptr)
+    ResetMap(particle_system_struct())
+    
+    While NextMapElement(particle_system_struct())
+      
+      particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
+      particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
+    Wend
+
+    
 
   EndIf
   
@@ -808,8 +814,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 132
-; FirstLine = 114
+; CursorPosition = 807
+; FirstLine = 776
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw4.exe

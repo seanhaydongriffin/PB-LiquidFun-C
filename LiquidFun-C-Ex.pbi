@@ -89,6 +89,11 @@ Structure b2_ParticleSystem
   particle_size.d
   particle_blending.i
 EndStructure
+    
+Structure b2_ParticleGroup
+  particle_group_ptr.l
+  active.i
+EndStructure
 
 
 
@@ -132,7 +137,8 @@ Global NewMap particle_system_struct.b2_ParticleSystem()
 
 ; LiquidFun Particle Groups
 Global NewMap particle_group.s()
-Global NewMap particle_group_ptr.l()
+;Global NewMap particle_group_ptr.l()
+Global NewMap particle_group_struct.b2_ParticleGroup()
 
 ; OpenGL
 Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
@@ -1234,8 +1240,6 @@ Procedure b2World_CreateParticleSystems()
       
       AddMapElement(particle_system_struct(), particle_system_name)
       particle_system_struct()\particle_system_ptr = tmp_particle_system_ptr
-;      particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(tmp_particle_system_ptr)
- ;     particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(tmp_particle_system_ptr)
       particle_system_struct()\texture_name = texture_name
       particle_system_struct()\particle_size = particle_size
       particle_system_struct()\particle_blending = particle_blending
@@ -1256,160 +1260,162 @@ Procedure b2World_CreateParticleGroups()
       
       ParseJSON(4, particle_group(group_name))
       system_name.s       = GetJSONString(GetJSONElement(JSONValue(4), 0))
-      angle.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 1))
-      angularVelocity.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 2))
-      colorR.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 3))
-      colorG.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 4))
-      colorB.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 5))
-      colorA.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 6))
-      flags.s             = GetJSONString(GetJSONElement(JSONValue(4), 7))
-      group.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 8))
-      groupFlags.s        = GetJSONString(GetJSONElement(JSONValue(4), 9))
-      lifetime.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 10))
-      linearVelocityX.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 11))
-      linearVelocityY.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 12))
-      positionX.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 13))
-      positionY.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 14))
-      positionData.d      = GetJSONDouble(GetJSONElement(JSONValue(4), 15))
-      particleCount.d     = GetJSONDouble(GetJSONElement(JSONValue(4), 16))
-      strength.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 17))
-      stride.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 18))
-      userData.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 19))
-      px.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 20))
-      py.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 21))
-      radius.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
+      active.i            = GetJSONInteger(GetJSONElement(JSONValue(4), 1))
+      angle.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 2))
+      angularVelocity.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 3))
+      colorR.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 4))
+      colorG.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 5))
+      colorB.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 6))
+      colorA.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 7))
+      flags.s             = GetJSONString(GetJSONElement(JSONValue(4), 8))
+      group.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 9))
+      groupFlags.s        = GetJSONString(GetJSONElement(JSONValue(4), 10))
+      lifetime.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 11))
+      linearVelocityX.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 12))
+      linearVelocityY.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 13))
+      positionX.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 14))
+      positionY.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 15))
+      positionData.d      = GetJSONDouble(GetJSONElement(JSONValue(4), 16))
+      particleCount.d     = GetJSONDouble(GetJSONElement(JSONValue(4), 17))
+      strength.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 18))
+      stride.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 19))
+      userData.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 20))
+      px.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 21))
+      py.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
+      radius.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 23))
       
-      flags_int.i
+      If active = 1
       
-      If flags = "water"
+        flags_int.i
         
-        flags_int = #b2_waterParticle
-      EndIf
-      
-      If flags = "zombie"
+        If flags = "water"
+          
+          flags_int = #b2_waterParticle
+        EndIf
         
-        flags_int = #b2_zombieParticle
-      EndIf
-      
-      If flags = "wall"
+        If flags = "zombie"
+          
+          flags_int = #b2_zombieParticle
+        EndIf
         
-        flags_int = #b2_wallParticle
-      EndIf
-      
-      If flags = "spring"
+        If flags = "wall"
+          
+          flags_int = #b2_wallParticle
+        EndIf
         
-        flags_int = #b2_springParticle
-      EndIf
-      
-      If flags = "elastic"
+        If flags = "spring"
+          
+          flags_int = #b2_springParticle
+        EndIf
         
-        flags_int = #b2_elasticParticle
-      EndIf
-      
-      If flags = "viscous"
+        If flags = "elastic"
+          
+          flags_int = #b2_elasticParticle
+        EndIf
         
-        flags_int = #b2_viscousParticle
-      EndIf
-      
-      If flags = "powder"
+        If flags = "viscous"
+          
+          flags_int = #b2_viscousParticle
+        EndIf
         
-        flags_int = #b2_powderParticle
-      EndIf
-      
-      If flags = "tensile"
+        If flags = "powder"
+          
+          flags_int = #b2_powderParticle
+        EndIf
         
-        flags_int = #b2_tensileParticle
-      EndIf
-      
-      If flags = "color mixing"
+        If flags = "tensile"
+          
+          flags_int = #b2_tensileParticle
+        EndIf
         
-        flags_int = #b2_colorMixingParticle
-      EndIf
-      
-      If flags = "destruction listener"
+        If flags = "color mixing"
+          
+          flags_int = #b2_colorMixingParticle
+        EndIf
         
-        flags_int = #b2_destructionListenerParticle
-      EndIf
-      
-      If flags = "barrier"
+        If flags = "destruction listener"
+          
+          flags_int = #b2_destructionListenerParticle
+        EndIf
         
-        flags_int = #b2_barrierParticle
-      EndIf
-      
-      If flags = "static pressure"
+        If flags = "barrier"
+          
+          flags_int = #b2_barrierParticle
+        EndIf
         
-        flags_int = #b2_staticPressureParticle
-      EndIf
-      
-      If flags = "reactive"
+        If flags = "static pressure"
+          
+          flags_int = #b2_staticPressureParticle
+        EndIf
         
-        flags_int = #b2_reactiveParticle
-      EndIf
-      
-      If flags = "repulsive"
+        If flags = "reactive"
+          
+          flags_int = #b2_reactiveParticle
+        EndIf
         
-        flags_int = #b2_repulsiveParticle
-      EndIf
-      
-      If flags = "fixture contact listener"
+        If flags = "repulsive"
+          
+          flags_int = #b2_repulsiveParticle
+        EndIf
         
-        flags_int = #b2_fixtureContactListenerParticle
-      EndIf
-      
-      If flags = "particle contact listener"
+        If flags = "fixture contact listener"
+          
+          flags_int = #b2_fixtureContactListenerParticle
+        EndIf
         
-        flags_int = #b2_particleContactListenerParticle
-      EndIf
-      
-      If flags = "fixture contact filter"
+        If flags = "particle contact listener"
+          
+          flags_int = #b2_particleContactListenerParticle
+        EndIf
         
-        flags_int = #b2_fixtureContactFilterParticle
-      EndIf
-      
-      If flags = "particle contact filter"
+        If flags = "fixture contact filter"
+          
+          flags_int = #b2_fixtureContactFilterParticle
+        EndIf
         
-        flags_int = #b2_particleContactFilterParticle
-      EndIf
-      
-      groupFlags_int.i = -1
-      
-      If groupFlags = "solid"
+        If flags = "particle contact filter"
+          
+          flags_int = #b2_particleContactFilterParticle
+        EndIf
         
-        groupFlags_int = #b2_solidParticleGroup
-      EndIf
-      
-      If groupFlags = "rigid"
+        groupFlags_int.i = -1
         
-        groupFlags_int = #b2_rigidParticleGroup
-      EndIf
-      
-      If groupFlags = "can be empty"
+        If groupFlags = "solid"
+          
+          groupFlags_int = #b2_solidParticleGroup
+        EndIf
         
-        groupFlags_int = #b2_particleGroupCanBeEmpty
-      EndIf
-      
-      If groupFlags = "will be destroyed"
+        If groupFlags = "rigid"
+          
+          groupFlags_int = #b2_rigidParticleGroup
+        EndIf
         
-        groupFlags_int = #b2_particleGroupWillBeDestroyed
-      EndIf
-      
-      If groupFlags = "needs update depth"
+        If groupFlags = "can be empty"
+          
+          groupFlags_int = #b2_particleGroupCanBeEmpty
+        EndIf
         
-        groupFlags_int = #b2_particleGroupNeedsUpdateDepth
-      EndIf
-      
-      If groupFlags = "internal mask"
+        If groupFlags = "will be destroyed"
+          
+          groupFlags_int = #b2_particleGroupWillBeDestroyed
+        EndIf
         
-        groupFlags_int = #b2_particleGroupInternalMask
+        If groupFlags = "needs update depth"
+          
+          groupFlags_int = #b2_particleGroupNeedsUpdateDepth
+        EndIf
+        
+        If groupFlags = "internal mask"
+          
+          groupFlags_int = #b2_particleGroupInternalMask
+        EndIf
+        
+        tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
+        
+        AddMapElement(particle_group_struct(), group_name)
+        particle_group_struct()\particle_group_ptr = tmp_particle_group_ptr
+        particle_group_struct()\active = active
       EndIf
-      
-      tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
-      
-      
-      
-      AddMapElement(particle_group_ptr(), group_name)
-      particle_group_ptr() = tmp_particle_group_ptr
-
     EndIf
   Next
 EndProcedure
@@ -1418,8 +1424,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 714
-; FirstLine = 685
+; CursorPosition = 1416
+; FirstLine = 1387
 ; Folding = -----
 ; EnableXP
 ; EnableUnicode
