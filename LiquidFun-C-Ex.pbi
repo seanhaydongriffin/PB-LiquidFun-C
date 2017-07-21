@@ -29,6 +29,7 @@ EndEnumeration
 
 Enumeration glMode
     #gl_texture2
+    #gl_texture2_and_line_loop2
     #gl_line_strip2
     #gl_line_loop2
 EndEnumeration
@@ -70,90 +71,25 @@ Structure b2_Fixture
   num_vertices.i
   sprite_vertex.b2Vec2[4]
   body_ptr.l
+  draw_type.i
   line_width.f
   line_red.f
   line_green.f
   line_blue.f
   texture_ptr.l
 EndStructure
-
-Structure b2_1VertexFixture
-  fixture_ptr.l
-  radius.f
-  vertex.b2Vec2
-  body_ptr.l
-  texture_ptr.l
+    
+Structure b2_ParticleSystem
+  particle_system_ptr.l
+  particle_count.d
+  particle_position_buffer.l
+  particle_quad_vertice.Vec3f[20000 * 4]
+  particle_texture_vertice.b2Vec2[20000 * 4]
+  texture_name.s
+  particle_size.d
+  particle_blending.i
 EndStructure
 
-Structure b2_2VertexFixture
-  fixture_ptr.l
-  radius.f
-  vertex.b2Vec2[2]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_3VertexFixture
-  fixture_ptr.l
-  radius.f
-  vertex.b2Vec2[3]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_4VertexFixture
-  fixture_ptr.l
-  vertex.b2Vec2[4]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_5VertexFixture
-  fixture_ptr.l
-  line_width.f
-  line_red.f
-  line_green.f
-  line_blue.f
-  radius.f
-  vertex.b2Vec2[5]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_6VertexFixture
-  fixture_ptr.l
-  radius.f
-  vertex.b2Vec2[6]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_7VertexFixture
-  fixture_ptr.l
-  radius.f
-  vertex.b2Vec2[7]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_8VertexFixture
-  fixture_ptr.l
-  radius.f
-  vertex.b2Vec2[8]
-  body_ptr.l
-  texture_ptr.l
-EndStructure
-
-Structure b2_128VertexFixture
-  fixture_ptr.l
-  line_width.f
-  line_red.f
-  line_green.f
-  line_blue.f
-  vertex.b2Vec2[128]
-  num_vertices.i
-  body_ptr.l
-EndStructure
 
 
 ; A structure that combines Box2D Shapes and SFML Textures
@@ -172,34 +108,34 @@ EndStructure
 ; #GLOBALS# ===================================================================================================================
 ;Global sfBool.i
 Global window.l
+Global __clockwise.i
 
 ; Box2D Worlds
 Global world.l
 Global gravity.b2Vec2
 
-
-; OpenGL
-Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
-
-; LiquidFun Particle System
-Global particlesystem.l
-Global particlecount.d
-Global particlepositionbuffer.l
-
-; OpenGL Particles
-Global Dim particle_quad_vertice.Vec3f(0)
-Global Dim particle_texture_vertice.b2Vec2(0)
-
-Global __clockwise.i
-
+; Box2D Bodies
 Global NewMap body.s()
 Global NewMap body_ptr.l()
 
+; Box2D Fixtures
 Global NewMap fixture.s()
 Global NewMap fixture_struct.b2_Fixture()
 
+; Box2D Textures
 Global NewMap texture.s()
 Global NewMap texture_struct.gl_Texture()
+
+; LiquidFun Particle Systems
+Global NewMap particle_system.s()
+Global NewMap particle_system_struct.b2_ParticleSystem()
+
+; LiquidFun Particle Groups
+Global NewMap particle_group.s()
+Global NewMap particle_group_ptr.l()
+
+; OpenGL
+Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
 
 
 ; ===============================================================================================================================
@@ -225,7 +161,7 @@ Procedure b2PolygonShape_CreateFixture_4_sfSprite(*tmp_pb_LiquidFun_SFML.pb_Liqu
 EndProcedure
 
 
-Procedure animate_body_sprite(tmp_body.l, tmp_sprite.l)
+Procedure animate_body_sfSprite(tmp_body.l, tmp_sprite.l)
   
   Dim tmp_pos.f(2)
   tmp_angle.d
@@ -285,6 +221,14 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   LoadJSON(2, "texture.json")
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(2), texture())   
+
+  LoadJSON(3, "particle_system.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(3), particle_system())       
+  
+  LoadJSON(4, "particle_group.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(4), particle_group())       
   
   gravity\x = gravity_x
   gravity\y = gravity_y
@@ -297,43 +241,11 @@ Procedure glCreateTexture(*tmp_gl_texture.gl_Texture, filename.s)
   GetObject_(ImageID(*tmp_gl_texture\image_number), SizeOf(BITMAP), @*tmp_gl_texture\image_bitmap)
 EndProcedure
 
-;Procedure b2PolygonShape_Create4VertexFixture_GLQuad()
-  
-  
-;EndProcedure
-
-
-
-Procedure b2PolygonShape_Create5VertexFixture(*tmp_b2_fixture.b2_5VertexFixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, v0_x.d, v0_y.d, v1_x.d, v1_y.d, v2_x.d, v2_y.d, v3_x.d, v3_y.d, v4_x.d, v4_y.d, body_offset_x.d, body_offset_y.d, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, tmp_texture.l = -1)
-  
-  *tmp_b2_fixture\vertex[0]\x = v0_x + body_offset_x
-  *tmp_b2_fixture\vertex[0]\y = v0_y + body_offset_y
-  *tmp_b2_fixture\vertex[1]\x = v1_x + body_offset_x
-  *tmp_b2_fixture\vertex[1]\y = v1_y + body_offset_y
-  *tmp_b2_fixture\vertex[2]\x = v2_x + body_offset_x
-  *tmp_b2_fixture\vertex[2]\y = v2_y + body_offset_y
-  *tmp_b2_fixture\vertex[3]\x = v3_x + body_offset_x
-  *tmp_b2_fixture\vertex[3]\y = v3_y + body_offset_y
-  *tmp_b2_fixture\vertex[4]\x = v4_x + body_offset_x
-  *tmp_b2_fixture\vertex[4]\y = v4_y + body_offset_y
-  *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_5(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y, *tmp_b2_fixture\vertex[4]\x, *tmp_b2_fixture\vertex[4]\y)
-  *tmp_b2_fixture\body_ptr = tmp_body
-  *tmp_b2_fixture\line_width = tmp_line_width
-  *tmp_b2_fixture\line_red = tmp_line_red
-  *tmp_b2_fixture\line_green = tmp_line_green
-  *tmp_b2_fixture\line_blue = tmp_line_blue
-
-  If tmp_texture > -1
-    
-    *tmp_b2_fixture\texture_ptr = tmp_texture
-  EndIf
-  
-EndProcedure
 
 
 
 
-Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
+Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_sprite_offset_x.d, tmp_sprite_offset_y.d, tmp_draw_type.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
   
   If tmp_shape_type = #b2_circle
 
@@ -376,14 +288,14 @@ Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, t
     
     If tmp_shape_type = #b2_sprite
       
-      *tmp_b2_fixture\sprite_vertex[0]\x = 0 + (tmp_sprite_size / 2) + body_offset_x
-      *tmp_b2_fixture\sprite_vertex[0]\y = 0 + (tmp_sprite_size / 2) + body_offset_y
-      *tmp_b2_fixture\sprite_vertex[1]\x = 0 - (tmp_sprite_size / 2) + body_offset_x
-      *tmp_b2_fixture\sprite_vertex[1]\y = 0 + (tmp_sprite_size / 2) + body_offset_y
-      *tmp_b2_fixture\sprite_vertex[2]\x = 0 - (tmp_sprite_size / 2) + body_offset_x
-      *tmp_b2_fixture\sprite_vertex[2]\y = 0 - (tmp_sprite_size / 2) + body_offset_y
-      *tmp_b2_fixture\sprite_vertex[3]\x = 0 + (tmp_sprite_size / 2) + body_offset_x
-      *tmp_b2_fixture\sprite_vertex[3]\y = 0 - (tmp_sprite_size / 2) + body_offset_y
+      *tmp_b2_fixture\sprite_vertex[0]\x = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[0]\y = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_y
+      *tmp_b2_fixture\sprite_vertex[1]\x = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[1]\y = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_y
+      *tmp_b2_fixture\sprite_vertex[2]\x = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[2]\y = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_y
+      *tmp_b2_fixture\sprite_vertex[3]\x = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[3]\y = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_y
     EndIf
     
     If *tmp_b2_fixture\num_vertices = 3
@@ -453,6 +365,7 @@ Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, t
   
   *tmp_b2_fixture\body_ptr = tmp_body
   *tmp_b2_fixture\shape_type = tmp_shape_type
+  *tmp_b2_fixture\draw_type = tmp_draw_type
   *tmp_b2_fixture\line_width = tmp_line_width
   *tmp_b2_fixture\line_red = tmp_line_red
   *tmp_b2_fixture\line_green = tmp_line_green
@@ -460,289 +373,22 @@ Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, t
 EndProcedure
 
 
-Procedure glDrawFixtureTexture(*tmp_fixture.b2_4VertexFixture, tmp_texture_ptr.l = -1)
-  
-    tmp_body.l = *tmp_fixture\body_ptr
 
-    If tmp_texture_ptr > -1
-      
-      *tmp_texture.gl_Texture = tmp_texture_ptr
-    Else
-      
-      *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
-    EndIf
-  
-    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
-    Dim tmp_pos.f(2)
-    b2Body_GetPosition(tmp_body, tmp_pos())
-    tmp_angle.d = b2Body_GetAngle(tmp_body)
-    
-    glPushMatrix_()
-    
-    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-    
-    
-    Dim tmp_quad_vertice.Vec3f(4)
-    Dim tmp_texture_vertice.b2Vec2(4)
-
-    tmp_texture_vertice(0)\x = 1.0
-    tmp_texture_vertice(0)\y = 1.0
-    tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
-    tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
-    tmp_quad_vertice(0)\z = 0.5
-    
-    tmp_texture_vertice(1)\x = 0.0
-    tmp_texture_vertice(1)\y = 1.0
-    tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
-    tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
-    tmp_quad_vertice(1)\z = 0.5
-    
-    tmp_texture_vertice(2)\x = 0.0
-    tmp_texture_vertice(2)\y = 0.0
-    tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
-    tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
-    tmp_quad_vertice(2)\z = 0.5
-    
-    tmp_texture_vertice(3)\x = 1.0
-    tmp_texture_vertice(3)\y = 0.0
-    tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
-    tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
-    tmp_quad_vertice(3)\z = 0.5
-    
-    glEnableClientState_(#GL_VERTEX_ARRAY )
-    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
-    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
-    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
-    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
-    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
-    glDisableClientState_( #GL_VERTEX_ARRAY )
-
-    glPopMatrix_()
-EndProcedure
-
-
-Procedure glDrawFixtureTexture2(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
-  
-     tmp_body.l = *tmp_fixture\body_ptr
-     
-     If tmp_texture_ptr > -1
-       
-       *tmp_texture.gl_Texture = tmp_texture_ptr
-     Else
-       
-       *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
-     EndIf
-   
-    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
-    Dim tmp_pos.f(2)
-    b2Body_GetPosition(tmp_body, tmp_pos())
-    tmp_angle.d = b2Body_GetAngle(tmp_body)
-    
-    glPushMatrix_()
-    
-    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-    
-    
-    Dim tmp_quad_vertice.Vec3f(4)
-    Dim tmp_texture_vertice.b2Vec2(4)
-
-    tmp_texture_vertice(0)\x = 1.0
-    tmp_texture_vertice(0)\y = 1.0
-    tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
-    tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
-    tmp_quad_vertice(0)\z = 0.5
-    
-    tmp_texture_vertice(1)\x = 0.0
-    tmp_texture_vertice(1)\y = 1.0
-    tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
-    tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
-    tmp_quad_vertice(1)\z = 0.5
-    
-    tmp_texture_vertice(2)\x = 0.0
-    tmp_texture_vertice(2)\y = 0.0
-    tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
-    tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
-    tmp_quad_vertice(2)\z = 0.5
-    
-    tmp_texture_vertice(3)\x = 1.0
-    tmp_texture_vertice(3)\y = 0.0
-    tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
-    tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
-    tmp_quad_vertice(3)\z = 0.5
-    
-    glEnableClientState_(#GL_VERTEX_ARRAY )
-    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
-    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
-    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
-    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
-    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
-    glDisableClientState_( #GL_VERTEX_ARRAY )
-
-    glPopMatrix_()
-EndProcedure
-
-
-
-Procedure glDraw5VertexFixtureTexture(*tmp_fixture.b2_5VertexFixture) ;, tmp_texture_ptr.l = -1)
-  
-  
-  glLineWidth_(*tmp_fixture\line_width)
-  glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
-  
-  tmp_body.l = *tmp_fixture\body_ptr
- 
-  Dim tmp_pos.f(2)
-  b2Body_GetPosition(tmp_body, tmp_pos())
-  tmp_angle.d = b2Body_GetAngle(tmp_body)
-    
-  glPushMatrix_()
-  
-  glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-  glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-    
-  Dim tmp_chain_vertice.Vec3f(5) ;(*tmp_fixture\num_vertices)
-    
-;  For i = 0 To (*tmp_fixture\num_vertices - 1)
-  For i = 0 To (5 - 1)
-    
-    tmp_chain_vertice(i)\x = *tmp_fixture\vertex[i]\x
-    tmp_chain_vertice(i)\y = *tmp_fixture\vertex[i]\y
-    tmp_chain_vertice(i)\z = 0.5
-  Next
-
-  glEnableClientState_(#GL_VERTEX_ARRAY )
-  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
-  glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
-  glDisableClientState_( #GL_VERTEX_ARRAY )
-
-  glPopMatrix_()
-  
-;   
-;     tmp_body.l = *tmp_fixture\body_ptr
-; 
-;     If tmp_texture_ptr > -1
-;       
-;       *tmp_texture.gl_Texture = tmp_texture_ptr
-;     Else
-;       
-;       *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
-;     EndIf
-;   
-;     glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
-;     Dim tmp_pos.f(2)
-;     b2Body_GetPosition(tmp_body, tmp_pos())
-;     tmp_angle.d = b2Body_GetAngle(tmp_body)
-;     
-;     glPushMatrix_()
-;     
-;     glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-;     glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-;     
-;     
-;     Dim tmp_quad_vertice.Vec3f(4)
-;     Dim tmp_texture_vertice.b2Vec2(4)
-; 
-;     tmp_texture_vertice(0)\x = 1.0
-;     tmp_texture_vertice(0)\y = 1.0
-;     tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
-;     tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
-;     tmp_quad_vertice(0)\z = 0.5
-;     
-;     tmp_texture_vertice(1)\x = 0.0
-;     tmp_texture_vertice(1)\y = 1.0
-;     tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
-;     tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
-;     tmp_quad_vertice(1)\z = 0.5
-;     
-;     tmp_texture_vertice(2)\x = 0.0
-;     tmp_texture_vertice(2)\y = 0.0
-;     tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
-;     tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
-;     tmp_quad_vertice(2)\z = 0.5
-;     
-;     tmp_texture_vertice(3)\x = 1.0
-;     tmp_texture_vertice(3)\y = 0.0
-;     tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
-;     tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
-;     tmp_quad_vertice(3)\z = 0.5
-;     
-;     glEnableClientState_(#GL_VERTEX_ARRAY )
-;     glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
-;     glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
-;     glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
-;     glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
-;     glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
-;     glDisableClientState_( #GL_VERTEX_ARRAY )
-; 
-;     glPopMatrix_()
-EndProcedure
-
-Procedure glDrawFixture2(*tmp_fixture.b2_5VertexFixture)
-  
-  ; if the drawing is wireframe
-  
- ; If tmp_texture_ptr = #gl_line_strip2 Or tmp_texture_ptr = #gl_line_loop2
-  
-    glLineWidth_(*tmp_fixture\line_width)
-    glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
-    
-    tmp_body.l = *tmp_fixture\body_ptr
-   
-    Dim tmp_pos.f(2)
-    b2Body_GetPosition(tmp_body, tmp_pos())
-    tmp_angle.d = b2Body_GetAngle(tmp_body)
-      
-    glPushMatrix_()
-    
-    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-      
-    Dim tmp_chain_vertice.Vec3f(5)
-      
-    For i = 0 To (5 - 1)
-      
-      tmp_chain_vertice(i)\x = *tmp_fixture\vertex[i]\x
-      tmp_chain_vertice(i)\y = *tmp_fixture\vertex[i]\y
-      tmp_chain_vertice(i)\z = 0.5
-    Next
-  
-    glEnableClientState_(#GL_VERTEX_ARRAY )
-    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
-    
-    If tmp_texture_ptr = #gl_line_strip2
-      
-      glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
-    Else
-      
-      glDrawArrays_( #GL_LINE_LOOP, 0, ArraySize(tmp_chain_vertice()) )
-    EndIf
-    
-    glDisableClientState_( #GL_VERTEX_ARRAY )
-  
-    glPopMatrix_()
-  ;EndIf
-
-EndProcedure
-
-
-
-Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = 0)
+Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
   
   ; if the drawing is texture
   
-  If tmp_texture_ptr = #b2_texture Or tmp_texture_ptr > #gl_line_loop2
+  If *tmp_fixture\draw_type = #gl_texture2 Or *tmp_fixture\draw_type = #gl_texture2_and_line_loop2
     
-     tmp_body.l = *tmp_fixture\body_ptr
+    tmp_body.l = *tmp_fixture\body_ptr
      
-     If tmp_texture_ptr > #gl_line_loop2
+    If tmp_texture_ptr > -1
        
-       *tmp_texture.gl_Texture = tmp_texture_ptr
-     Else
+      *tmp_texture.gl_Texture = tmp_texture_ptr
+    Else
        
-       *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
-     EndIf
+      *tmp_texture.gl_Texture = *tmp_fixture\texture_ptr
+    EndIf
         
     glEnable_(#GL_TEXTURE_2D)
      
@@ -806,8 +452,8 @@ Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = 0)
     glPopMatrix_()
         
     ; disable texture mapping
-     glBindTexture_(#GL_TEXTURE_2D, 0)
-     glDisable_( #GL_TEXTURE_2D );
+    glBindTexture_(#GL_TEXTURE_2D, 0)
+    glDisable_( #GL_TEXTURE_2D )
 
   EndIf
 
@@ -815,7 +461,7 @@ Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = 0)
   
   ; if the drawing is wireframe
   
-  If tmp_texture_ptr = #gl_line_strip2 Or tmp_texture_ptr = #gl_line_loop2
+  If *tmp_fixture\draw_type >= #gl_texture2_and_line_loop2
   
     glLineWidth_(*tmp_fixture\line_width)
     glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
@@ -843,7 +489,7 @@ Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = 0)
     glEnableClientState_(#GL_VERTEX_ARRAY )
     glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
     
-    If tmp_texture_ptr = #gl_line_strip2
+    If *tmp_fixture\draw_type = #gl_line_strip2
       
       glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
     Else
@@ -863,88 +509,47 @@ Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = 0)
 EndProcedure
 
 
-
-Procedure glDrawBodyFixtureTexture(tmp_body.l, *tmp_fixture.b2_4VertexFixture, *tmp_texture.gl_Texture)
-  
-    glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
-    Dim tmp_pos.f(2)
-    b2Body_GetPosition(tmp_body, tmp_pos())
-    tmp_angle.d = b2Body_GetAngle(tmp_body)
+Procedure glDrawFixtures()
+      
+    ResetMap(fixture_struct())
     
-    glPushMatrix_()
-    
-    glTranslatef_(tmp_pos(0), tmp_pos(1), 0)
-    glRotatef_ (Degree(tmp_angle), 0, 0, 1.0)
-    
-    
-    Dim tmp_quad_vertice.Vec3f(4)
-    Dim tmp_texture_vertice.b2Vec2(4)
-
-    tmp_texture_vertice(0)\x = 1.0
-    tmp_texture_vertice(0)\y = 1.0
-    tmp_quad_vertice(0)\x = *tmp_fixture\vertex[0]\x
-    tmp_quad_vertice(0)\y = *tmp_fixture\vertex[0]\y
-    tmp_quad_vertice(0)\z = 0.5
-    
-    tmp_texture_vertice(1)\x = 0.0
-    tmp_texture_vertice(1)\y = 1.0
-    tmp_quad_vertice(1)\x = *tmp_fixture\vertex[1]\x
-    tmp_quad_vertice(1)\y = *tmp_fixture\vertex[1]\y
-    tmp_quad_vertice(1)\z = 0.5
-    
-    tmp_texture_vertice(2)\x = 0.0
-    tmp_texture_vertice(2)\y = 0.0
-    tmp_quad_vertice(2)\x = *tmp_fixture\vertex[2]\x
-    tmp_quad_vertice(2)\y = *tmp_fixture\vertex[2]\y
-    tmp_quad_vertice(2)\z = 0.5
-    
-    tmp_texture_vertice(3)\x = 1.0
-    tmp_texture_vertice(3)\y = 0.0
-    tmp_quad_vertice(3)\x = *tmp_fixture\vertex[3]\x
-    tmp_quad_vertice(3)\y = *tmp_fixture\vertex[3]\y
-    tmp_quad_vertice(3)\z = 0.5
-    
-    glEnableClientState_(#GL_VERTEX_ARRAY )
-    glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
-    glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_quad_vertice(0)\x )
-    glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @tmp_texture_vertice(0)\x)
-    glDrawArrays_( #GL_QUADS, 0, ArraySize(tmp_quad_vertice()) )
-    glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
-    glDisableClientState_( #GL_VERTEX_ARRAY )
-
-    glPopMatrix_()
+    While NextMapElement(fixture_struct())
+      
+      glDrawFixture(fixture_struct())
+    Wend
 EndProcedure
 
 
-Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f, blending.i)
-      
-  *positionbuffer_ptr.b2Vec2 = particlepositionbuffer
- 
-  For i = 0 To (Int(particlecount) - 1)
 
-    particle_texture_vertice((i * 4) + 0)\x = 1.0
-    particle_texture_vertice((i * 4) + 0)\y = 1.0
-    particle_quad_vertice((i * 4) + 0)\x = *positionbuffer_ptr\x + particle_quad_size
-    particle_quad_vertice((i * 4) + 0)\y = *positionbuffer_ptr\y + particle_quad_size
-    particle_quad_vertice((i * 4) + 0)\z = 0.5
+Procedure glDrawParticles(*tmp_particle_system.b2_ParticleSystem) ;, particle_quad_size.f, blending.i)
+
+  *positionbuffer_ptr.b2Vec2 = *tmp_particle_system\particle_position_buffer
+  
+  For i = 0 To (Int(*tmp_particle_system\particle_count) - 1)
+
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 0]\x = 1.0
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 0]\y = 1.0
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 0]\x = *positionbuffer_ptr\x + *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 0]\y = *positionbuffer_ptr\y + *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 0]\z = 0.5
     
-    particle_texture_vertice((i * 4) + 1)\x = 0.0
-    particle_texture_vertice((i * 4) + 1)\y = 1.0
-    particle_quad_vertice((i * 4) + 1)\x = *positionbuffer_ptr\x - particle_quad_size
-    particle_quad_vertice((i * 4) + 1)\y = *positionbuffer_ptr\y + particle_quad_size
-    particle_quad_vertice((i * 4) + 1)\z = 0.5
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 1]\x = 0.0
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 1]\y = 1.0
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 1]\x = *positionbuffer_ptr\x - *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 1]\y = *positionbuffer_ptr\y + *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 1]\z = 0.5
     
-    particle_texture_vertice((i * 4) + 2)\x = 0.0
-    particle_texture_vertice((i * 4) + 2)\y = 0.0
-    particle_quad_vertice((i * 4) + 2)\x = *positionbuffer_ptr\x - particle_quad_size
-    particle_quad_vertice((i * 4) + 2)\y = *positionbuffer_ptr\y - particle_quad_size
-    particle_quad_vertice((i * 4) + 2)\z = 0.5
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 2]\x = 0.0
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 2]\y = 0.0
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 2]\x = *positionbuffer_ptr\x - *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 2]\y = *positionbuffer_ptr\y - *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 2]\z = 0.5
     
-    particle_texture_vertice((i * 4) + 3)\x = 1.0
-    particle_texture_vertice((i * 4) + 3)\y = 0.0
-    particle_quad_vertice((i * 4) + 3)\x = *positionbuffer_ptr\x + particle_quad_size
-    particle_quad_vertice((i * 4) + 3)\y = *positionbuffer_ptr\y - particle_quad_size
-    particle_quad_vertice((i * 4) + 3)\z = 0.5
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 3]\x = 1.0
+    *tmp_particle_system\particle_texture_vertice[(i * 4) + 3]\y = 0.0
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 3]\x = *positionbuffer_ptr\x + *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 3]\y = *positionbuffer_ptr\y - *tmp_particle_system\particle_size
+    *tmp_particle_system\particle_quad_vertice[(i * 4) + 3]\z = 0.5
            
     ; point to the next particle
     *positionbuffer_ptr + SizeOf(b2Vec2)
@@ -959,8 +564,8 @@ Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f, 
 ;   glDepthMask_(#GL_FALSE) 
    
     glEnable_(#GL_TEXTURE_2D)
-  
-  If blending = 1
+    
+  If *tmp_particle_system\particle_blending = 1
     glEnable_(#GL_BLEND)
     glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE_MINUS_SRC_ALPHA)
 ;    glBlendFunc_(#GL_SRC_ALPHA,#GL_ONE)
@@ -968,22 +573,22 @@ Procedure glDrawParticlesTexture(*tmp_texture.gl_Texture, particle_quad_size.f, 
  ; glBlendFunc_(#GL_ONE,#GL_ONE_MINUS_SRC_ALPHA)
  ;  glBlendFunc_(#GL_ONE_MINUS_SRC_ALPHA,#GL_ONE)
   
-  glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(*tmp_texture\image_number), ImageHeight(*tmp_texture\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, *tmp_texture\image_bitmap\bmBits)
+  glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture_struct(*tmp_particle_system\texture_name)\image_number), ImageHeight(texture_struct(*tmp_particle_system\texture_name)\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture_struct(*tmp_particle_system\texture_name)\image_bitmap\bmBits)
   
   glEnableClientState_(#GL_VERTEX_ARRAY )
   glEnableClientState_ (#GL_TEXTURE_COORD_ARRAY_EXT); 
-  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @particle_quad_vertice(0)\x )
-  glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @particle_texture_vertice(0)\x)
-  glDrawArrays_( #GL_QUADS, 0, ArraySize(particle_quad_vertice()) )
+  glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @*tmp_particle_system\particle_quad_vertice[0]\x )
+  glTexCoordPointer_(2, #GL_FLOAT, SizeOf(b2Vec2), @*tmp_particle_system\particle_texture_vertice[0]\x)
+  glDrawArrays_( #GL_QUADS, 0, *tmp_particle_system\particle_count * 4 )
   glDisableClientState_( #GL_TEXTURE_COORD_ARRAY_EXT )
   glDisableClientState_( #GL_VERTEX_ARRAY )
    
-   glDisable_( #GL_BLEND );
-;   glEnable_( #GL_DEPTH_TEST );
+  glDisable_( #GL_BLEND );
+;   glEnable_( #GL_DEPTH_TEST )
     
-    ; disable texture mapping
-     glBindTexture_(#GL_TEXTURE_2D, 0)
-     glDisable_( #GL_TEXTURE_2D );
+  ; disable texture mapping
+  glBindTexture_(#GL_TEXTURE_2D, 0)
+  glDisable_( #GL_TEXTURE_2D )
 
 EndProcedure
   
@@ -1446,7 +1051,6 @@ Procedure b2World_CreateBodies()
   ForEach body()
     
     body_name = MapKey(body())
-  ;  Debug body_name
     
     If body_name <> "body name"
     
@@ -1468,17 +1072,12 @@ Procedure b2World_CreateBodies()
       type.d              = GetJSONDouble(GetJSONElement(JSONValue(0), 15))
       userData.d          = GetJSONDouble(GetJSONElement(JSONValue(0), 16))
   
-      ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
       tmp_body_ptr.l = b2World_CreateBody(world, active, allowSleep, Radian(angle), angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
       
       AddMapElement(body_ptr(), body_name)
       body_ptr() = tmp_body_ptr
     EndIf
-    
   Next
-
-  
-
 EndProcedure
 
 
@@ -1491,12 +1090,9 @@ Procedure b2World_CreateFixtures()
   ForEach fixture()
     
     fixture_name = MapKey(fixture())
-  ;  Debug body_name
     
     If fixture_name <> "fixture name"
       
-          ; fixture_struct, body_ptr, density, friction, isSensor, restitution, v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, v3_x, v3_y
-    ;  Debug fixture_name
       ParseJSON(1, fixture(fixture_name))
       body_name.s         = GetJSONString(GetJSONElement(JSONValue(1), 0))
       density.d           = GetJSONDouble(GetJSONElement(JSONValue(1), 1))
@@ -1506,66 +1102,78 @@ Procedure b2World_CreateFixtures()
       categoryBits.d      = GetJSONDouble(GetJSONElement(JSONValue(1), 5))
       groupIndex.d        = GetJSONDouble(GetJSONElement(JSONValue(1), 6))
       maskBits.d          = GetJSONDouble(GetJSONElement(JSONValue(1), 7))
-      shape_type.S        = GetJSONString(GetJSONElement(JSONValue(1), 8))
+      shape_type.s        = GetJSONString(GetJSONElement(JSONValue(1), 8))
       vertices.s          = GetJSONString(GetJSONElement(JSONValue(1), 9))
       sprite_size.f       = GetJSONFloat(GetJSONElement(JSONValue(1), 10))
-      line_width.f        = GetJSONFloat(GetJSONElement(JSONValue(1), 11))
-      line_red.f          = GetJSONFloat(GetJSONElement(JSONValue(1), 12))
-      line_green.f        = GetJSONFloat(GetJSONElement(JSONValue(1), 13))
-      line_blue.f         = GetJSONFloat(GetJSONElement(JSONValue(1), 14))
-      body_offset_x.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 15))
-      body_offset_y.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 16))
-      texture_name.s      = GetJSONString(GetJSONElement(JSONValue(1), 17))
+      sprite_offset_x.d   = GetJSONDouble(GetJSONElement(JSONValue(1), 11))
+      sprite_offset_y.d   = GetJSONDouble(GetJSONElement(JSONValue(1), 12))
+      draw_type.s         = GetJSONString(GetJSONElement(JSONValue(1), 13))
+      line_width.f        = GetJSONFloat(GetJSONElement(JSONValue(1), 14))
+      line_red.f          = GetJSONFloat(GetJSONElement(JSONValue(1), 15))
+      line_green.f        = GetJSONFloat(GetJSONElement(JSONValue(1), 16))
+      line_blue.f         = GetJSONFloat(GetJSONElement(JSONValue(1), 17))
+      body_offset_x.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 18))
+      body_offset_y.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 19))
+      texture_name.s      = GetJSONString(GetJSONElement(JSONValue(1), 20))
       
       shape_type_int.i
       
-      If shape_type = "#b2_circle"
+      If shape_type = "circle"
         
         shape_type_int = #b2_circle
       EndIf
       
-      If shape_type = "#b2_edge"
+      If shape_type = "edge"
         
         shape_type_int = #b2_edge
       EndIf
       
-      If shape_type = "#b2_polygon"
+      If shape_type = "polygon"
         
         shape_type_int = #b2_polygon
       EndIf
       
-      If shape_type = "#b2_chain"
+      If shape_type = "chain"
         
         shape_type_int = #b2_chain
       EndIf
       
-      If shape_type = "#b2_box"
+      If shape_type = "box"
         
         shape_type_int = #b2_box
       EndIf
       
-      If shape_type = "#b2_sprite"
+      If shape_type = "sprite"
         
         shape_type_int = #b2_sprite
       EndIf
       
+      draw_type_int.i = -1
+      
+      If draw_type = "texture"
+        
+        draw_type_int = #gl_texture2
+      EndIf
+      
+      If draw_type = "texture and line loop"
+        
+        draw_type_int = #gl_texture2_and_line_loop2
+      EndIf
+      
+      If draw_type = "line loop"
+        
+        draw_type_int = #gl_line_loop2
+      EndIf
+      
+      If draw_type = "line strip"
+        
+        draw_type_int = #gl_line_strip2
+      EndIf
       
       AddMapElement(fixture_struct(), fixture_name)
-
-      ; world, active, allowSleep, angle, angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
-   ;   tmp_body_ptr.l = b2World_CreateBody(world, active, allowSleep, Radian(angle), angularVelocity, angularDamping, awake, bullet, fixedRotation, gravityScale, linearDamping, linearVelocityX, linearVelocityY, positionX, positionY, type, userData)
-      
-      b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @texture_struct(texture_name))
-      
-    ;  Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
-
-
+      b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, sprite_offset_x, sprite_offset_y, draw_type_int, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @texture_struct(texture_name))
     EndIf
-    
   Next
-
-  
-
 EndProcedure
 
 
@@ -1588,11 +1196,230 @@ Procedure b2World_CreateTextures()
 EndProcedure
 
 
+Procedure b2World_CreateParticleSystems()
+  
+  particle_system_name.s
+  
+  ForEach particle_system()
+    
+    particle_system_name = MapKey(particle_system())
+    
+    If particle_system_name <> "system name"
+    
+      ParseJSON(3, particle_system(particle_system_name))
+      colorMixingStrength.d             = GetJSONDouble(GetJSONElement(JSONValue(3), 1))
+      dampingStrength.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 2))
+      destroyByAge.d                    = GetJSONDouble(GetJSONElement(JSONValue(3), 3))
+      ejectionStrength.d                = GetJSONDouble(GetJSONElement(JSONValue(3), 4))
+      elasticStrength.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 5))
+      lifetimeGranularity.d             = GetJSONDouble(GetJSONElement(JSONValue(3), 6))
+      powderStrength.d                  = GetJSONDouble(GetJSONElement(JSONValue(3), 7))
+      pressureStrength.d                = GetJSONDouble(GetJSONElement(JSONValue(3), 8))
+      particleRadius.d                  = GetJSONDouble(GetJSONElement(JSONValue(3), 9))
+      repulsiveStrength.d               = GetJSONDouble(GetJSONElement(JSONValue(3), 10))
+      springStrength.d                  = GetJSONDouble(GetJSONElement(JSONValue(3), 11))
+      staticPressureIterations.d        = GetJSONDouble(GetJSONElement(JSONValue(3), 12))
+      staticPressureRelaxation.d        = GetJSONDouble(GetJSONElement(JSONValue(3), 13))
+      staticPressureStrength.d          = GetJSONDouble(GetJSONElement(JSONValue(3), 14))
+      surfaceTensionNormalStrength.d    = GetJSONDouble(GetJSONElement(JSONValue(3), 15))
+      surfaceTensionPressureStrength.d  = GetJSONDouble(GetJSONElement(JSONValue(3), 16))
+      viscousStrength.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 17))
+      particleDensity.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 18))
+      texture_name.s                    = GetJSONString(GetJSONElement(JSONValue(3), 19))
+      particle_size.d                   = GetJSONDouble(GetJSONElement(JSONValue(3), 20))
+      particle_blending.i               = GetJSONInteger(GetJSONElement(JSONValue(3), 21))
+
+      tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, particleRadius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength)
+      b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particleDensity)
+      
+      AddMapElement(particle_system_struct(), particle_system_name)
+      particle_system_struct()\particle_system_ptr = tmp_particle_system_ptr
+;      particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(tmp_particle_system_ptr)
+ ;     particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(tmp_particle_system_ptr)
+      particle_system_struct()\texture_name = texture_name
+      particle_system_struct()\particle_size = particle_size
+      particle_system_struct()\particle_blending = particle_blending
+
+    EndIf
+  Next
+EndProcedure
+
+Procedure b2World_CreateParticleGroups()
+  
+  group_name.s
+  
+  ForEach particle_group()
+    
+    group_name = MapKey(particle_group())
+    
+    If group_name <> "group name"
+      
+      ParseJSON(4, particle_group(group_name))
+      system_name.s       = GetJSONString(GetJSONElement(JSONValue(4), 0))
+      angle.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 1))
+      angularVelocity.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 2))
+      colorR.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 3))
+      colorG.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 4))
+      colorB.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 5))
+      colorA.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 6))
+      flags.s             = GetJSONString(GetJSONElement(JSONValue(4), 7))
+      group.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 8))
+      groupFlags.s        = GetJSONString(GetJSONElement(JSONValue(4), 9))
+      lifetime.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 10))
+      linearVelocityX.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 11))
+      linearVelocityY.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 12))
+      positionX.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 13))
+      positionY.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 14))
+      positionData.d      = GetJSONDouble(GetJSONElement(JSONValue(4), 15))
+      particleCount.d     = GetJSONDouble(GetJSONElement(JSONValue(4), 16))
+      strength.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 17))
+      stride.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 18))
+      userData.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 19))
+      px.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 20))
+      py.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 21))
+      radius.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
+      
+      flags_int.i
+      
+      If flags = "water"
+        
+        flags_int = #b2_waterParticle
+      EndIf
+      
+      If flags = "zombie"
+        
+        flags_int = #b2_zombieParticle
+      EndIf
+      
+      If flags = "wall"
+        
+        flags_int = #b2_wallParticle
+      EndIf
+      
+      If flags = "spring"
+        
+        flags_int = #b2_springParticle
+      EndIf
+      
+      If flags = "elastic"
+        
+        flags_int = #b2_elasticParticle
+      EndIf
+      
+      If flags = "viscous"
+        
+        flags_int = #b2_viscousParticle
+      EndIf
+      
+      If flags = "powder"
+        
+        flags_int = #b2_powderParticle
+      EndIf
+      
+      If flags = "tensile"
+        
+        flags_int = #b2_tensileParticle
+      EndIf
+      
+      If flags = "color mixing"
+        
+        flags_int = #b2_colorMixingParticle
+      EndIf
+      
+      If flags = "destruction listener"
+        
+        flags_int = #b2_destructionListenerParticle
+      EndIf
+      
+      If flags = "barrier"
+        
+        flags_int = #b2_barrierParticle
+      EndIf
+      
+      If flags = "static pressure"
+        
+        flags_int = #b2_staticPressureParticle
+      EndIf
+      
+      If flags = "reactive"
+        
+        flags_int = #b2_reactiveParticle
+      EndIf
+      
+      If flags = "repulsive"
+        
+        flags_int = #b2_repulsiveParticle
+      EndIf
+      
+      If flags = "fixture contact listener"
+        
+        flags_int = #b2_fixtureContactListenerParticle
+      EndIf
+      
+      If flags = "particle contact listener"
+        
+        flags_int = #b2_particleContactListenerParticle
+      EndIf
+      
+      If flags = "fixture contact filter"
+        
+        flags_int = #b2_fixtureContactFilterParticle
+      EndIf
+      
+      If flags = "particle contact filter"
+        
+        flags_int = #b2_particleContactFilterParticle
+      EndIf
+      
+      groupFlags_int.i = -1
+      
+      If groupFlags = "solid"
+        
+        groupFlags_int = #b2_solidParticleGroup
+      EndIf
+      
+      If groupFlags = "rigid"
+        
+        groupFlags_int = #b2_rigidParticleGroup
+      EndIf
+      
+      If groupFlags = "can be empty"
+        
+        groupFlags_int = #b2_particleGroupCanBeEmpty
+      EndIf
+      
+      If groupFlags = "will be destroyed"
+        
+        groupFlags_int = #b2_particleGroupWillBeDestroyed
+      EndIf
+      
+      If groupFlags = "needs update depth"
+        
+        groupFlags_int = #b2_particleGroupNeedsUpdateDepth
+      EndIf
+      
+      If groupFlags = "internal mask"
+        
+        groupFlags_int = #b2_particleGroupInternalMask
+      EndIf
+      
+      tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
+      
+      
+      
+      AddMapElement(particle_group_ptr(), group_name)
+      particle_group_ptr() = tmp_particle_group_ptr
+
+    EndIf
+  Next
+EndProcedure
+
+
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 275
-; FirstLine = 271
-; Folding = ------
+; CursorPosition = 714
+; FirstLine = 685
+; Folding = -----
 ; EnableXP
 ; EnableUnicode

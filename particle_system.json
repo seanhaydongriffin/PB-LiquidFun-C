@@ -1,0 +1,5 @@
+{
+  "system name":    "world,       colorMixingStrength,  dampingStrength,  destroyByAge, ejectionStrength, elasticStrength,  lifetimeGranularity,  powderStrength, pressureStrength, particleRadius, repulsiveStrength,  springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength,  particleDensity,  texture_name, particle_size,  particle_blending",
+
+  "particlesystem": "[\"world\",  0.5,                  0.2,              1,            0.5,              0.25,             0.016666666666666666, 0.5,            0.01,             0.3,            1,                  0.25,           8,                        0.2,                      0.2,                    0.2,                          0.2,                            0.25,             1.8,              \"water\",    0.5,            1]"
+}

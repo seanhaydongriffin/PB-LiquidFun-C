@@ -22,26 +22,6 @@ Global tmp_fixture_vector_num = -1
 Global tmp_fixture_vector_size = -1
 Global Dim tmp_fixture_angle.f(50)
 
-; LiquidFun Particle System
-Global particle_flags.i
-Global particle_group_flags.i
-Global particle_powder_strength.d
-Global particle_pressure_strength.d
-Global particle_radius.d = 0.06
-Global dampingStrength.d = 1.5
-Global particle_size.f = 0.5
-Global particle_blending.i = 1
-Global particle_density.d
-Global particle_group_position_x.d = 0.0
-Global particle_group_position_y.d = 40.0
-Global particle_group_strength.d = 1.0
-Global particle_group_stride.d = 0.3
-Global particle_group_radius.d = 9.0
-
-; LiquidFun Particle Groups
-Global particlegroup.l
-
-
 ; Game Controls
 Global camera_linearvelocity.Vec3f
 camera_linearvelocity\x = 0
@@ -88,6 +68,7 @@ Declare b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system
 
 ; Setup the Box2D World (gravity_x, gravity_y, and load texture, body and fixture JSON files)
 b2World_CreateEx(0.0, -10.0)
+;b2World_CreateEx(0.0, 0.0)
 
 ; Create the Box2D Bodies, Fixtures and the LiquidFun Particle System
 b2CreateScene(1, 1, 1)
@@ -108,7 +89,6 @@ glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, 0, -190.0)
 ; Remember! In Paint.NET save images as 32-bit PNG for the below to work
 ; Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions in powers of 2
 ;   i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
-
 b2World_CreateTextures()
 
 
@@ -145,23 +125,10 @@ Repeat
     
             
     ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    glDrawParticlesTexture(texture_struct("water"), particle_size, particle_blending)
+    glDrawParticles(particle_system_struct("particlesystem"))
 
-    ; Enable Texture Mapping
- ;   glEnable_(#GL_TEXTURE_2D)
- ;   glBindTexture_(#GL_TEXTURE_2D, TextureID)
-    
     ; Draw the Box2D Bodies (body, fixture, texture)
-    glDrawFixture(fixture_struct("ground main"), #b2_texture)
-    glDrawFixture(fixture_struct("ground post 1"), #b2_texture)
-    glDrawFixture(fixture_struct("ground post 2"), #b2_texture)
-    glDrawFixture(fixture_struct("body"), #gl_line_loop2)
-    glDrawFixture(fixture_struct("bucket main"), #gl_line_strip2)
-    glDrawFixture(fixture_struct("bucket under box 1"), #b2_texture)
-    glDrawFixture(fixture_struct("bucket under box 2"), #b2_texture)
-    glDrawFixture(fixture_struct("bucket under box 3"), #b2_texture)
-    glDrawFixture(fixture_struct("bucket ball"), #b2_texture)
-    glDrawFixture(fixture_struct("boat"));, #gl_line_loop2)
+    glDrawFixtures()
 
     
     
@@ -397,26 +364,26 @@ Repeat
           
         Case #PB_Shortcut_Y
           
-          If particle_blending = 0
+          If particle_system_struct("particlesystem")\particle_blending = 0
             
-            particle_blending = 1
+            particle_system_struct("particlesystem")\particle_blending = 1
           Else
             
-            particle_blending = 0
+            particle_system_struct("particlesystem")\particle_blending = 0
           EndIf
           
         Case #PB_Shortcut_U
           
-          particle_size = particle_size - 0.05
+          particle_system_struct("particlesystem")\particle_size = particle_system_struct("particlesystem")\particle_size - 0.05
           
-          If particle_size < 0.05
+          If particle_system_struct("particlesystem")\particle_size < 0.05
             
-            particle_size = 0.05
+            particle_system_struct("particlesystem")\particle_size = 0.05
           EndIf
           
         Case #PB_Shortcut_I
           
-          particle_size = particle_size + 0.05
+          particle_system_struct("particlesystem")\particle_size = particle_system_struct("particlesystem")\particle_size + 0.05
 
       EndSelect
       
@@ -480,7 +447,7 @@ Repeat
       centroid.b2Vec2
       _Box2C_b2PolygonShape_MoveToZeroCentroid(@tmp_fixture_vector(0)\x, tmp_fixture_vector_size, @centroid\x)
       
-      clipboard_str.s = "b2PolygonShape_CreateFixture(boatFixture, boatBody, 1, 0.1, 0, 0, 1, 0, 65535, #b2_sprite, " +  Chr(34) + "["
+      clipboard_str.s = "\" + Chr(34) + "["
       
       For tmp_fixture_vector_num = 0 To (tmp_fixture_vector_size - 1)
         
@@ -492,7 +459,7 @@ Repeat
         clipboard_str = clipboard_str + StrF(tmp_fixture_vector(tmp_fixture_vector_num)\x, 2) + ", " + StrF(tmp_fixture_vector(tmp_fixture_vector_num)\y, 2)
       Next
       
-      clipboard_str = clipboard_str + "]" +  Chr(34) + ", " + StrF(tmp_quad(1)\x - tmp_quad(0)\x, 2) + ", 2.5, 1.0, 0, 0, 0, 0, @speed_boat_texture)"
+      clipboard_str = clipboard_str + "]\" +  Chr(34) + ", " + StrF(tmp_quad(1)\x - tmp_quad(0)\x, 2)
       
  ;     _Box2C_b2PolygonShape_ComputeCentroid(@tmp_fixture_vector(0)\x, tmp_fixture_vector_size, @centroid\x)
   ;    clipboard_str = clipboard_str + " --- " + StrF(centroid\x, 2) + ", " + StrF(centroid\y, 2)
@@ -565,12 +532,18 @@ Procedure keyboard_mouse_handler(*Value)
         
         b2Body_GetPosition(body_ptr("body"), tmp_pos())
         b2Body_ApplyForce(body_ptr("body"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+        
+        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("boat"), -80, 0, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_D)
         
         b2Body_GetPosition(body_ptr("body"), tmp_pos())
         b2Body_ApplyForce(body_ptr("body"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+        
+        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("boat"), 80, 0, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_W)
@@ -588,11 +561,15 @@ Procedure keyboard_mouse_handler(*Value)
       If GetAsyncKeyState_(#VK_Q)
         
         b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
+        
+        b2Body_ApplyTorque(body_ptr("boat"), 50, 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_E)
         
         b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
+        
+        b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
       EndIf
       
       ; camera control (mouse)
@@ -693,9 +670,9 @@ Procedure text_window_handler(*Value)
               "Crate: Mass=" + StrF(body_mass, 2) + Chr(10) + 
               "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
               "Animation: Speed=" + StrF(animation_speed / 60.0) + " ms" + Chr(10) + 
-              "Water Particle: Size=" + StrF(particle_size) + "; Blending=" + Str(particle_blending) + Chr(10) + 
+              "Water Particle: Size=" + StrF(particle_system_struct("particlesystem")\particle_size) + "; Blending=" + Str(particle_system_struct("particlesystem")\particle_blending) + Chr(10) + 
               "Water Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(water_radius, 2) + Chr(10) + 
-              "Bodies: Total=" + Str(particlecount) + Chr(10) + 
+              "Bodies: Total=" + Str(particle_system_struct("particlesystem")\particle_count) + Chr(10) + 
               "Frames: Per Sec=" + Str(fps) + " fps"
 
       SetGadgetText(5, msg)
@@ -729,36 +706,54 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_system.i)
   
-  If destroy_fixtures = 1
-    
-    ; Destroy the Box2D Fixtures  
-;    b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
- ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture1\fixture_ptr)
- ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture2\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("body"), fixture_struct("body")\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket main")\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 1")\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 2")\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 3")\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("bucket ball"), fixture_struct("bucket ball")\fixture_ptr)
-    b2Body_DestroyFixture(body_ptr("boat"), fixture_struct("boat")\fixture_ptr)
-  EndIf
+;   If destroy_fixtures = 1
+;     
+;     ; Destroy the Box2D Fixtures  
+; ;    b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
+;  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture1\fixture_ptr)
+;  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture2\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("body"), fixture_struct("body")\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket main")\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 1")\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 2")\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 3")\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("bucket ball"), fixture_struct("bucket ball")\fixture_ptr)
+;     b2Body_DestroyFixture(body_ptr("boat"), fixture_struct("boat")\fixture_ptr)
+;   EndIf
   
   If destroy_bodies = 1
   
     ; Destroy the Box2D Bodies  
-    b2World_DestroyBody(world, body_ptr("ground"))
-    b2World_DestroyBody(world, body_ptr("body"))
-    b2World_DestroyBody(world, body_ptr("bucket"))
-    b2World_DestroyBody(world, body_ptr("bucket ball"))
-    b2World_DestroyBody(world, body_ptr("boat"))
+    ResetMap(body_ptr())
+    
+    While NextMapElement(body_ptr())
+      
+      b2World_DestroyBody(world, body_ptr())
+    Wend
+
   EndIf
   
   If destroy_particle_system = 1
 
-    ; Destory the LiquidFun Particle System
-    b2ParticleGroup_DestroyParticles(particlegroup, 0)
-    b2World_DestroyParticleSystem(world, particlesystem)
+    ; Destroy the LiquidFun Particle Groups
+    ResetMap(particle_group_ptr())
+    
+    While NextMapElement(particle_group_ptr())
+      
+      b2ParticleGroup_DestroyParticles(particle_group_ptr(), 0)
+    Wend
+
+    ; Destroy the LiquidFun Particle Systems
+    ResetMap(particle_system_struct())
+    
+    While NextMapElement(particle_system_struct())
+      
+;      b2ParticleGroup_DestroyParticles(particle_group_ptr(), 0)
+      b2World_DestroyParticleSystem(world, particle_system_struct()\particle_system_ptr)
+    Wend
+
+    
+    
   
     ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
     b2World_Step(world, (1 / 60.0), 6, 2)
@@ -797,42 +792,24 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
   
   If create_particle_system = 1
     
-    ; Water (wave machine) parameters
-    particle_flags.i = #b2_waterParticle
-    particle_density = 1.8
-    particle_powder_strength = 0.5
-    particle_pressure_strength = 0.01
-    particle_radius = 0.3
-    particle_group_flags.i = #b2_solidParticleGroup
-    particle_group_strength = 1.0
-    particle_group_stride = 0.4
-    particle_group_radius = 10.0
-    
-    ; Create the Particle System
-    ; world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, radius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength
-    particlesystem = b2World_CreateParticleSystem(world, 0.5, 0.2, 1, 0.5, 0.25, 0.016666666666666666, particle_powder_strength, particle_pressure_strength, particle_radius, 1, 0.25, 8, 0.2, 0.2, 0.2, 0.2, 0.25)
-    b2ParticleSystem_SetDensity(particlesystem, particle_density)
+    ; Create the Particle Systems
+    b2World_CreateParticleSystems()
     
     ; Create the Particle Group
-    ; particleSystem, angle, angularVelocity, colorR, colorG, colorB, colorA, flags, group, groupFlags, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData, px, py,	radius
-  ;  Debug(flags)
-    particlegroup = b2CircleShape_CreateParticleGroup(particlesystem, 0, 0, 0, 0, 0, 0, particle_flags, 0, particle_group_flags, 0, 0, 0, particle_group_position_x, particle_group_position_y, 0, 0, particle_group_strength, particle_group_stride, 0, 0, 0, particle_group_radius)
+    b2World_CreateParticleGroups()
     
-    
-    
-    particlecount = b2ParticleSystem_GetParticleCount(particlesystem)
-    particlepositionbuffer = b2ParticleSystem_GetPositionBuffer(particlesystem)
-  
-    ReDim particle_quad_vertice(Int(particlecount) * 4)
-    ReDim particle_texture_vertice(Int(particlecount) * 4)
+    ; Update the Particle System with the latest info
+    particle_system_struct("particlesystem")\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct("particlesystem")\particle_system_ptr)
+    particle_system_struct("particlesystem")\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct("particlesystem")\particle_system_ptr)
+
   EndIf
   
 EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 818
-; FirstLine = 794
+; CursorPosition = 132
+; FirstLine = 114
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw4.exe
