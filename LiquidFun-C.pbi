@@ -125,12 +125,45 @@ ImportC "LiquidFun-C.lib"
   b2CircleShape_CreateParticleGroup.l (particleSystem.l, angle.d, angularVelocity.d, colorR.d, colorG.d, colorB.d, colorA.d, flags.d, group.d, groupFlags.d, lifetime.d, linearVelocityX.d, linearVelocityY.d, positionX.d, positionY.d, positionData.d, particleCount.d, strength.d, stride.d, userData.d,	px.d, py.d,	radius.d)
   b2ParticleGroup_GetParticleCount.d (particleGroup.l)
   b2ParticleGroup_DestroyParticles (particleGroup.l, flag.d)
+  
+  ; b2WeldJoint
+  b2WeldJointDef_Create.l (world.l, bodyA.l, bodyB.l, collideConnected.d, dampingRatio.d, frequencyHz.d, localAnchorAx.d, localAnchorAy.d, localAnchorBx.d, localAnchorBy.d, referenceAngle.d)
+  b2WeldJointDef_InitializeAndCreate.l (world.l, bodyA.l, bodyB.l, anchorX.d,	anchorY.d, collideConnected.d, dampingRatio.d, frequencyHz.d)
+  
+  ; b2RevoluteJoint
+  b2RevoluteJoint_EnableLimit (joint.l, flag.d)
+	b2RevoluteJoint_EnableMotor (joint.l, flag.d)
+	b2RevoluteJoint_GetJointAngle.d (joint.l)
+	b2RevoluteJoint_IsLimitEnabled.d (joint.l)
+	b2RevoluteJoint_IsMotorEnabled.d (joint.l)
+	b2RevoluteJointDef_Create.l (world.l, bodyA.l, bodyB.l, collideConnected.d,	enableLimit.d, enableMotor.d, lowerAngle.d,	localAnchorAx.d, localAnchorAy.d, localAnchorBx.d, localAnchorBy.d, maxMotorTorque.d, motorSpeed.d,	referenceAngle.d, upperAngle.d)
+	b2RevoluteJointDef_InitializeAndCreate.l (world.l, bodyA.l, bodyB.l, anchorX.d, anchorY.d, collideConnected.d, enableLimit.d,	enableMotor.d, lowerAngle.d, maxMotorTorque.d, motorSpeed.d, upperAngle.d)
+  b2RevoluteJoint_SetMotorSpeed (joint.l, speed.d)
+  
+  ; b2PrismaticJoint
+  b2PrismaticJoint_EnableLimit (joint.l, flag.d)
+	b2PrismaticJoint_EnableMotor (joint.l, flag.d)
+	b2PrismaticJoint_GetJointTranslation.d (joint.l)
+	b2PrismaticJoint_GetMotorSpeed.d (joint.l)
+	b2PrismaticJoint_GetMotorForce.d (joint.l, hz.d)
+	b2PrismaticJoint_IsLimitEnabled.d (joint.l)
+	b2PrismaticJoint_IsMotorEnabled.d (joint.l)
+	b2PrismaticJoint_SetMotorSpeed (joint.l, speed.d)
+	b2PrismaticJointDef_Create.l (world.l, bodyA.l, bodyB.l, collideConnected.d, enableLimit.d, enableMotor.d, localAnchorAx.d,	localAnchorAy.d, localAnchorBx.d, localAnchorBy.d, localAxisAx.d, localAxisAy.d, lowerTranslation.d, maxMotorForce.d, motorSpeed.d, referenceAngle.d, upperTranslation.d)
+  b2PrismaticJointDef_InitializeAndCreate.l (world.l,	bodyA.l, bodyB.l, anchorX.d, anchorY.d, axisX.d, axisY.d,	collideConnected.d,	enableLimit.d, enableMotor.d, lowerTranslation.d, maxMotorForce.d, motorSpeed.d, upperTranslation.d)
+  
+  ; b2WheelJoint
+  b2WheelJoint_SetMotorSpeed (wheel.l, speed.d)
+	b2WheelJoint_SetSpringFrequencyHz (wheel.l, frequency.d)
+	b2WheelJointDef_Create.l (world.l, bodyA.l, bodyB.l, collideConnected.d, dampingRatio.d, enableMotor.d, frequencyHz.d, localAnchorAx.d, localAnchorAy.d, localAnchorBx.d,	localAnchorBy.d, localAxisAx.d, localAxisAy.d, maxMotorTorque.d, motorSpeed.d)
+	b2WheelJointDef_InitializeAndCreate.l (world.l, bodyA.l, bodyB.l, anchorX.d, anchorY.d, axisX.d, axisY.d, collideConnected.d, dampingRatio.d, enableMotor.d, frequencyHz.d, maxMotorTorque.d, motorSpeed.d)
 
+  
 EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 52
-; FirstLine = 31
+; CursorPosition = 158
+; FirstLine = 124
 ; EnableXP
 ; EnableUnicode

@@ -96,13 +96,7 @@ Repeat
     
             
     ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    ResetMap(particle_system_struct())
-    
-    While NextMapElement(particle_system_struct())
-      
-      glDrawParticles(particle_system_struct())
-    Wend
-    
+    glDrawParticles()
     
     
     ; Draw the Box2D Bodies (body, fixture, texture)
@@ -549,6 +543,19 @@ Procedure keyboard_mouse_handler(*Value)
         
         b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
       EndIf
+                  
+      If GetAsyncKeyState_(#VK_M)
+        
+;        b2Body_AddAngularVelocity(body_ptr("boat prop"), Radian(5))
+        b2Body_ApplyTorque(body_ptr("boat prop"), -100, 1)
+
+      EndIf
+      
+      If GetAsyncKeyState_(#VK_N)
+        
+;        b2Body_AddAngularVelocity(body_ptr("boat prop"), Radian(-5))
+        b2Body_ApplyTorque(body_ptr("boat prop"), 100, 1)
+      EndIf
       
       ; camera control (mouse)
             
@@ -671,8 +678,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 32
-; FirstLine = 28
+; CursorPosition = 556
+; FirstLine = 529
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe

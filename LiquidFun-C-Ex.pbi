@@ -540,7 +540,7 @@ EndProcedure
 
 
 
-Procedure glDrawParticles(*tmp_particle_system.b2_ParticleSystem) ;, particle_quad_size.f, blending.i)
+Procedure glDrawParticleSystem(*tmp_particle_system.b2_ParticleSystem)
 
   *positionbuffer_ptr.b2Vec2 = *tmp_particle_system\particle_position_buffer
   
@@ -1442,13 +1442,23 @@ EndProcedure
 
 
 Procedure glDrawFixtures()
-      
-    ResetMap(fixture_struct())
     
-    While NextMapElement(fixture_struct())
-      
-      glDrawFixture(fixture_struct())
-    Wend
+  ResetMap(fixture_struct())
+  
+  While NextMapElement(fixture_struct())
+    
+    glDrawFixture(fixture_struct())
+  Wend
+EndProcedure
+
+Procedure glDrawParticles()
+
+  ResetMap(particle_system_struct())
+  
+  While NextMapElement(particle_system_struct())
+    
+    glDrawParticleSystem(particle_system_struct())
+  Wend
 EndProcedure
 
 
@@ -1553,6 +1563,25 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
 
     ; Create the Box2D Bodies
     b2World_CreateBodies()
+    
+    ; Join the bodies
+    
+ ; 	b2RevoluteJointDef_InitializeAndCreate (world, body_ptr("boat prop"), body_ptr("boat prop axle"), 0, 0, 0, 0, 1, 0, 0, 0, 0)
+ ; 	b2RevoluteJointDef_InitializeAndCreate (world, body_ptr("boat prop axle"), body_ptr("boat prop"), 0, 0, 0, 0, 1, 0, 0, 0, 0)
+  	
+  ;	b2PrismaticJointDef_InitializeAndCreate (world, body_ptr("boat"), body_ptr("boat prop"), 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)
+  ;	b2RevoluteJointDef_InitializeAndCreate (world, body_ptr("boat"), body_ptr("boat prop"), 0, 0, 0, 1, 0, 0, 0, 0, 0)
+    ;b2WeldJointDef_InitializeAndCreate(world, body_ptr("boat"), body_ptr("boat prop axle"), 0, 0, 0, 0, 0)
+
+  	
+  	
+;    b2WeldJointDef_InitializeAndCreate(world, body_ptr("boat"), body_ptr("boat prop axle"), 0, 0, 0, 0, 0)
+;      b2WeldJointDef_InitializeAndCreate (world.l, bodyA.l, bodyB.l, anchorX.d,	anchorY.d, collideConnected.d, dampingRatio.d, frequencyHz.d)
+;    b2WeldJointDef_InitializeAndCreate(world, body_ptr("boat prop axle"), body_ptr("boat prop"), 0, 0, 0, 0, 0)
+  	
+  	b2WheelJointDef_InitializeAndCreate(world, body_ptr("boat prop"), body_ptr("boat"), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+  	
+  	
   EndIf
   
   If create_fixtures = 1
@@ -1588,8 +1617,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1585
-; FirstLine = 1546
+; CursorPosition = 1581
+; FirstLine = 1559
 ; Folding = ------
 ; EnableXP
 ; EnableUnicode
