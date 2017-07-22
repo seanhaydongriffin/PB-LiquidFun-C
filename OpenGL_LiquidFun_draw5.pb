@@ -22,33 +22,6 @@ Global tmp_fixture_vector_num = -1
 Global tmp_fixture_vector_size = -1
 Global Dim tmp_fixture_angle.f(50)
 
-; Game Controls
-Global camera_linearvelocity.Vec3f
-camera_linearvelocity\x = 0
-camera_linearvelocity\y = 0
-camera_linearvelocity\z = 0
-Global camera_position.Vec3f
-camera_position\x = 0
-camera_position\y = 0
-camera_position\z = 0
-Global mouse_position.Vec2i
-mouse_position\x = 0
-mouse_position\y = 0
-Global draw_world_start_position.b2Vec2
-draw_world_start_position\x = 999999
-draw_world_start_position\y = 999999
-Global draw_world_end_position.b2Vec2
-draw_world_end_position\x = 999999
-draw_world_end_position\y = 999999
-Global draw_world_angle.f
-Global old_mouse_position.Vec2i
-old_mouse_position\x = -99999
-old_mouse_position\y = -99999
-Global mouse_left_button_down.i = 0
-Global mouse_wheel_position.i = 0
-Global texture_drawing_mode.i = 0
-Global fixture_drawing_mode.i = 0
-Global end_game.i = 0
 ; ===============================================================================================================================
 
 ; #VARIABLES# ===================================================================================================================
@@ -57,8 +30,6 @@ Global end_game.i = 0
 ; #FUNCTIONS# ===================================================================================================================
 Declare keyboard_mouse_handler(*Value)
 Declare text_window_handler(*Value)
-Declare b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_system.i)
-Declare b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system.i)
 ; ===============================================================================================================================
 
   
@@ -125,8 +96,15 @@ Repeat
     
             
     ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    glDrawParticles(particle_system_struct("particlesystem"))
-
+    ResetMap(particle_system_struct())
+    
+    While NextMapElement(particle_system_struct())
+      
+      glDrawParticles(particle_system_struct())
+    Wend
+    
+    
+    
     ; Draw the Box2D Bodies (body, fixture, texture)
     glDrawFixtures()
 
@@ -670,12 +648,14 @@ Procedure text_window_handler(*Value)
               "Crate: Mass=" + StrF(body_mass, 2) + Chr(10) + 
               "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
               "Animation: Speed=" + StrF(animation_speed / 60.0) + " ms" + Chr(10) + 
-              "Water Particle: Size=" + StrF(particle_system_struct("particlesystem")\particle_size) + "; Blending=" + Str(particle_system_struct("particlesystem")\particle_blending) + Chr(10) + 
               "Water Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(water_radius, 2) + Chr(10) + 
-              "Bodies: Total=" + Str(particle_system_struct("particlesystem")\particle_count) + Chr(10) + 
               "Frames: Per Sec=" + Str(fps) + " fps"
 
       SetGadgetText(5, msg)
+      
+;              "Water Particle: Size=" + StrF(particle_system_struct("water")\particle_size) + "; Blending=" + Str(particle_system_struct("water")\particle_blending) + Chr(10) + 
+;              "Bodies: Total=" + Str(particle_system_struct("water")\particle_count) + Chr(10) + 
+      
       
 ;              "Camera: Pos=" + Str(camera_position\x) + "," + Str(camera_position\y) + "," + Str(camera_position\z) + Chr(10) + 
 ;              "OpenGL extensions = " + sgGlExtn + Chr(10) + 
@@ -689,134 +669,11 @@ Procedure text_window_handler(*Value)
 
 EndProcedure
 
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2DestroyScene
-; Description ...: Destroy all objects in the current Box2D scene
-; Syntax.........: b2DestroyScene()
-; Parameters ....: destroy_fixtures - 1 (true) to destroy all fixtures, anything else to ignore
-;                  destroy_bodies - 1 (true) to destroy all bodies, anything else to ignore
-;                  destroy_particle_system - 1 (true) to destroy all particle system elements, anything else to ignore
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......: 
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_system.i)
-  
-;   If destroy_fixtures = 1
-;     
-;     ; Destroy the Box2D Fixtures  
-; ;    b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
-;  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture1\fixture_ptr)
-;  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture2\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("body"), fixture_struct("body")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket main")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 1")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 2")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 3")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket ball"), fixture_struct("bucket ball")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("boat"), fixture_struct("boat")\fixture_ptr)
-;   EndIf
-  
-  If destroy_bodies = 1
-  
-    ; Destroy the Box2D Bodies  
-    ResetMap(body_ptr())
-    
-    While NextMapElement(body_ptr())
-      
-      b2World_DestroyBody(world, body_ptr())
-    Wend
-
-  EndIf
-  
-  If destroy_particle_system = 1
-
-    ; Destroy the LiquidFun Particle Groups
-    ResetMap(particle_group_struct())
-    
-    While NextMapElement(particle_group_struct())
-      
-      b2ParticleGroup_DestroyParticles(particle_group_struct()\particle_group_ptr, 0)
-    Wend
-
-    ; Destroy the LiquidFun Particle Systems
-    ResetMap(particle_system_struct())
-    
-    While NextMapElement(particle_system_struct())
-      
-      b2World_DestroyParticleSystem(world, particle_system_struct()\particle_system_ptr)
-    Wend
-
-    
-    
-  
-    ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-    b2World_Step(world, (1 / 60.0), 6, 2)
-  EndIf
-  
-EndProcedure
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2CreateScene
-; Description ...: Destroy all objects in the current Box2D scene
-; Syntax.........: b2CreateScene()
-; Parameters ....: destroy_fixtures - 1 (true) to create all fixtures, anything else to ignore
-;                  destroy_bodies - 1 (true) to create all bodies, anything else to ignore
-;                  destroy_particle_system - 1 (true) to create all particle system elements, anything else to ignore
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......: 
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system.i)
-  
-  If create_bodies = 1
-
-    ; Create the Box2D Bodies
-    b2World_CreateBodies()
-  EndIf
-  
-  If create_fixtures = 1
-
-    ; Create the Box2D Fixtures
-    b2World_CreateFixtures()
-  EndIf
-  
-  If create_particle_system = 1
-    
-    ; Create the Particle Systems
-    b2World_CreateParticleSystems()
-    
-    ; Create the Particle Group
-    b2World_CreateParticleGroups()
-    
-    ; Update the Particle System with the latest info
-    ResetMap(particle_system_struct())
-    
-    While NextMapElement(particle_system_struct())
-      
-      particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
-      particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
-    Wend
-
-    
-
-  EndIf
-  
-EndProcedure
-
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 807
-; FirstLine = 776
+; CursorPosition = 32
+; FirstLine = 28
 ; Folding = -
 ; EnableXP
-; Executable = OpenGL_LiquidFun_draw4.exe
+; Executable = OpenGL_LiquidFun_draw5.exe
 ; SubSystem = OpenGL
