@@ -95,6 +95,11 @@ Structure b2_ParticleGroup
   particle_group_ptr.l
   active.i
 EndStructure
+    
+Structure b2_Joint
+  joint_ptr.l
+  active.i
+EndStructure
 
 
 
@@ -126,9 +131,14 @@ Global NewMap body.s()
 ; Box2D Fixtures
 Global NewMap fixture.s()
 
+; Box2D Joints
+Global NewMap joint.s()
+
 ; Box2D Textures
 Global NewMap texture.s()
 Global NewMap texture_struct.gl_Texture()
+
+Global tmp_joint.l
 
 ; LiquidFun Particle Systems
 Global NewMap particle_system.s()
@@ -258,6 +268,10 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   LoadJSON(4, "particle_group.json")
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(4), particle_group())       
+  
+  LoadJSON(5, "joint.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(5), joint())       
   
   gravity\x = gravity_x
   gravity\y = gravity_y
@@ -1137,62 +1151,118 @@ Procedure b2World_CreateFixtures()
       body_offset_y.d     = GetJSONDouble(GetJSONElement(JSONValue(1), 19))
       texture_name.s      = GetJSONString(GetJSONElement(JSONValue(1), 20))
       
-      shape_type_int.i
-      
-      If shape_type = "circle"
+      If FindMapElement(body_ptr(), body_name) <> 0 And b2Body_IsActive(body_ptr(body_name)) = 1
         
-        shape_type_int = #b2_circle
-      EndIf
-      
-      If shape_type = "edge"
+        shape_type_int.i
         
-        shape_type_int = #b2_edge
-      EndIf
-      
-      If shape_type = "polygon"
+        If shape_type = "circle"
+          
+          shape_type_int = #b2_circle
+        EndIf
         
-        shape_type_int = #b2_polygon
-      EndIf
-      
-      If shape_type = "chain"
+        If shape_type = "edge"
+          
+          shape_type_int = #b2_edge
+        EndIf
         
-        shape_type_int = #b2_chain
-      EndIf
-      
-      If shape_type = "box"
+        If shape_type = "polygon"
+          
+          shape_type_int = #b2_polygon
+        EndIf
         
-        shape_type_int = #b2_box
-      EndIf
-      
-      If shape_type = "sprite"
+        If shape_type = "chain"
+          
+          shape_type_int = #b2_chain
+        EndIf
         
-        shape_type_int = #b2_sprite
-      EndIf
-      
-      draw_type_int.i = -1
-      
-      If draw_type = "texture"
+        If shape_type = "box"
+          
+          shape_type_int = #b2_box
+        EndIf
         
-        draw_type_int = #gl_texture2
-      EndIf
-      
-      If draw_type = "texture and line loop"
+        If shape_type = "sprite"
+          
+          shape_type_int = #b2_sprite
+        EndIf
         
-        draw_type_int = #gl_texture2_and_line_loop2
-      EndIf
-      
-      If draw_type = "line loop"
+        draw_type_int.i = -1
         
-        draw_type_int = #gl_line_loop2
-      EndIf
-      
-      If draw_type = "line strip"
+        If draw_type = "texture"
+          
+          draw_type_int = #gl_texture2
+        EndIf
         
-        draw_type_int = #gl_line_strip2
+        If draw_type = "texture and line loop"
+          
+          draw_type_int = #gl_texture2_and_line_loop2
+        EndIf
+        
+        If draw_type = "line loop"
+          
+          draw_type_int = #gl_line_loop2
+        EndIf
+        
+        If draw_type = "line strip"
+          
+          draw_type_int = #gl_line_strip2
+        EndIf
+        
+        AddMapElement(fixture_struct(), fixture_name)
+        b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, sprite_offset_x, sprite_offset_y, draw_type_int, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @texture_struct(texture_name))
       EndIf
+    
+    EndIf
+  Next
+EndProcedure
+
+
+Procedure b2World_CreateJoints()
+  
+  Global NewMap joint_struct.b2_Joint()
+  joint_name.s
+  
+  ForEach joint()
+    
+    joint_name = MapKey(joint())
+    
+    If joint_name <> "joint name"
       
-      AddMapElement(fixture_struct(), fixture_name)
-      b2PolygonShape_CreateFixture(fixture_struct(), body_ptr(body_name), density, friction, isSensor, restitution, categoryBits, groupIndex, maskBits, shape_type_int, vertices, sprite_size, sprite_offset_x, sprite_offset_y, draw_type_int, line_width, line_red, line_green, line_blue, body_offset_x, body_offset_y, @texture_struct(texture_name))
+      ParseJSON(5, joint(joint_name))
+      body_a_name.s       = GetJSONString(GetJSONElement(JSONValue(5), 0))
+      body_b_name.s       = GetJSONString(GetJSONElement(JSONValue(5), 1))
+      joint_type.s        = GetJSONString(GetJSONElement(JSONValue(5), 2))
+      active.i            = GetJSONInteger(GetJSONElement(JSONValue(5), 3))
+      collideConnected.d  = GetJSONDouble(GetJSONElement(JSONValue(5), 4))
+      dampingRatio.d      = GetJSONDouble(GetJSONElement(JSONValue(5), 5))
+      enableLimit.d       = GetJSONDouble(GetJSONElement(JSONValue(5), 6))
+      enableMotor.d       = GetJSONDouble(GetJSONElement(JSONValue(5), 7))
+      lowerAngle.d        = GetJSONDouble(GetJSONElement(JSONValue(5), 8))
+      frequencyHz.d       = GetJSONDouble(GetJSONElement(JSONValue(5), 9))
+      localAnchorAx.d     = GetJSONDouble(GetJSONElement(JSONValue(5), 10))
+      localAnchorAy.d     = GetJSONDouble(GetJSONElement(JSONValue(5), 11))
+      localAnchorBx.d     = GetJSONDouble(GetJSONElement(JSONValue(5), 12))
+      localAnchorBy.d     = GetJSONDouble(GetJSONElement(JSONValue(5), 13))
+      localAxisAx.d       = GetJSONDouble(GetJSONElement(JSONValue(5), 14))
+      localAxisAy.d       = GetJSONDouble(GetJSONElement(JSONValue(5), 15))
+      maxMotorTorque.d    = GetJSONDouble(GetJSONElement(JSONValue(5), 16))
+      lowerTranslation.d  = GetJSONDouble(GetJSONElement(JSONValue(5), 17))
+      maxMotorForce.d     = GetJSONDouble(GetJSONElement(JSONValue(5), 18))
+      motorSpeed.d        = GetJSONDouble(GetJSONElement(JSONValue(5), 19))
+      referenceAngle.d    = GetJSONDouble(GetJSONElement(JSONValue(5), 20))
+      upperAngle.d        = GetJSONDouble(GetJSONElement(JSONValue(5), 21))
+      upperTranslation.d  = GetJSONDouble(GetJSONElement(JSONValue(5), 22))
+      
+      If active = 1
+      
+        AddMapElement(joint_struct(), joint_name)
+  
+        If joint_type = "wheel"
+          
+          joint_struct()\joint_ptr = b2WheelJointDef_Create(world, body_ptr(body_a_name), body_ptr(body_b_name), collideConnected, dampingRatio, enableMotor, frequencyHz, localAnchorAx, localAnchorAy, localAnchorBx,	localAnchorBy, localAxisAx, localAxisAy, maxMotorTorque, motorSpeed)
+        EndIf
+      EndIf
+    
+      
     EndIf
   Next
 EndProcedure
@@ -1564,23 +1634,8 @@ Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_syst
     ; Create the Box2D Bodies
     b2World_CreateBodies()
     
-    ; Join the bodies
-    
- ; 	b2RevoluteJointDef_InitializeAndCreate (world, body_ptr("boat prop"), body_ptr("boat prop axle"), 0, 0, 0, 0, 1, 0, 0, 0, 0)
- ; 	b2RevoluteJointDef_InitializeAndCreate (world, body_ptr("boat prop axle"), body_ptr("boat prop"), 0, 0, 0, 0, 1, 0, 0, 0, 0)
-  	
-  ;	b2PrismaticJointDef_InitializeAndCreate (world, body_ptr("boat"), body_ptr("boat prop"), 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)
-  ;	b2RevoluteJointDef_InitializeAndCreate (world, body_ptr("boat"), body_ptr("boat prop"), 0, 0, 0, 1, 0, 0, 0, 0, 0)
-    ;b2WeldJointDef_InitializeAndCreate(world, body_ptr("boat"), body_ptr("boat prop axle"), 0, 0, 0, 0, 0)
-
-  	
-  	
-;    b2WeldJointDef_InitializeAndCreate(world, body_ptr("boat"), body_ptr("boat prop axle"), 0, 0, 0, 0, 0)
-;      b2WeldJointDef_InitializeAndCreate (world.l, bodyA.l, bodyB.l, anchorX.d,	anchorY.d, collideConnected.d, dampingRatio.d, frequencyHz.d)
-;    b2WeldJointDef_InitializeAndCreate(world, body_ptr("boat prop axle"), body_ptr("boat prop"), 0, 0, 0, 0, 0)
-  	
-  	b2WheelJointDef_InitializeAndCreate(world, body_ptr("boat prop"), body_ptr("boat"), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-  	
+    ; Create the Box2D Joints
+    b2World_CreateJoints()
   	
   EndIf
   
@@ -1617,8 +1672,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1581
-; FirstLine = 1559
+; CursorPosition = 1643
+; FirstLine = 1625
 ; Folding = ------
 ; EnableXP
 ; EnableUnicode

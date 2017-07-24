@@ -85,9 +85,11 @@ Repeat
     
     frame_timer = ElapsedMilliseconds()
     
+    
     ; Step the Box2D World
     b2World_Step(world, (animation_speed / 60.0), 6, 2)
     
+
     ; Clear the OpenGLGadget
     glColor3f_(1.0, 1.0, 1.0)
 ;    glClearColor_(1, 1, 1, 1)
@@ -240,7 +242,7 @@ Repeat
     
     b2Body_SetAngularVelocityPercent(body_ptr("ground"), 99)
     
-    body_mass.d = b2Body_GetMass(body_ptr("body"))
+    body_mass.d = b2Body_GetMass(body_ptr("boat"))
     
     num_frames = num_frames + 1
   EndIf
@@ -501,47 +503,66 @@ Procedure keyboard_mouse_handler(*Value)
       ; body control (keyboard)
 
       If GetAsyncKeyState_(#VK_A)
-        
-        b2Body_GetPosition(body_ptr("body"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("body"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+
         
         b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("boat"), -80, 0, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_ApplyForce(body_ptr("boat"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+        
+  ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+   ;     b2Body_ApplyForce(body_ptr("boat"), -80, 0, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_D)
-        
-        b2Body_GetPosition(body_ptr("body"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("body"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
-        
+
         b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("boat"), 80, 0, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_ApplyForce(body_ptr("boat"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+        
+  ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+  ;      b2Body_ApplyForce(body_ptr("boat"), 80, 0, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_W)
         
-        b2Body_GetPosition(body_ptr("body"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("body"), 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_S)
         
-        b2Body_GetPosition(body_ptr("body"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("body"), 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+        b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_Q)
+                        
+        tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
         
-        b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
+        If tmp_velocity < 30
+          
+          tmp_velocity = tmp_velocity + Radian(100)
+        EndIf
         
-        b2Body_ApplyTorque(body_ptr("boat"), 50, 1)
+        b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+        
+;        b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
+        
+ ;       b2Body_ApplyTorque(body_ptr("boat"), 50, 1)
       EndIf
 
       If GetAsyncKeyState_(#VK_E)
+                
+        tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
         
-        b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
+        If tmp_velocity > -30
+
+          tmp_velocity = tmp_velocity - Radian(100)
+        EndIf
         
-        b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
+        b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+
+;        b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
+        
+ ;       b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
       EndIf
                   
       If GetAsyncKeyState_(#VK_M)
@@ -678,8 +699,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 556
-; FirstLine = 529
+; CursorPosition = 557
+; FirstLine = 534
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe
