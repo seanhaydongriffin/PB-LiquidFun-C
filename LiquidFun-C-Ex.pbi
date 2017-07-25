@@ -34,6 +34,12 @@ Enumeration glMode
     #gl_line_loop2
 EndEnumeration
 
+Enumeration MenuType
+    #main_menu
+    #player_menu
+    #particle_menu
+EndEnumeration
+
 ; ===============================================================================================================================
 
 
@@ -94,6 +100,7 @@ EndStructure
 Structure b2_ParticleGroup
   particle_group_ptr.l
   active.i
+  radius.d
 EndStructure
     
 Structure b2_Joint
@@ -176,6 +183,10 @@ Global mouse_wheel_position.i = 0
 Global texture_drawing_mode.i = 0
 Global fixture_drawing_mode.i = 0
 Global end_game.i = 0
+Global info_text_window.l
+Global menu_type.i = #main_menu
+Global current_particle_system_name.s = "water"
+Global current_particle_group_name.s = "water"
 
 ; ===============================================================================================================================
 
@@ -627,11 +638,15 @@ EndProcedure
   
 
 Procedure MyWindowCallback(WindowID,Message,wParam,lParam)
+  
   Result=#PB_ProcessPureBasicEvents
+  
   If Message=#WM_MOVE ; Main window is moving!
+    
     GetWindowRect_(WindowID(0),win.RECT) ; Store its dimensions in "win" structure.
     SetWindowPos_(info_text_window,0,win\left+10,win\top+20,0,0,#SWP_NOSIZE|#SWP_NOACTIVATE) ; Dock other window.
   EndIf
+  
   ProcedureReturn Result
 EndProcedure
 
@@ -665,7 +680,7 @@ Procedure glSetupWindows(main_window_x.i, main_window_y.i, main_window_width.i, 
   SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
   GetWindowRect_(WindowID(0),win.RECT)
   OpenWindow(1, win\left+10, win\top+20, text_window_width, text_window_height, "Follower", #PB_Window_BorderLess, WindowID(0))
-  Global info_text_window.l = WindowID(1)
+  info_text_window = WindowID(1)
   SetWindowColor(1, text_window_background_colour)
   SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
   SetLayeredWindowAttributes_(WindowID(1), text_window_background_colour,0,#LWA_COLORKEY)
@@ -1115,7 +1130,19 @@ Procedure b2World_CreateBodies()
 EndProcedure
 
 
+Procedure b2World_DestroyBodies()
+  
+      ; Destroy the Box2D Bodies  
+    ResetMap(body_ptr())
+    
+    While NextMapElement(body_ptr())
+      
+      b2World_DestroyBody(world, body_ptr())
+    Wend
+    
+    FreeMap(body_ptr())
 
+EndProcedure
 
 Procedure b2World_CreateFixtures()
   
@@ -1268,6 +1295,21 @@ Procedure b2World_CreateJoints()
 EndProcedure
 
 
+Procedure b2World_DestroyJoints()
+  
+      ; Destroy the Box2D Joints  
+    ResetMap(joint_struct())
+    
+    While NextMapElement(joint_struct())
+      
+      b2World_DestroyJoint(world, joint_struct()\joint_ptr)
+    Wend
+    
+    FreeMap(joint_struct())
+
+EndProcedure
+
+
 Procedure b2World_CreateTextures()
   
   texture_name.s
@@ -1287,7 +1329,7 @@ Procedure b2World_CreateTextures()
 EndProcedure
 
 
-Procedure b2World_CreateParticleSystems()
+Procedure b2World_CreateParticleSystems(single_system_name.s = "")
   
   Global NewMap particle_system_struct.b2_ParticleSystem()
   particle_system_name.s
@@ -1322,8 +1364,8 @@ Procedure b2World_CreateParticleSystems()
       particle_size.d                   = GetJSONDouble(GetJSONElement(JSONValue(3), 21))
       particle_blending.i               = GetJSONInteger(GetJSONElement(JSONValue(3), 22))
       
-      If active = 1
-
+      If active = 1 Or single_system_name = particle_system_name
+        
         tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, particleRadius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength)
         b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particleDensity)
         
@@ -1332,12 +1374,31 @@ Procedure b2World_CreateParticleSystems()
         particle_system_struct()\texture_name = texture_name
         particle_system_struct()\particle_size = particle_size
         particle_system_struct()\particle_blending = particle_blending
+        
+        If single_system_name = particle_system_name
+          
+          Break
+        EndIf
       EndIf
     EndIf
   Next
+
 EndProcedure
 
-Procedure b2World_CreateParticleGroups()
+Procedure b2World_DestroyParticleSystems()
+  
+    ; Destroy the LiquidFun Particle Systems
+    ResetMap(particle_system_struct())
+
+    While NextMapElement(particle_system_struct())
+       
+      b2World_DestroyParticleSystem(world, particle_system_struct()\particle_system_ptr)
+    Wend
+     
+    FreeMap(particle_system_struct())
+EndProcedure
+  
+Procedure b2World_CreateParticleGroups(single_group_name.s = "", radius_override.d = -1)
   
   Global NewMap particle_group_struct.b2_ParticleGroup()
   group_name.s
@@ -1374,8 +1435,8 @@ Procedure b2World_CreateParticleGroups()
       py.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
       radius.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 23))
       
-      If active = 1
-      
+      If active = 1 Or single_group_name = group_name
+              
         flags_int.i
         
         If flags = "water"
@@ -1500,14 +1561,50 @@ Procedure b2World_CreateParticleGroups()
           groupFlags_int = #b2_particleGroupInternalMask
         EndIf
         
+        If radius_override > -1
+          
+          radius = radius_override
+        EndIf
+        
         tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
         
         AddMapElement(particle_group_struct(), group_name)
         particle_group_struct()\particle_group_ptr = tmp_particle_group_ptr
         particle_group_struct()\active = active
+        particle_group_struct()\radius = radius
+                
+        If single_group_name = group_name
+          
+          Break
+        EndIf
+
       EndIf
     EndIf
   Next
+    
+  ; Update the Particle System with the latest info
+  ResetMap(particle_system_struct())
+  
+  While NextMapElement(particle_system_struct())
+    
+    particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
+    particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
+  Wend
+
+EndProcedure
+
+Procedure b2World_DestroyParticleGroups()
+
+    ; Destroy the LiquidFun Particle Groups
+    ResetMap(particle_group_struct())
+     
+    While NextMapElement(particle_group_struct())
+    
+      b2ParticleGroup_DestroyParticles(particle_group_struct()\particle_group_ptr, 0)
+    Wend
+      
+    FreeMap(particle_group_struct())
+  
 EndProcedure
 
 
@@ -1569,42 +1666,21 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
   
   
   If destroy_bodies = 1
+    
+    ; Destroy the Joints
+    b2World_DestroyJoints()
   
-    ; Destroy the Box2D Bodies  
-    ResetMap(body_ptr())
-    
-    While NextMapElement(body_ptr())
-      
-      b2World_DestroyBody(world, body_ptr())
-    Wend
-    
-    FreeMap(body_ptr())
-
+    ; Destroy the Bodies
+    b2World_DestroyBodies()
   EndIf
   
   If destroy_particle_system = 1
-
-    ; Destroy the LiquidFun Particle Groups
-    ResetMap(particle_group_struct())
-     
-    While NextMapElement(particle_group_struct())
     
-      b2ParticleGroup_DestroyParticles(particle_group_struct()\particle_group_ptr, 0)
-    Wend
-      
-    FreeMap(particle_group_struct())
-
-    ; Destroy the LiquidFun Particle Systems
-    ResetMap(particle_system_struct())
-
-    While NextMapElement(particle_system_struct())
-       
-      b2World_DestroyParticleSystem(world, particle_system_struct()\particle_system_ptr)
-    Wend
-     
-    FreeMap(particle_system_struct())
+    ; Destroy the Particle Groups
+    b2World_DestroyParticleGroups()
     
-    
+    ; Destroy the Particle Systems
+    b2World_DestroyParticleSystems()
   
     ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
     b2World_Step(world, (1 / 60.0), 6, 2)
@@ -1612,68 +1688,14 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
   
 EndProcedure
 
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2CreateScene
-; Description ...: Destroy all objects in the current Box2D scene
-; Syntax.........: b2CreateScene()
-; Parameters ....: destroy_fixtures - 1 (true) to create all fixtures, anything else to ignore
-;                  destroy_bodies - 1 (true) to create all bodies, anything else to ignore
-;                  destroy_particle_system - 1 (true) to create all particle system elements, anything else to ignore
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......: 
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2CreateScene(create_fixtures.i, create_bodies.i, create_particle_system.i)
-  
-  If create_bodies = 1
 
-    ; Create the Box2D Bodies
-    b2World_CreateBodies()
-    
-    ; Create the Box2D Joints
-    b2World_CreateJoints()
-  	
-  EndIf
-  
-  If create_fixtures = 1
-
-    ; Create the Box2D Fixtures
-    b2World_CreateFixtures()
-  EndIf
-  
-  If create_particle_system = 1
-    
-    ; Create the Particle Systems
-    b2World_CreateParticleSystems()
-    
-    ; Create the Particle Group
-    b2World_CreateParticleGroups()
-    
-    ; Update the Particle System with the latest info
-    ResetMap(particle_system_struct())
-    
-    While NextMapElement(particle_system_struct())
-      
-      particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
-      particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
-    Wend
-
-    
-
-  EndIf
-  
-EndProcedure
 
 
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1643
-; FirstLine = 1625
+; CursorPosition = 1690
+; FirstLine = 1655
 ; Folding = ------
 ; EnableXP
 ; EnableUnicode

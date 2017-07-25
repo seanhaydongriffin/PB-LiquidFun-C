@@ -83,7 +83,8 @@ ImportC "LiquidFun-C.lib"
   ; b2World
   b2World_Create.l (x.d, y.d)
   b2World_Step (world.l, Step2.f, vIterations.f, pIterations.f)
-  
+  b2World_DestroyJoint(world.l, joint.l)
+
   ; b2Body
   b2World_CreateBody.l (world.l, active.d, allowSleep.d, angle.d, angularVelocity.d, angularDamping.d, awake.d, bullet.d, fixedRotation.d, gravityScale.d, linearDamping.d, linearVelocityX.d, linearVelocityY.d, positionX.d, positionY.d, type.d, userData.l)
 	b2World_DestroyBody (world.l, body.l)
@@ -91,12 +92,14 @@ ImportC "LiquidFun-C.lib"
   b2Body_SetAngularVelocity (body.l, angle.d)
 	b2Body_GetPosition (body.l, arr.l)
 	b2Body_GetAngle.d (body.l)
+	b2Body_IsActive.d (body.l)
 	b2Body_SetTransform (body.l, x.d, y.d, angle.d)
 	b2Body_ApplyForce (body.l, forceX.d, forceY.d, pointX.d, pointY.d, wake.d)
 	b2Body_ApplyTorque(body.l, force.d, wake.d)
 	b2Body_GetMass.d (body.l)
 	b2Body_SetMassData (body.l, mass.d, centerX.d, centerY.d, inertia.d)
 	b2Body_GetInertia.d (body.l)
+	b2Body_SetLinearVelocity (body.l, x.d, y.d)
 
 
   ; b2Fixture
@@ -163,7 +166,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 158
-; FirstLine = 124
+; CursorPosition = 85
+; FirstLine = 72
 ; EnableXP
 ; EnableUnicode

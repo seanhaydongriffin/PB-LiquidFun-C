@@ -42,7 +42,12 @@ b2World_CreateEx(0.0, -10.0)
 ;b2World_CreateEx(0.0, 0.0)
 
 ; Create the Box2D Bodies, Fixtures and the LiquidFun Particle System
-b2CreateScene(1, 1, 1)
+b2World_CreateBodies()
+b2World_CreateJoints()
+b2World_CreateFixtures()
+b2World_CreateParticleSystems("water")
+b2World_CreateParticleGroups("water")
+
 
   
 ; ============
@@ -54,7 +59,7 @@ glSetupWindows(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $0066
 
 ; Setup the OpenGL World (field_of_view, aspect_ratio, viewer_to_near_clipping_plane_distance, viewer_to_far_clipping_plane_distance, camera_x, camera_y, camera_z)
 ;glSetupWorld(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
-glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, 0, -190.0)
+glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
 
 ; Setup OpenGL Textures
 ; Remember! In Paint.NET save images as 32-bit PNG for the below to work
@@ -256,110 +261,166 @@ Repeat
     Case #PB_EventType_KeyUp
       
       key = GetGadgetAttribute(0,#PB_OpenGL_Key)
-
+      
+      ; For all menus
       Select key
+        
+        ; if Escape is pressed then toggle menus or quit demo
+        Case #PB_Shortcut_Escape
+          
+          end_game = 1
+          
+        ; if 1 is pressed then display the main menu
+        Case #PB_Shortcut_1
+          
+          menu_type = #main_menu
+          
+        ; if 2 is pressed then display the player menu
+        Case #PB_Shortcut_2
+          
+          menu_type = #player_menu
+          
+        ; if 3 is pressed then display the player menu
+        Case #PB_Shortcut_3
+          
+          menu_type = #particle_menu
           
         ; if R is pressed then reset the Box2D World
         Case #PB_Shortcut_R
           
           b2DestroyScene(1, 1, 1)
-          b2CreateScene(1, 1, 1)
+          ;b2CreateScene(1, 1, 1)
           
-          
-        Case #PB_Shortcut_6
-          
-          If fixture_drawing_mode = 0
-            
-            fixture_drawing_mode = 1
-            tmp_fixture_vector_num = 0
-          
-            tmp_fixture_vector(tmp_fixture_vector_num)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-            tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
-          EndIf
-          
-          tmp_fixture_vector_num = tmp_fixture_vector_num + 1
-
-
-        Case #PB_Shortcut_T
-          
-          If texture_drawing_mode = 0
-
-            texture_drawing_mode = 1
-    ;        tmp_quad(0)\x = (mouse_position\x - 400) * 0.171
-    ;        tmp_quad(0)\y = (300 - mouse_position\y) * 0.171
-            
-            tmp_quad(0)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-            tmp_quad(0)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
-
-          EndIf
-          
-          If texture_drawing_mode = 3
-            
-            texture_drawing_mode = 0
-          EndIf
-          
-          If texture_drawing_mode = 2
-            
-            texture_drawing_mode = 3
-          EndIf
-
-        Case #PB_Shortcut_K
-          
-          b2DestroyScene(0, 0, 1)
-          b2CreateScene(0, 0, 1)
-          
-        Case #PB_Shortcut_C
-          
-          water_radius = water_radius - 0.5
-          b2DestroyScene(0, 0, 1)
-          b2CreateScene(0, 0, 1)
-          
-        Case #PB_Shortcut_V
-          
-          water_radius = water_radius + 0.5
-          b2DestroyScene(0, 0, 1)
-          b2CreateScene(0, 0, 1)
-          
-        Case #PB_Shortcut_O
-          
-          animation_speed = animation_speed - 0.5
-          
-        Case #PB_Shortcut_P
-          
-          animation_speed = animation_speed + 0.5
-          
-        Case #PB_Shortcut_F
-          
-          b2Body_SetMassData(body_ptr("body"), body_mass - 1.0, 0, 0, 0)
-          
-        Case #PB_Shortcut_G
-          
-          b2Body_SetMassData(body_ptr("body"), body_mass + 1.0, 0, 0, 0)
-          
-        Case #PB_Shortcut_Y
-          
-          If particle_system_struct("particlesystem")\particle_blending = 0
-            
-            particle_system_struct("particlesystem")\particle_blending = 1
-          Else
-            
-            particle_system_struct("particlesystem")\particle_blending = 0
-          EndIf
-          
-        Case #PB_Shortcut_U
-          
-          particle_system_struct("particlesystem")\particle_size = particle_system_struct("particlesystem")\particle_size - 0.05
-          
-          If particle_system_struct("particlesystem")\particle_size < 0.05
-            
-            particle_system_struct("particlesystem")\particle_size = 0.05
-          EndIf
-          
-        Case #PB_Shortcut_I
-          
-          particle_system_struct("particlesystem")\particle_size = particle_system_struct("particlesystem")\particle_size + 0.05
+          b2World_CreateBodies()
+          b2World_CreateJoints()
+          b2World_CreateFixtures()
+          b2World_CreateParticleSystems("water")
+          b2World_CreateParticleGroups("water")
 
       EndSelect
+      
+      ; For specific menus            
+      Select menu_type
+          
+        ; main menu
+        Case #main_menu
+
+        Select key
+  
+          Case #PB_Shortcut_T
+            
+            If texture_drawing_mode = 0
+  
+              texture_drawing_mode = 1
+      ;        tmp_quad(0)\x = (mouse_position\x - 400) * 0.171
+      ;        tmp_quad(0)\y = (300 - mouse_position\y) * 0.171
+              
+              tmp_quad(0)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
+              tmp_quad(0)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+  
+            EndIf
+            
+            If texture_drawing_mode = 3
+              
+              texture_drawing_mode = 0
+            EndIf
+            
+            If texture_drawing_mode = 2
+              
+              texture_drawing_mode = 3
+            EndIf
+      
+          Case #PB_Shortcut_6
+            
+            If fixture_drawing_mode = 0
+              
+              fixture_drawing_mode = 1
+              tmp_fixture_vector_num = 0
+            
+              tmp_fixture_vector(tmp_fixture_vector_num)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
+              tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+            EndIf
+            
+            tmp_fixture_vector_num = tmp_fixture_vector_num + 1
+
+        EndSelect
+          
+        ; particle menu
+        Case #particle_menu
+
+        Select key
+
+          Case #PB_Shortcut_K
+            
+            b2DestroyScene(0, 0, 1)
+            ;b2CreateScene(0, 0, 1)
+            
+            b2World_CreateParticleSystems("water")
+            b2World_CreateParticleGroups("water")
+
+            
+          Case #PB_Shortcut_C
+            
+            tmp_radius.d = particle_group_struct(first_particle_group_name)\radius - 0.5
+            
+            ; Destroy the Particle Groups
+            b2World_DestroyParticleGroups()
+          
+            ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+            b2World_Step(world, (1 / 60.0), 6, 2)
+            
+            ; Create the Particle Groups
+            b2World_CreateParticleGroups("water", tmp_radius)
+
+          Case #PB_Shortcut_V
+            
+            tmp_radius.d = particle_group_struct(first_particle_group_name)\radius + 0.5
+            
+            ; Destroy the Particle Groups
+            b2World_DestroyParticleGroups()
+          
+            ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+            b2World_Step(world, (1 / 60.0), 6, 2)
+            
+            ; Create the Particle Groups
+            b2World_CreateParticleGroups("water", tmp_radius)
+            
+          Case #PB_Shortcut_Y
+            
+            If particle_system_struct(current_particle_system_name)\particle_blending = 0
+              
+              particle_system_struct(current_particle_system_name)\particle_blending = 1
+            Else
+              
+              particle_system_struct(current_particle_system_name)\particle_blending = 0
+            EndIf
+            
+          Case #PB_Shortcut_U
+            
+            particle_system_struct(current_particle_system_name)\particle_size = particle_system_struct(current_particle_system_name)\particle_size - 0.05
+            
+            If particle_system_struct(current_particle_system_name)\particle_size < 0.05
+              
+              particle_system_struct(current_particle_system_name)\particle_size = 0.05
+            EndIf
+            
+          Case #PB_Shortcut_I
+            
+            particle_system_struct(current_particle_system_name)\particle_size = particle_system_struct(current_particle_system_name)\particle_size + 0.05
+        EndSelect
+        
+      EndSelect
+          
+;        Case #PB_Shortcut_O
+          
+;          animation_speed = animation_speed - 0.5
+          
+;        Case #PB_Shortcut_P
+          
+;          animation_speed = animation_speed + 0.5
+          
+
+    ;  EndSelect
       
     ; if the mouse is moved then capture it's position for later on
     Case #PB_EventType_MouseMove
@@ -481,102 +542,99 @@ Procedure keyboard_mouse_handler(*Value)
       
       keyboard_mouse_timer = ElapsedMilliseconds()
       
-      ; game control (keyboard)
-      
-      If GetAsyncKeyState_(#VK_ESCAPE)
-        
-        end_game = 1
-      EndIf
-      
-      ; ground control (keyboard)
-                  
-      If GetAsyncKeyState_(#VK_Z)
-        
-        b2Body_AddAngularVelocity(body_ptr("ground"), Radian(1))
-      EndIf
-      
-      If GetAsyncKeyState_(#VK_X)
-        
-        b2Body_AddAngularVelocity(body_ptr("ground"), Radian(-1))
-      EndIf
-
-      ; body control (keyboard)
-
-      If GetAsyncKeyState_(#VK_A)
-
-        
-        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("boat"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
-        
-  ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-   ;     b2Body_ApplyForce(body_ptr("boat"), -80, 0, tmp_pos(0), tmp_pos(1), 1)
-      EndIf
-
-      If GetAsyncKeyState_(#VK_D)
-
-        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("boat"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
-        
-  ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-  ;      b2Body_ApplyForce(body_ptr("boat"), 80, 0, tmp_pos(0), tmp_pos(1), 1)
-      EndIf
-
-      If GetAsyncKeyState_(#VK_W)
-        
-        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
-      EndIf
-
-      If GetAsyncKeyState_(#VK_S)
-        
-        b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-        b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
-      EndIf
-
-      If GetAsyncKeyState_(#VK_Q)
-                        
-        tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
-        
-        If tmp_velocity < 30
+      Select menu_type
           
-          tmp_velocity = tmp_velocity + Radian(100)
-        EndIf
-        
-        b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
-        
-;        b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
-        
- ;       b2Body_ApplyTorque(body_ptr("boat"), 50, 1)
-      EndIf
+        ; main menu (keyboard)
+        Case #main_menu
+          
+          If GetAsyncKeyState_(#VK_Q)
+            
+            b2Body_AddAngularVelocity(body_ptr("ground"), Radian(1))
+          EndIf
+          
+          If GetAsyncKeyState_(#VK_E)
+            
+            b2Body_AddAngularVelocity(body_ptr("ground"), Radian(-1))
+          EndIf
+          
+        ; player menu (keyboard)
+        Case #player_menu
+    
+          If GetAsyncKeyState_(#VK_A)
+            
+            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+            b2Body_ApplyForce(body_ptr("boat"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+            
+      ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+       ;     b2Body_ApplyForce(body_ptr("boat"), -80, 0, tmp_pos(0), tmp_pos(1), 1)
+          EndIf
+    
+          If GetAsyncKeyState_(#VK_D)
+    
+            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+            b2Body_ApplyForce(body_ptr("boat"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+            
+      ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+      ;      b2Body_ApplyForce(body_ptr("boat"), 80, 0, tmp_pos(0), tmp_pos(1), 1)
+          EndIf
 
-      If GetAsyncKeyState_(#VK_E)
-                
-        tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
-        
-        If tmp_velocity > -30
+          If GetAsyncKeyState_(#VK_W)
+            
+            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+            b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+          EndIf
+    
+          If GetAsyncKeyState_(#VK_S)
+            
+            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
+            b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+          EndIf
+    
+          If GetAsyncKeyState_(#VK_Q)
+                            
+            tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
+            
+            If tmp_velocity < 30
+              
+              tmp_velocity = tmp_velocity + Radian(100)
+            EndIf
+            
+            b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+            
+    ;        b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
+            
+     ;       b2Body_ApplyTorque(body_ptr("boat"), 50, 1)
+          EndIf
+    
+          If GetAsyncKeyState_(#VK_E)
+                    
+            tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
+            
+            If tmp_velocity > -30
+    
+              tmp_velocity = tmp_velocity - Radian(100)
+            EndIf
+            
+            b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+    
+    ;        b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
+            
+     ;       b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
+          EndIf
+          
+          If GetAsyncKeyState_(#VK_F)
 
-          tmp_velocity = tmp_velocity - Radian(100)
-        EndIf
-        
-        b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+            b2Body_SetMassData(body_ptr("boat"), body_mass - 1.0, 0, 0, 0)
+          EndIf
+          
+          If GetAsyncKeyState_(#VK_G)
+          
+            b2Body_SetMassData(body_ptr("boat"), body_mass + 1.0, 0, 0, 0)
+          EndIf
 
-;        b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
-        
- ;       b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
-      EndIf
-                  
-      If GetAsyncKeyState_(#VK_M)
-        
-;        b2Body_AddAngularVelocity(body_ptr("boat prop"), Radian(5))
-        b2Body_ApplyTorque(body_ptr("boat prop"), -100, 1)
-
-      EndIf
-      
-      If GetAsyncKeyState_(#VK_N)
-        
-;        b2Body_AddAngularVelocity(body_ptr("boat prop"), Radian(-5))
-        b2Body_ApplyTorque(body_ptr("boat prop"), 100, 1)
-      EndIf
+          
+          
+      EndSelect
       
       ; camera control (mouse)
             
@@ -653,34 +711,93 @@ Procedure text_window_handler(*Value)
       fps = num_frames + 1
       num_frames = 0
       
-      msg.s = "Keys & Mouse" + Chr(10) +
-              "-----------------------" + Chr(10) +
-              "Left Mouse Button & Drag: pans the camera" + Chr(10) +
-              "Mouse Wheel: zooms the camera in & out" + Chr(10) +
-              "A, D, S, W: adds linear force to the crate" + Chr(10) +
-              "Q, E: adds angular force to the crate" + Chr(10) +
-              "Z, X: rotates the platform" + Chr(10) +
-              "F, G: adjusts the mass of the crate" + Chr(10) +
-              "C, V: adjusts the starting radius of the water group" + Chr(10) +
-              "O, P: adjusts the animation speed (helps with low fps)" + Chr(10) +
-              "Y: toggles water particle texture blending" + Chr(10) +
-              "U, I: adjusts the water particle size" + Chr(10) +
-              "K: restarts the water group" + Chr(10) +
-              "R: resets the scene" + Chr(10) +
-              "Esc: quits the demo" + Chr(10) +
-              "" + Chr(10) +
-              "Info" + Chr(10) +
-              "-------" + Chr(10) +
-              "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-              "Draw: Pos=" + StrF(draw_world_start_position\x, 2) + "," + StrF(draw_world_start_position\y, 2) + "; Length=" + StrF(_Box2C_b2Vec2_Distance(draw_world_start_position\x, draw_world_start_position\y, draw_world_end_position\x, draw_world_end_position\y), 2) + "; Angle=" + StrF(Degree(draw_world_angle), 2) + Chr(10) +
-              "Crate: Mass=" + StrF(body_mass, 2) + Chr(10) + 
-              "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
-              "Animation: Speed=" + StrF(animation_speed / 60.0) + " ms" + Chr(10) + 
-              "Water Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(water_radius, 2) + Chr(10) + 
-              "Frames: Per Sec=" + Str(fps) + " fps"
+      Select menu_type
+          
+        Case #main_menu
+          
+          msg.s = "Main Menu" + Chr(10) +
+                  "------------------" + Chr(10) +
+                  "Keys & Mouse" + Chr(10) +
+                  "-----------------------" + Chr(10) +
+                  "Esc: Quits this demo" + Chr(10) +
+                  "2: Player menu" + Chr(10) +
+                  "3: Particle menu" + Chr(10) +
+                  "R: Restarts the scene" + Chr(10) +
+                  "Left Mouse Button & Drag: Pans the camera" + Chr(10) +
+                  "Mouse Wheel: Zooms the camera in & out" + Chr(10) +
+                  "Q, E: Adds torque to the platform" + Chr(10) +
+                  "T: Toggles sprite image drawing (experimental)" + Chr(10) +
+                  "6: Toggles CCW convex polygon shape drawing (experimental)" + Chr(10) +
+                  "-------" + Chr(10) +
+                  "Info" + Chr(10) +
+                  "-------" + Chr(10) +
+                  "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
+                  "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
+                  "Animation: Frames Per Sec=" + Str(fps) + " fps"
+          
+        Case #player_menu
+          
+          msg.s = "Player Menu" + Chr(10) +
+                  "------------------" + Chr(10) +
+                  "Keys & Mouse" + Chr(10) +
+                  "-----------------------" + Chr(10) +
+                  "Esc: Quits this demo" + Chr(10) +
+                  "1: Main menu" + Chr(10) +
+                  "3: Particle menu" + Chr(10) +
+                  "R: Restarts the scene" + Chr(10) +
+                  "Left Mouse Button & Drag: Pans the camera" + Chr(10) +
+                  "Mouse Wheel: Zooms the camera in & out" + Chr(10) +
+                  "Q, E: Adds torque to the motor of the player" + Chr(10) +
+                  "A, D, S, W: Adds Linear Force to the player" + Chr(10) +
+                  "F, G: Changes the Mass of the player" + Chr(10) +
+                  "X: Changes the Vehicle of the player" + Chr(10) +
+                  "-------" + Chr(10) +
+                  "Info" + Chr(10) +
+                  "-------" + Chr(10) +
+                  "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
+                  "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
+                  "Player: Mass=" + StrF(body_mass, 2) + Chr(10) + 
+                  "Animation: Frames Per Sec=" + Str(fps) + " fps"
+
+        Case #particle_menu
+          
+            ResetMap(particle_system_struct())
+  NextMapElement(particle_system_struct())
+
+          msg.s = "Particle Menu" + Chr(10) +
+                  "------------------" + Chr(10) +
+                  "Keys & Mouse" + Chr(10) +
+                  "-----------------------" + Chr(10) +
+                  "Esc: Quits this demo" + Chr(10) +
+                  "1: Main menu" + Chr(10) +
+                  "2: Player menu" + Chr(10) +
+                  "R: Restarts the scene" + Chr(10) +
+                  "Left Mouse Button & Drag: Pans the camera" + Chr(10) +
+                  "Mouse Wheel: Zooms the camera in & out" + Chr(10) +
+                  "C, V: Changes the starting radius of the water group" + Chr(10) +
+                  "Y: Toggles water particle texture blending" + Chr(10) +
+                  "U, I: Changes the water particle size" + Chr(10) +
+                  "K: Restarts the water group" + Chr(10) +
+                  "-------" + Chr(10) +
+                  "Info" + Chr(10) +
+                  "-------" + Chr(10) +
+                  "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
+                  "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
+                  "Particle System: Number of Particles=" + Str(particle_system_struct(current_particle_system_name)\particle_count) + Chr(10) + 
+                  "Particle Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(particle_group_struct(first_particle_group_name)\radius, 2) + Chr(10) + 
+                  "Particle: Size=" + StrF(particle_system_struct(current_particle_system_name)\particle_size) + "; Blending=" + Str(particle_system_struct(current_particle_system_name)\particle_blending) + Chr(10) + 
+                  "Animation: Frames Per Sec=" + Str(fps) + " fps"
+          
+      EndSelect
 
       SetGadgetText(5, msg)
       
+
+;                        "Animation: Speed=" + StrF(animation_speed / 60.0) + " ms" + Chr(10) + 
+
+;              "Draw: Pos=" + StrF(draw_world_start_position\x, 2) + "," + StrF(draw_world_start_position\y, 2) + "; Length=" + StrF(_Box2C_b2Vec2_Distance(draw_world_start_position\x, draw_world_start_position\y, draw_world_end_position\x, draw_world_end_position\y), 2) + "; Angle=" + StrF(Degree(draw_world_angle), 2) + Chr(10) +
+;                        "O, P: Adjusts the Animation Speed (helps with low fps)" + Chr(10)
+
 ;              "Water Particle: Size=" + StrF(particle_system_struct("water")\particle_size) + "; Blending=" + Str(particle_system_struct("water")\particle_blending) + Chr(10) + 
 ;              "Bodies: Total=" + Str(particle_system_struct("water")\particle_count) + Chr(10) + 
       
@@ -699,8 +816,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 557
-; FirstLine = 534
+; CursorPosition = 385
+; FirstLine = 382
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe
