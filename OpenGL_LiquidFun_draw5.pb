@@ -117,7 +117,7 @@ Repeat
       
    ;   Debug(@tmp_fixture_vector(0)\x)
       
-  ;    is_convex_and_clockwise = _Box2C_b2Vec2Array_IsConvexAndClockwise(@tmp_fixture_vector(0)\x, tmp_fixture_vector_num + 1)
+  ;    is_convex_and_clockwise = b2Vec2Array_IsConvexAndClockwise(@tmp_fixture_vector(0)\x, tmp_fixture_vector_num + 1)
       
   ;    If is_convex_and_clockwise <> 1
         
@@ -455,8 +455,8 @@ Repeat
             
             particle_system(curr_particle_system_name)\active = 1
             particle_group(curr_particle_system_name)\active = 1
-            b2World_CreateParticleSystem2(curr_particle_system_name)
-            b2World_CreateParticleGroup2(curr_particle_system_name)
+            b2World_CreateParticleSystemEx(curr_particle_system_name)
+            b2World_CreateParticleGroupEx(curr_particle_system_name)
 
             
         EndSelect
@@ -525,7 +525,7 @@ Repeat
       
       ; move the fixture / shape to the centroid (center of rotation) of 0,0
       centroid.b2Vec2
-      _Box2C_b2PolygonShape_MoveToZeroCentroid(@tmp_fixture_vector(0)\x, tmp_fixture_vector_size, @centroid\x)
+      b2PolygonShape_MoveToZeroCentroid(@tmp_fixture_vector(0)\x, tmp_fixture_vector_size, @centroid\x)
       
       clipboard_str.s = "\" + Chr(34) + "["
       
@@ -541,10 +541,10 @@ Repeat
       
       clipboard_str = clipboard_str + "]\" +  Chr(34) + ", " + StrF(tmp_quad(1)\x - tmp_quad(0)\x, 2)
       
- ;     _Box2C_b2PolygonShape_ComputeCentroid(@tmp_fixture_vector(0)\x, tmp_fixture_vector_size, @centroid\x)
+ ;     b2PolygonShape_ComputeCentroid(@tmp_fixture_vector(0)\x, tmp_fixture_vector_size, @centroid\x)
   ;    clipboard_str = clipboard_str + " --- " + StrF(centroid\x, 2) + ", " + StrF(centroid\y, 2)
       
-        ;    is_convex_and_clockwise = _Box2C_b2Vec2Array_IsConvexAndClockwise(@tmp_fixture_vector(0)\x, tmp_fixture_vector_num + 1)
+        ;    is_convex_and_clockwise = b2Vec2Array_IsConvexAndClockwise(@tmp_fixture_vector(0)\x, tmp_fixture_vector_num + 1)
 
       SetClipboardText(clipboard_str)
 
@@ -836,7 +836,7 @@ Procedure text_window_handler(*Value)
       
 
 
-;              "Draw: Pos=" + StrF(draw_world_start_position\x, 2) + "," + StrF(draw_world_start_position\y, 2) + "; Length=" + StrF(_Box2C_b2Vec2_Distance(draw_world_start_position\x, draw_world_start_position\y, draw_world_end_position\x, draw_world_end_position\y), 2) + "; Angle=" + StrF(Degree(draw_world_angle), 2) + Chr(10) +
+;              "Draw: Pos=" + StrF(draw_world_start_position\x, 2) + "," + StrF(draw_world_start_position\y, 2) + "; Length=" + StrF(b2Vec2_Distance(draw_world_start_position\x, draw_world_start_position\y, draw_world_end_position\x, draw_world_end_position\y), 2) + "; Angle=" + StrF(Degree(draw_world_angle), 2) + Chr(10) +
 ;                        "O, P: Adjusts the Animation Speed (helps with low fps)" + Chr(10)
 
 ;              "Water Particle: Size=" + StrF(particle_system_struct("water")\particle_size) + "; Blending=" + Str(particle_system_struct("water")\particle_blending) + Chr(10) + 
@@ -857,8 +857,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 829
-; FirstLine = 818
+; CursorPosition = 527
+; FirstLine = 524
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe

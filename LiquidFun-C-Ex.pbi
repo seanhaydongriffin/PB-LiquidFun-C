@@ -240,7 +240,8 @@ Global last_particle_group_name.s
 ; #VARIABLES# ===================================================================================================================
 ; ===============================================================================================================================
 
-; #FUNCTIONS# ===================================================================================================================
+
+; #SFML FUNCTIONS# ==============================================================================================================
 
 Procedure b2PolygonShape_CreateFixture_4_sfSprite(*tmp_pb_LiquidFun_SFML.pb_LiquidFun_SFML_struct, body.l, texture.l, x0.d, y0.d, x1.d, y1.d, x2.d, y2.d, x3.d, y3.d, origin_x.d, origin_y.d)
   
@@ -274,39 +275,25 @@ Procedure animate_body_sfSprite(tmp_body.l, tmp_sprite.l)
   
 EndProcedure
 
-Procedure b2Body_SetAngle(tmp_body.l, tmp_angle.d)
-  
-  Dim tmp_pos.f(2)
-    
-  b2Body_GetPosition(tmp_body, tmp_pos())
-  b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), tmp_angle)
-EndProcedure
+
+; #B2PARTICLESYSTEM FUNCTIONS# ===========================================================================================================
 
 
-Procedure b2Body_AddAngle(tmp_body.l, add_angle.d)
-  
-  Dim tmp_pos.f(2)
-  b2Body_GetPosition(tmp_body, tmp_pos())
-  curr_angle.d = b2Body_GetAngle(tmp_body)
-  b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), curr_angle + add_angle)
-EndProcedure
-
-Procedure b2Body_AddAngularVelocity(tmp_body.l, add_angle.d)
-  
-  velocity.d = b2Body_GetAngularVelocity(tmp_body)
-  velocity = velocity + add_angle
-  b2Body_SetAngularVelocity(tmp_body, velocity)
-EndProcedure
-
-Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
-  
-  velocity.d = b2Body_GetAngularVelocity(tmp_body)
-  velocity = velocity * (percent / 100)
-  b2Body_SetAngularVelocity(tmp_body, velocity)
-EndProcedure
-
-
-Procedure b2World_LoadParticleSystems()
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2ParticleSystem_LoadAll
+; Description ...: Loads all the data for the particle systems from the JSON file
+; Syntax.........: b2ParticleSystem_LoadAll()
+; Parameters ....: 
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2ParticleSystem_LoadAll()
   
   LoadJSON(3, "particle_system.json")
   ;Debug JSONErrorMessage()
@@ -345,35 +332,31 @@ Procedure b2World_LoadParticleSystems()
       particle_system()\texture_name                    = GetJSONString(GetJSONElement(JSONValue(3), 20))
       particle_system()\particle_size                   = GetJSONDouble(GetJSONElement(JSONValue(3), 21))
       particle_system()\particle_blending               = GetJSONInteger(GetJSONElement(JSONValue(3), 22))
-      
-;       If active = 1
-;         
-;         tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, particleRadius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength)
-;         b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particleDensity)
-;         
-;         AddMapElement(particle_system(), particle_system_name)
-;         particle_system()\particle_system_ptr = tmp_particle_system_ptr
-;         particle_system()\texture_name = texture_name
-;         particle_system()\particle_size = particle_size
-;         particle_system()\particle_blending = particle_blending
-;         
-;       EndIf
     EndIf
   Next
-
-EndProcedure
-
-
-Procedure b2World_CreateParticleSystem2(system_name.s)
   
-  tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, particle_system(system_name)\colorMixingStrength, particle_system(system_name)\dampingStrength, particle_system(system_name)\destroyByAge, particle_system(system_name)\ejectionStrength, particle_system(system_name)\elasticStrength, particle_system(system_name)\lifetimeGranularity, particle_system(system_name)\powderStrength, particle_system(system_name)\pressureStrength, particle_system(system_name)\particleRadius, particle_system(system_name)\repulsiveStrength, particle_system(system_name)\springStrength, particle_system(system_name)\staticPressureIterations, particle_system(system_name)\staticPressureRelaxation, particle_system(system_name)\staticPressureStrength, particle_system(system_name)\surfaceTensionNormalStrength, particle_system(system_name)\surfaceTensionPressureStrength, particle_system(system_name)\viscousStrength)
-  b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particle_system(system_name)\particleDensity)
-  particle_system(system_name)\particle_system_ptr = tmp_particle_system_ptr
-
+  ProcedureReturn 1
 EndProcedure
 
 
-Procedure b2World_LoadParticleGroups()
+; #B2PARTICLEGROUP FUNCTIONS# ===========================================================================================================
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2ParticleGroup_LoadAll
+; Description ...: Loads all the data for the particle groups from the JSON file
+; Syntax.........: b2ParticleGroup_LoadAll()
+; Parameters ....: 
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2ParticleGroup_LoadAll()
   
   LoadJSON(4, "particle_group.json")
   ;Debug JSONErrorMessage()
@@ -414,164 +397,54 @@ Procedure b2World_LoadParticleGroups()
       particle_group()\px                = GetJSONDouble(GetJSONElement(JSONValue(4), 21))
       particle_group()\py                = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
       particle_group()\radius            = GetJSONDouble(GetJSONElement(JSONValue(4), 23))
-      
-;       If active = 1
-;               
-;         flags_int.i
-;         
-;         If flags = "water"
-;           
-;           flags_int = #b2_waterParticle
-;         EndIf
-;         
-;         If flags = "zombie"
-;           
-;           flags_int = #b2_zombieParticle
-;         EndIf
-;         
-;         If flags = "wall"
-;           
-;           flags_int = #b2_wallParticle
-;         EndIf
-;         
-;         If flags = "spring"
-;           
-;           flags_int = #b2_springParticle
-;         EndIf
-;         
-;         If flags = "elastic"
-;           
-;           flags_int = #b2_elasticParticle
-;         EndIf
-;         
-;         If flags = "viscous"
-;           
-;           flags_int = #b2_viscousParticle
-;         EndIf
-;         
-;         If flags = "powder"
-;           
-;           flags_int = #b2_powderParticle
-;         EndIf
-;         
-;         If flags = "tensile"
-;           
-;           flags_int = #b2_tensileParticle
-;         EndIf
-;         
-;         If flags = "color mixing"
-;           
-;           flags_int = #b2_colorMixingParticle
-;         EndIf
-;         
-;         If flags = "destruction listener"
-;           
-;           flags_int = #b2_destructionListenerParticle
-;         EndIf
-;         
-;         If flags = "barrier"
-;           
-;           flags_int = #b2_barrierParticle
-;         EndIf
-;         
-;         If flags = "static pressure"
-;           
-;           flags_int = #b2_staticPressureParticle
-;         EndIf
-;         
-;         If flags = "reactive"
-;           
-;           flags_int = #b2_reactiveParticle
-;         EndIf
-;         
-;         If flags = "repulsive"
-;           
-;           flags_int = #b2_repulsiveParticle
-;         EndIf
-;         
-;         If flags = "fixture contact listener"
-;           
-;           flags_int = #b2_fixtureContactListenerParticle
-;         EndIf
-;         
-;         If flags = "particle contact listener"
-;           
-;           flags_int = #b2_particleContactListenerParticle
-;         EndIf
-;         
-;         If flags = "fixture contact filter"
-;           
-;           flags_int = #b2_fixtureContactFilterParticle
-;         EndIf
-;         
-;         If flags = "particle contact filter"
-;           
-;           flags_int = #b2_particleContactFilterParticle
-;         EndIf
-;         
-;         groupFlags_int.i = -1
-;         
-;         If groupFlags = "solid"
-;           
-;           groupFlags_int = #b2_solidParticleGroup
-;         EndIf
-;         
-;         If groupFlags = "rigid"
-;           
-;           groupFlags_int = #b2_rigidParticleGroup
-;         EndIf
-;         
-;         If groupFlags = "can be empty"
-;           
-;           groupFlags_int = #b2_particleGroupCanBeEmpty
-;         EndIf
-;         
-;         If groupFlags = "will be destroyed"
-;           
-;           groupFlags_int = #b2_particleGroupWillBeDestroyed
-;         EndIf
-;         
-;         If groupFlags = "needs update depth"
-;           
-;           groupFlags_int = #b2_particleGroupNeedsUpdateDepth
-;         EndIf
-;         
-;         If groupFlags = "internal mask"
-;           
-;           groupFlags_int = #b2_particleGroupInternalMask
-;         EndIf
-;         
-;         If radius_override > -1
-;           
-;           radius = radius_override
-;         EndIf
-;         
-;         tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
-;         
-;         AddMapElement(particle_group_struct(), group_name)
-;         particle_group_struct()\particle_group_ptr = tmp_particle_group_ptr
-;         particle_group_struct()\active = active
-;         particle_group_struct()\radius = radius
-;                 
-
-    ;  EndIf
     EndIf
   Next
-    
-  ; Update the Particle System with the latest info
-;   ResetMap(particle_system_struct())
-;   
-;   While NextMapElement(particle_system_struct())
-;     
-;     particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
-;     particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
-;   Wend
 
+  ProcedureReturn 1
 EndProcedure
 
 
-Procedure b2World_CreateParticleGroup2(group_name.s)
+; #B2WORLD FUNCTIONS# ===========================================================================================================
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateParticleSystemEx
+; Description ...: Creates a particle system for a given system name (from the JSON data)
+; Syntax.........: b2World_CreateParticleSystemEx(system_name.s)
+; Parameters ....: system_name = the name of the system (in the JSON data)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateParticleSystemEx(system_name.s)
   
+  tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, particle_system(system_name)\colorMixingStrength, particle_system(system_name)\dampingStrength, particle_system(system_name)\destroyByAge, particle_system(system_name)\ejectionStrength, particle_system(system_name)\elasticStrength, particle_system(system_name)\lifetimeGranularity, particle_system(system_name)\powderStrength, particle_system(system_name)\pressureStrength, particle_system(system_name)\particleRadius, particle_system(system_name)\repulsiveStrength, particle_system(system_name)\springStrength, particle_system(system_name)\staticPressureIterations, particle_system(system_name)\staticPressureRelaxation, particle_system(system_name)\staticPressureStrength, particle_system(system_name)\surfaceTensionNormalStrength, particle_system(system_name)\surfaceTensionPressureStrength, particle_system(system_name)\viscousStrength)
+  b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particle_system(system_name)\particleDensity)
+  particle_system(system_name)\particle_system_ptr = tmp_particle_system_ptr
+
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateParticleGroupEx
+; Description ...: Creates a particle group for a given group name (from the JSON data)
+; Syntax.........: b2World_CreateParticleGroupEx(group_name.s)
+; Parameters ....: group_name = the name of the group (in the JSON data)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateParticleGroupEx(group_name.s)
           
   flags_int.i
   
@@ -697,24 +570,31 @@ Procedure b2World_CreateParticleGroup2(group_name.s)
     groupFlags_int = #b2_particleGroupInternalMask
   EndIf
   
-  ;If radius_override > -1
-    
-  ;  radius = radius_override
-  ;EndIf
-  
   tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system(particle_group(group_name)\system_name)\particle_system_ptr, particle_group(group_name)\angle, particle_group(group_name)\angularVelocity, particle_group(group_name)\colorR, particle_group(group_name)\colorG, particle_group(group_name)\colorB, particle_group(group_name)\colorA, flags_int, particle_group(group_name)\group, groupFlags_int, particle_group(group_name)\lifetime, particle_group(group_name)\linearVelocityX, particle_group(group_name)\linearVelocityY, particle_group(group_name)\positionX, particle_group(group_name)\positionY, particle_group(group_name)\positionData, particle_group(group_name)\particleCount, particle_group(group_name)\strength, particle_group(group_name)\stride, particle_group(group_name)\userData,	particle_group(group_name)\px, particle_group(group_name)\py,	particle_group(group_name)\radius)
   particle_group(group_name)\particle_group_ptr = tmp_particle_group_ptr
-  
     
   ; Update the Particle System with the latest info
   particle_system(particle_group(group_name)\system_name)\particle_count = b2ParticleSystem_GetParticleCount(particle_system(particle_group(group_name)\system_name)\particle_system_ptr)
   particle_system(particle_group(group_name)\system_name)\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system(particle_group(group_name)\system_name)\particle_system_ptr)
   
-  
+  ProcedureReturn 1
 EndProcedure
 
-
-
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateEx
+; Description ...: Creates a Box2D world, and loads all Box2D and LiquidFun data
+; Syntax.........: b2World_CreateEx(gravity_x.f, gravity_y.f)
+; Parameters ....: gravity_x = the horizontal component of the gravity
+;                  gravity_y = the vertical component of the gravity
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
 Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
 
   LoadJSON(0, "body.json")
@@ -729,8 +609,8 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(2), texture())   
   
-  b2World_LoadParticleSystems()
-  b2World_LoadParticleGroups()
+  b2ParticleSystem_LoadAll()
+  b2ParticleGroup_LoadAll()
   
   
   LoadJSON(5, "joint.json")
@@ -740,154 +620,162 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   gravity\x = gravity_x
   gravity\y = gravity_y
   world = b2World_Create(gravity\x, gravity\y)
+  
+  ProcedureReturn 1
 EndProcedure
 
 
 
 
 
+; #B2BODY FUNCTIONS# ============================================================================================================
 
 
-Procedure glCreateTexture(*tmp_gl_texture.gl_Texture, filename.s)
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_SetAngle
+; Description ...: Sets the angle (radians) of a body (b2Body)
+; Syntax.........: b2Body_SetAngle(tmp_body, tmp_angle)
+; Parameters ....: tmp_body - a pointer to the body (b2Body)
+;				           tmp_angle - the angle (radians)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_SetAngle(tmp_body.l, tmp_angle.d)
+  
+  Dim tmp_pos.f(2)
+    
+  b2Body_GetPosition(tmp_body, tmp_pos())
+  b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), tmp_angle)
+  
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_AddAngle
+; Description ...: Adds an angle (radians) to a body (b2Body)
+; Syntax.........: b2Body_AddAngle(tmp_body.l, add_angle.d)
+; Parameters ....: tmp_body - a pointer to the body (b2Body)
+;				           add_angle - the angle (radians)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_AddAngle(tmp_body.l, add_angle.d)
+  
+  Dim tmp_pos.f(2)
+  b2Body_GetPosition(tmp_body, tmp_pos())
+  curr_angle.d = b2Body_GetAngle(tmp_body)
+  b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), curr_angle + add_angle)
+  
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_AddAngularVelocity
+; Description ...: Adds an angular velocity to a body (b2Body)
+; Syntax.........: b2Body_AddAngularVelocity(tmp_body.l, add_angle.d)
+; Parameters ....: tmp_body - a pointer to the body (b2Body)
+;				           add_velocity - the velocity
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_AddAngularVelocity(tmp_body.l, add_velocity.d)
+  
+  velocity.d = b2Body_GetAngularVelocity(tmp_body)
+  velocity = velocity + add_velocity
+  b2Body_SetAngularVelocity(tmp_body, velocity)
+  
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_SetAngularVelocityPercent
+; Description ...: Sets the angular velocity of a body (b2Body) to a given percentage
+; Syntax.........: b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
+; Parameters ....: tmp_body - a pointer to the body (b2Body)
+;				           percent - the percentage
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
+  
+  velocity.d = b2Body_GetAngularVelocity(tmp_body)
+  velocity = velocity * (percent / 100)
+  b2Body_SetAngularVelocity(tmp_body, velocity)
+  
+  ProcedureReturn 1
+EndProcedure
+
+
+; #GLTEXTURE FUNCTIONS# ============================================================================================================
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: glTexture_Create
+; Description ...: Creates an OpenGL texture
+; Syntax.........: glTexture_Create(*tmp_gl_texture.gl_Texture, filename.s)
+; Parameters ....: *tmp_gl_texture - a pointer to the gl_Texture object
+;				           filename - the name of the file containing the texture
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure glTexture_Create(*tmp_gl_texture.gl_Texture, filename.s)
   
   *tmp_gl_texture\image_number = LoadImage(#PB_Any, filename)
   GetObject_(ImageID(*tmp_gl_texture\image_number), SizeOf(BITMAP), @*tmp_gl_texture\image_bitmap)
+  
+  ProcedureReturn 1
 EndProcedure
 
 
+; #GLDRAW FUNCTIONS# ============================================================================================================
 
 
-
-Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_sprite_offset_x.d, tmp_sprite_offset_y.d, tmp_draw_type.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
-  
-  If tmp_shape_type = #b2_circle
-
-    ParseJSON(0, tmp_vertices)    
-    tmp_circle_radius.f = GetJSONDouble(GetJSONElement(JSONValue(0), 0))
-    
-    *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, tmp_circle_radius)
-    *tmp_b2_fixture\body_ptr = tmp_body
-    *tmp_b2_fixture\vertex[0]\x = 0 + tmp_circle_radius + body_offset_x
-    *tmp_b2_fixture\vertex[0]\y = 0 + tmp_circle_radius + body_offset_y
-    *tmp_b2_fixture\vertex[1]\x = 0 - tmp_circle_radius + body_offset_x
-    *tmp_b2_fixture\vertex[1]\y = 0 + tmp_circle_radius + body_offset_y
-    *tmp_b2_fixture\vertex[2]\x = 0 - tmp_circle_radius + body_offset_x
-    *tmp_b2_fixture\vertex[2]\y = 0 - tmp_circle_radius + body_offset_y
-    *tmp_b2_fixture\vertex[3]\x = 0 + tmp_circle_radius + body_offset_x
-    *tmp_b2_fixture\vertex[3]\y = 0 - tmp_circle_radius + body_offset_y
-    
-    If tmp_texture > -1
-      
-      *tmp_b2_fixture\texture_ptr = tmp_texture
-    EndIf
-  EndIf
-
-  
-  If tmp_shape_type = #b2_polygon Or tmp_shape_type = #b2_sprite
-    
-    ParseJSON(0, tmp_vertices)    
-    *tmp_b2_fixture\num_vertices = JSONArraySize(JSONValue(0)) / 2
-      
-    Dim tmp_vertex.b2Vec2(*tmp_b2_fixture\num_vertices)
-    
-    vertex_num.i = -1
-    
-    For i = 0 To ((*tmp_b2_fixture\num_vertices * 2) - 1) Step 2
-      
-      vertex_num = vertex_num + 1
-      *tmp_b2_fixture\vertex[vertex_num]\x = GetJSONDouble(GetJSONElement(JSONValue(0), i)) + body_offset_x
-      *tmp_b2_fixture\vertex[vertex_num]\y = GetJSONDouble(GetJSONElement(JSONValue(0), i + 1)) + body_offset_y
-    Next i
-    
-    If tmp_shape_type = #b2_sprite
-      
-      *tmp_b2_fixture\sprite_vertex[0]\x = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_x
-      *tmp_b2_fixture\sprite_vertex[0]\y = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_y
-      *tmp_b2_fixture\sprite_vertex[1]\x = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_x
-      *tmp_b2_fixture\sprite_vertex[1]\y = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_y
-      *tmp_b2_fixture\sprite_vertex[2]\x = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_x
-      *tmp_b2_fixture\sprite_vertex[2]\y = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_y
-      *tmp_b2_fixture\sprite_vertex[3]\x = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_x
-      *tmp_b2_fixture\sprite_vertex[3]\y = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_y
-    EndIf
-    
-    If *tmp_b2_fixture\num_vertices = 3
-      
-      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_3(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y)
-    EndIf
-    
-    If *tmp_b2_fixture\num_vertices = 4
-      
-      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
-    EndIf
-    
-    If *tmp_b2_fixture\num_vertices = 5
-      
-      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_5(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y, *tmp_b2_fixture\vertex[4]\x, *tmp_b2_fixture\vertex[4]\y)
-    EndIf
-    
-    If tmp_texture > -1
-      
-      *tmp_b2_fixture\texture_ptr = tmp_texture
-    EndIf
-  
-  EndIf
-  
-  
-  If tmp_shape_type = #b2_box
-    
-    ParseJSON(0, tmp_vertices)    
-    tmp_box_width.f = GetJSONDouble(GetJSONElement(JSONValue(0), 0))
-    tmp_box_height.f = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
-    
-    *tmp_b2_fixture\vertex[0]\x = 0 + (tmp_box_width / 2) + body_offset_x
-    *tmp_b2_fixture\vertex[0]\y = 0 + (tmp_box_height / 2) + body_offset_y
-    *tmp_b2_fixture\vertex[1]\x = 0 - (tmp_box_width / 2) + body_offset_x
-    *tmp_b2_fixture\vertex[1]\y = 0 + (tmp_box_height / 2) + body_offset_y
-    *tmp_b2_fixture\vertex[2]\x = 0 - (tmp_box_width / 2) + body_offset_x
-    *tmp_b2_fixture\vertex[2]\y = 0 - (tmp_box_height / 2) + body_offset_y
-    *tmp_b2_fixture\vertex[3]\x = 0 + (tmp_box_width / 2) + body_offset_x
-    *tmp_b2_fixture\vertex[3]\y = 0 - (tmp_box_height / 2) + body_offset_y
-    *tmp_b2_fixture\num_vertices = 4
-    *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
-    
-    If tmp_texture > -1
-      
-      *tmp_b2_fixture\texture_ptr = tmp_texture
-    EndIf
-  
-  EndIf
-    
-  If tmp_shape_type = #b2_chain
-
-    ParseJSON(0, tmp_vertices)    
-    *tmp_b2_fixture\num_vertices = JSONArraySize(JSONValue(0)) / 2
-    Dim tmp_vertex.b2Vec2(*tmp_b2_fixture\num_vertices)
-    
-    vertex_num.i = -1
-    
-    For i = 0 To ((*tmp_b2_fixture\num_vertices * 2) - 1) Step 2
-      
-      vertex_num = vertex_num + 1
-      *tmp_b2_fixture\vertex[vertex_num]\x = GetJSONDouble(GetJSONElement(JSONValue(0), i)) + body_offset_x
-      *tmp_b2_fixture\vertex[vertex_num]\y = GetJSONDouble(GetJSONElement(JSONValue(0), i + 1)) + body_offset_y
-    Next i
-    
-    *tmp_b2_fixture\fixture_ptr = b2ChainShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, @*tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\num_vertices * 2)
-  EndIf
-  
-  *tmp_b2_fixture\body_ptr = tmp_body
-  *tmp_b2_fixture\shape_type = tmp_shape_type
-  *tmp_b2_fixture\draw_type = tmp_draw_type
-  *tmp_b2_fixture\line_width = tmp_line_width
-  *tmp_b2_fixture\line_red = tmp_line_red
-  *tmp_b2_fixture\line_green = tmp_line_green
-  *tmp_b2_fixture\line_blue = tmp_line_blue
-EndProcedure
-
-
-
-Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
+; #FUNCTION# ====================================================================================================================
+; Name...........: glDraw_Fixture
+; Description ...: Draw a Box2D Fixture with OpenGL
+; Syntax.........: glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
+; Parameters ....: *tmp_fixture - a pointer to the b2_Fixture object
+;				           tmp_texture_ptr - an optional pointer to a texture
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
   
   ; if the drawing is texture
   
@@ -1021,10 +909,21 @@ Procedure glDrawFixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
 
 EndProcedure
 
-
-
-
-Procedure glDrawParticleSystem(*tmp_particle_system.b2_ParticleSystem)
+; #FUNCTION# ====================================================================================================================
+; Name...........: glDraw_ParticleSystem
+; Description ...: Draw a LiquidFun Particle System with OpenGL
+; Syntax.........: glDraw_ParticleSystem(*tmp_particle_system.b2_ParticleSystem)
+; Parameters ....: *tmp_particle_system - a pointer to the particle system (b2_ParticleSystem)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure glDraw_ParticleSystem(*tmp_particle_system.b2_ParticleSystem)
 
   *positionbuffer_ptr.b2Vec2 = *tmp_particle_system\particle_position_buffer
   
@@ -1095,6 +994,177 @@ Procedure glDrawParticleSystem(*tmp_particle_system.b2_ParticleSystem)
   glDisable_( #GL_TEXTURE_2D )
 
 EndProcedure
+
+
+; #B2POLYGONSHAPE FUNCTIONS# ============================================================================================================
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2PolygonShape_CreateFixture
+; Description ...: Creates a polygon shape and corresponding fixture for a body
+; Syntax.........: b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_sprite_offset_x.d, tmp_sprite_offset_y.d, tmp_draw_type.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
+; Parameters ....: *tmp_b2_fixture - a pointer to the b2_Fixture object
+;				           tmp_body - the body to attach the fixture to
+;                  tmp_density
+;                  tmp_friction
+;                  tmp_isSensor
+;                  tmp_restitution
+;                  tmp_categoryBits
+;                  tmp_groupIndex
+;                  tmp_maskBits
+;                  tmp_shape_type
+;                  tmp_vertices
+;                  tmp_sprite_size
+;                  tmp_sprite_offset_x
+;                  tmp_sprite_offset_y
+;                  tmp_draw_type
+;                  tmp_line_width
+;                  tmp_line_red
+;                  tmp_line_green
+;                  tmp_line_blue
+;                  body_offset_x
+;                  body_offset_y
+;                  tmp_texture
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_sprite_offset_x.d, tmp_sprite_offset_y.d, tmp_draw_type.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
+  
+  If tmp_shape_type = #b2_circle
+
+    ParseJSON(0, tmp_vertices)    
+    tmp_circle_radius.f = GetJSONDouble(GetJSONElement(JSONValue(0), 0))
+    
+    *tmp_b2_fixture\fixture_ptr = b2CircleShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, body_offset_x, body_offset_y, tmp_circle_radius)
+    *tmp_b2_fixture\body_ptr = tmp_body
+    *tmp_b2_fixture\vertex[0]\x = 0 + tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[0]\y = 0 + tmp_circle_radius + body_offset_y
+    *tmp_b2_fixture\vertex[1]\x = 0 - tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[1]\y = 0 + tmp_circle_radius + body_offset_y
+    *tmp_b2_fixture\vertex[2]\x = 0 - tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[2]\y = 0 - tmp_circle_radius + body_offset_y
+    *tmp_b2_fixture\vertex[3]\x = 0 + tmp_circle_radius + body_offset_x
+    *tmp_b2_fixture\vertex[3]\y = 0 - tmp_circle_radius + body_offset_y
+    
+    If tmp_texture > -1
+      
+      *tmp_b2_fixture\texture_ptr = tmp_texture
+    EndIf
+  EndIf
+
+  
+  If tmp_shape_type = #b2_polygon Or tmp_shape_type = #b2_sprite
+    
+    ParseJSON(0, tmp_vertices)    
+    *tmp_b2_fixture\num_vertices = JSONArraySize(JSONValue(0)) / 2
+      
+    Dim tmp_vertex.b2Vec2(*tmp_b2_fixture\num_vertices)
+    
+    vertex_num.i = -1
+    
+    For i = 0 To ((*tmp_b2_fixture\num_vertices * 2) - 1) Step 2
+      
+      vertex_num = vertex_num + 1
+      *tmp_b2_fixture\vertex[vertex_num]\x = GetJSONDouble(GetJSONElement(JSONValue(0), i)) + body_offset_x
+      *tmp_b2_fixture\vertex[vertex_num]\y = GetJSONDouble(GetJSONElement(JSONValue(0), i + 1)) + body_offset_y
+    Next i
+    
+    If tmp_shape_type = #b2_sprite
+      
+      *tmp_b2_fixture\sprite_vertex[0]\x = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[0]\y = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_y
+      *tmp_b2_fixture\sprite_vertex[1]\x = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[1]\y = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_y
+      *tmp_b2_fixture\sprite_vertex[2]\x = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[2]\y = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_y
+      *tmp_b2_fixture\sprite_vertex[3]\x = 0 + (tmp_sprite_size / 2) + tmp_sprite_offset_x
+      *tmp_b2_fixture\sprite_vertex[3]\y = 0 - (tmp_sprite_size / 2) + tmp_sprite_offset_y
+    EndIf
+    
+    If *tmp_b2_fixture\num_vertices = 3
+      
+      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_3(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y)
+    EndIf
+    
+    If *tmp_b2_fixture\num_vertices = 4
+      
+      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+    EndIf
+    
+    If *tmp_b2_fixture\num_vertices = 5
+      
+      *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_5(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y, *tmp_b2_fixture\vertex[4]\x, *tmp_b2_fixture\vertex[4]\y)
+    EndIf
+    
+    If tmp_texture > -1
+      
+      *tmp_b2_fixture\texture_ptr = tmp_texture
+    EndIf
+  
+  EndIf
+  
+  
+  If tmp_shape_type = #b2_box
+    
+    ParseJSON(0, tmp_vertices)    
+    tmp_box_width.f = GetJSONDouble(GetJSONElement(JSONValue(0), 0))
+    tmp_box_height.f = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
+    
+    *tmp_b2_fixture\vertex[0]\x = 0 + (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[0]\y = 0 + (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\vertex[1]\x = 0 - (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[1]\y = 0 + (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\vertex[2]\x = 0 - (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[2]\y = 0 - (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\vertex[3]\x = 0 + (tmp_box_width / 2) + body_offset_x
+    *tmp_b2_fixture\vertex[3]\y = 0 - (tmp_box_height / 2) + body_offset_y
+    *tmp_b2_fixture\num_vertices = 4
+    *tmp_b2_fixture\fixture_ptr = b2PolygonShape_CreateFixture_4(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, *tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\vertex[0]\y, *tmp_b2_fixture\vertex[1]\x, *tmp_b2_fixture\vertex[1]\y, *tmp_b2_fixture\vertex[2]\x, *tmp_b2_fixture\vertex[2]\y, *tmp_b2_fixture\vertex[3]\x, *tmp_b2_fixture\vertex[3]\y)
+    
+    If tmp_texture > -1
+      
+      *tmp_b2_fixture\texture_ptr = tmp_texture
+    EndIf
+  
+  EndIf
+    
+  If tmp_shape_type = #b2_chain
+
+    ParseJSON(0, tmp_vertices)    
+    *tmp_b2_fixture\num_vertices = JSONArraySize(JSONValue(0)) / 2
+    Dim tmp_vertex.b2Vec2(*tmp_b2_fixture\num_vertices)
+    
+    vertex_num.i = -1
+    
+    For i = 0 To ((*tmp_b2_fixture\num_vertices * 2) - 1) Step 2
+      
+      vertex_num = vertex_num + 1
+      *tmp_b2_fixture\vertex[vertex_num]\x = GetJSONDouble(GetJSONElement(JSONValue(0), i)) + body_offset_x
+      *tmp_b2_fixture\vertex[vertex_num]\y = GetJSONDouble(GetJSONElement(JSONValue(0), i + 1)) + body_offset_y
+    Next i
+    
+    *tmp_b2_fixture\fixture_ptr = b2ChainShape_CreateFixture(tmp_body, tmp_density, tmp_friction, tmp_isSensor, tmp_restitution, 0, tmp_categoryBits, tmp_groupIndex, tmp_maskBits, @*tmp_b2_fixture\vertex[0]\x, *tmp_b2_fixture\num_vertices * 2)
+  EndIf
+  
+  *tmp_b2_fixture\body_ptr = tmp_body
+  *tmp_b2_fixture\shape_type = tmp_shape_type
+  *tmp_b2_fixture\draw_type = tmp_draw_type
+  *tmp_b2_fixture\line_width = tmp_line_width
+  *tmp_b2_fixture\line_red = tmp_line_red
+  *tmp_b2_fixture\line_green = tmp_line_green
+  *tmp_b2_fixture\line_blue = tmp_line_blue
+  
+  ProcedureReturn 1
+EndProcedure
+
+
+
   
 
 Procedure MyWindowCallback(WindowID,Message,wParam,lParam)
@@ -1175,7 +1245,7 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2Vec2_Distance
+; Name...........: b2Vec2_Distance
 ; Description ...: Gets the distance between two vectors.
 ; Syntax.........: _Box2C_b2Vec2_Distance($x1, $y1, $x2, $y2)
 ; Parameters ....: $x1 - horizontal component (pixel position) of the vector
@@ -1191,21 +1261,21 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure.f _Box2C_b2Vec2_Distance (x1.f, y1.f, x2.f, y2.f)
+Procedure.f b2Vec2_Distance (x1.f, y1.f, x2.f, y2.f)
 
 	ProcedureReturn Sqr(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)))
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2Vec2_Vector_at_Angle_Distance
+; Name...........: b2Vec2_Vector_at_Angle_Distance
 ; Description ...: Gets the distance between two vectors.
-; Syntax.........: _Box2C_b2Vec2_Vector_at_Angle_Distance($x1, $y1, $x2, $y2)
+; Syntax.........: b2Vec2_Vector_at_Angle_Distance($x1, $y1, $x2, $y2)
 ; Parameters ....: x1 - horizontal component (pixel position) of the vector
 ;				           y1 - vertical component (pixel position) of the vector
 ;				           angle - must be in radians
 ;				           distance - vertical component (pixel position) of the vector
 ; Return values .: Success - the length of the vector
-;				   Failure - 0
+;				           Failure - 0
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -1213,7 +1283,7 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure _Box2C_b2Vec2_Vector_at_Angle_Distance (x1.f, y1.f, angle.f, distance.f, *tmpvec.b2Vec2)
+Procedure b2Vec2_Vector_at_Angle_Distance (x1.f, y1.f, angle.f, distance.f, *tmpvec.b2Vec2)
   
   *tmpvec\x = x1 - (Cos(angle) * Abs(distance))
   *tmpvec\y = y1 + (Sin(angle) * Abs(distance)) 
@@ -1225,9 +1295,9 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2Vec2_GetAngleBetweenThreePoints
+; Name...........: b2Vec2_GetAngleBetweenThreePoints
 ; Description ...:
-; Syntax.........: _Box2C_b2Vec2_GetAngleBetweenThreePoints($x1, $y1, $x2, $y2, $x3, $y3, ByRef $clockwise)
+; Syntax.........: b2Vec2_GetAngleBetweenThreePoints($x1, $y1, $x2, $y2, $x3, $y3, ByRef $clockwise)
 ; Parameters ....: $x1 - the first point
 ;				           $y1 - the first point
 ;				           $x2 - the second point
@@ -1243,14 +1313,12 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-;Procedure _Box2C_b2Vec2_GetAngleBetweenThreePoints(x1.f, y1.f, x2.f, y2.f, x3.f, y3.f, *clockwise.i)
-Procedure _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector1.b2Vec2, *vector2.b2Vec2, *vector3.b2Vec2)
+Procedure b2Vec2_GetAngleBetweenThreePoints(*vector1.b2Vec2, *vector2.b2Vec2, *vector3.b2Vec2)
   
 	angle1.f = ATan2(*vector1\y - *vector2\y, *vector1\x - *vector2\x)
 	angle2.f = ATan2(*vector3\y - *vector2\y, *vector3\x - *vector2\x)
 	angle.f =  angle1 - angle2
 	deg.f = Degree(angle)
-;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $deg = ' & $deg & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
 	__clockwise = 1
 	
 
@@ -1283,10 +1351,10 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2Vec2Array_IsConvexAndClockwise
+; Name...........: b2Vec2Array_IsConvexAndClockwise
 ; Description ...: Check whether an array of vertices (a polygon) is convex and in a clockwise direction.
 ;					This is a requirement for a the vertices of a Box2D shape.
-; Syntax.........: _Box2C_b2Vec2Array_IsConvexAndClockwise($vertices)
+; Syntax.........: b2Vec2Array_IsConvexAndClockwise($vertices)
 ; Parameters ....: $vertices - an array of vertices
 ; Return values .: True if convex, otherwise False
 ; Author ........: Sean Griffin
@@ -1296,8 +1364,7 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-;Procedure _Box2C_b2Vec2Array_IsConvexAndClockwise($vertices)
-Procedure.i _Box2C_b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vertices.i)
+Procedure.i b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vertices.i)
 
   edited_angle.f
   angles.s
@@ -1334,7 +1401,7 @@ Procedure.i _Box2C_b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vert
 	    *second_vector_ptr = *vector_2_ptr
 	  EndIf
 	  
-		edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector_1_ptr, *vector_2_ptr, *vector_3_ptr)
+		edited_angle = b2Vec2_GetAngleBetweenThreePoints(*vector_1_ptr, *vector_2_ptr, *vector_3_ptr)
 
 	;	If __clockwise = 1
 
@@ -1347,26 +1414,26 @@ Procedure.i _Box2C_b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vert
 	
 	
 	; angle at the last point
-	edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector_2_ptr, *vector_3_ptr, *first_vector_ptr)
+	edited_angle = b2Vec2_GetAngleBetweenThreePoints(*vector_2_ptr, *vector_3_ptr, *first_vector_ptr)
 
 	;	If __clockwise = 1
 
 		;	ProcedureReturn 0
 		;EndIf
 ;	Debug(edited_angle)
-; ;	$edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 2][0], $vertices[UBound($vertices) - 2][1], $vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $clockwise)
+; ;	$edited_angle = b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 2][0], $vertices[UBound($vertices) - 2][1], $vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $clockwise)
  	angles = angles + ", last # = " + StrF(edited_angle)
  	edited_total_angles = edited_total_angles + edited_angle
 
 	; angle at the first point
 
-	edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints(*vector_3_ptr, *first_vector_ptr, *second_vector_ptr)
+	edited_angle = b2Vec2_GetAngleBetweenThreePoints(*vector_3_ptr, *first_vector_ptr, *second_vector_ptr)
 
 		;If __clockwise = 1
 
 ;			ProcedureReturn 0
 	;	EndIf
-;	$edited_angle = _Box2C_b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $vertices[1][0], $vertices[1][1], $clockwise)
+;	$edited_angle = b2Vec2_GetAngleBetweenThreePoints($vertices[UBound($vertices) - 1][0], $vertices[UBound($vertices) - 1][1], $vertices[0][0], $vertices[0][1], $vertices[1][0], $vertices[1][1], $clockwise)
 	angles = "first # = " + StrF(edited_angle) + angles
 	edited_total_angles = edited_total_angles + edited_angle
 	
@@ -1388,9 +1455,9 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2PolygonShape_CrossProductVectorVector
+; Name...........: b2PolygonShape_CrossProductVectorVector
 ; Description ...:
-; Syntax.........: _Box2C_b2PolygonShape_CrossProductVectorVector($x1, $y1, $x2, $y2)
+; Syntax.........: b2PolygonShape_CrossProductVectorVector($x1, $y1, $x2, $y2)
 ; Parameters ....: $x1 -
 ;				   $y1 -
 ;				   $x2 -
@@ -1403,16 +1470,16 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure.f _Box2C_b2PolygonShape_CrossProductVectorVector(x1.f, y1.f, x2.f, y2.f)
+Procedure.f b2PolygonShape_CrossProductVectorVector(x1.f, y1.f, x2.f, y2.f)
 
 	ProcedureReturn x1 * y2 - y1 * x2
 EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2PolygonShape_ComputeCentroid
+; Name...........: b2PolygonShape_ComputeCentroid
 ; Description ...:
-; Syntax.........: _Box2C_b2PolygonShape_ComputeCentroid($vertices)
+; Syntax.........: b2PolygonShape_ComputeCentroid($vertices)
 ; Parameters ....: $x -
 ;				   $y -
 ; Return values .: A vector (2D element array) of the centroid of the vertices
@@ -1423,8 +1490,7 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-;Procedure _Box2C_b2PolygonShape_ComputeCentroid($vertices)
-Procedure _Box2C_b2PolygonShape_ComputeCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
+Procedure b2PolygonShape_ComputeCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
 
 	area.f = 0
   *vector_1_ptr.b2Vec2
@@ -1482,7 +1548,7 @@ Procedure _Box2C_b2PolygonShape_ComputeCentroid(*vector_ptr.b2Vec2, num_vertices
 		e2\x = p3\x - p1\x
 		e2\y = p3\y - p1\y
 
-		D.f = _Box2C_b2PolygonShape_CrossProductVectorVector(e1\x, e1\y, e2\x, e2\y)
+		D.f = b2PolygonShape_CrossProductVectorVector(e1\x, e1\y, e2\x, e2\y)
 
 		triangleArea.f = 0.5 * D
 		area = area + triangleArea
@@ -1500,9 +1566,9 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Box2C_b2PolygonShape_MoveToZeroCentroid
+; Name...........: b2PolygonShape_MoveToZeroCentroid
 ; Description ...: Computes the centroid of the shape and moves the vertices such that the centroid becomes 0,0.
-; Syntax.........: _Box2C_b2PolygonShape_MoveToZeroCentroid($vertices)
+; Syntax.........: b2PolygonShape_MoveToZeroCentroid($vertices)
 ; Parameters ....: $vertices
 ;				   $format - a StringFormat string to make a vertices smaller.  Try "%4.2f".
 ; Return values .: the centroid
@@ -1513,15 +1579,14 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-;Func _Box2C_b2PolygonShape_MoveToZeroCentroid(ByRef $vertices, $format = "%4.2f", $first_vertex_x = 0, $first_vertex_y = 0)
-Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
+Procedure b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
   
   centroid.b2Vec2
   
 	; Compute the polygon centroid.
 
-	;Local $centroid = _Box2C_b2PolygonShape_ComputeCentroid($vertices)
-  _Box2C_b2PolygonShape_ComputeCentroid(*vector_ptr, num_vertices, @centroid\x)
+	;Local $centroid = b2PolygonShape_ComputeCentroid($vertices)
+  b2PolygonShape_ComputeCentroid(*vector_ptr, num_vertices, @centroid\x)
   
 ;  Debug (Str(centroid\x) + ", " + Str(centroid\y))
 	; Shift the shape, meaning it's center and therefore it's centroid, to the world position of 0,0, such that rotations and calculations are easier
@@ -1544,8 +1609,6 @@ Procedure _Box2C_b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_verti
 
 ;	$centroid[0] = $first_vertex_x - $vertices[0][0]
 ;	$centroid[1] = $first_vertex_y - $vertices[0][1]
-;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $first_vertex_y = ' & $first_vertex_y & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
-;	ConsoleWrite('@@ Debug(' & @ScriptLineNumber & ') : $vertices[0][1] = ' & $vertices[0][1] & @CRLF & '>Error code: ' & @error & @CRLF) ;### Debug Console
 	
 	*centroid_ptr = @centroid\x
 ;	Return $centroid
@@ -1782,7 +1845,7 @@ Procedure b2World_CreateTextures()
       
       file_name.s = texture(texture_name)
       AddMapElement(texture_struct(), texture_name)
-      glCreateTexture(texture_struct(), file_name)
+      glTexture_Create(texture_struct(), file_name)
     EndIf
   Next
 
@@ -1798,7 +1861,7 @@ Procedure b2World_CreateParticleSystems()
     If particle_system()\active = 1
       
       last_particle_system_name = MapKey(particle_system())
-      b2World_CreateParticleSystem2(last_particle_system_name)
+      b2World_CreateParticleSystemEx(last_particle_system_name)
     EndIf
   Wend
 
@@ -1830,7 +1893,7 @@ Procedure b2World_CreateParticleGroups()
     If particle_group()\active = 1
       
       last_particle_group_name = MapKey(particle_group())
-      b2World_CreateParticleGroup2(last_particle_group_name)
+      b2World_CreateParticleGroupEx(last_particle_group_name)
     EndIf
     
   Wend
@@ -1861,7 +1924,7 @@ Procedure glDrawFixtures()
   
   While NextMapElement(fixture_struct())
     
-    glDrawFixture(fixture_struct())
+    glDraw_Fixture(fixture_struct())
   Wend
 EndProcedure
 
@@ -1873,7 +1936,7 @@ Procedure glDrawParticles()
     
     If particle_system()\active = 1
       
-      glDrawParticleSystem(particle_system())
+      glDraw_ParticleSystem(particle_system())
     EndIf
   Wend
 EndProcedure
@@ -1944,8 +2007,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1832
-; FirstLine = 1820
+; CursorPosition = 1581
+; FirstLine = 1565
 ; Folding = -------
 ; EnableXP
 ; EnableUnicode
