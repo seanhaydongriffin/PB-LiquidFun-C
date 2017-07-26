@@ -88,21 +88,66 @@ EndStructure
 Structure b2_ParticleSystem
   particle_system_ptr.l
   active.i
+  colorMixingStrength.d
+  dampingStrength.d
+  destroyByAge.d
+  ejectionStrength.d
+  elasticStrength.d
+  lifetimeGranularity.d
+  powderStrength.d
+  pressureStrength.d
+  particleRadius.d
+  repulsiveStrength.d
+  springStrength.d
+  staticPressureIterations.d
+  staticPressureRelaxation.d
+  staticPressureStrength.d
+  surfaceTensionNormalStrength.d
+  surfaceTensionPressureStrength.d
+  viscousStrength.d
+  particleDensity.d
+  texture_name.s
+  particle_size.d
+  particle_blending.i
   particle_count.d
   particle_position_buffer.l
   particle_quad_vertice.Vec3f[20000 * 4]
   particle_texture_vertice.b2Vec2[20000 * 4]
-  texture_name.s
-  particle_size.d
-  particle_blending.i
 EndStructure
-    
+
+
+
 Structure b2_ParticleGroup
   particle_group_ptr.l
+  system_name.s
   active.i
+  angle.d
+  angularVelocity.d
+  colorR.d
+  colorG.d
+  colorB.d
+  colorA.d
+  flags.s
+  group.d
+  groupFlags.s
+  lifetime.d
+  linearVelocityX.d
+  linearVelocityY.d
+  positionX.d
+  positionY.d
+  positionData.d
+  particleCount.d
+  strength.d
+  stride.d
+  userData.d
+  px.d
+  py.d
   radius.d
 EndStructure
-    
+
+
+
+
 Structure b2_Joint
   joint_ptr.l
   active.i
@@ -148,10 +193,12 @@ Global NewMap texture_struct.gl_Texture()
 Global tmp_joint.l
 
 ; LiquidFun Particle Systems
-Global NewMap particle_system.s()
+Global NewMap particle_system_json.s()
+Global NewMap particle_system.b2_ParticleSystem()
 
 ; LiquidFun Particle Groups
-Global NewMap particle_group.s()
+Global NewMap particle_group_json.s()
+Global NewMap particle_group.b2_ParticleGroup()
 
 ; OpenGL
 Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
@@ -185,8 +232,8 @@ Global fixture_drawing_mode.i = 0
 Global end_game.i = 0
 Global info_text_window.l
 Global menu_type.i = #main_menu
-Global current_particle_system_name.s = "water"
-Global current_particle_group_name.s = "water"
+Global last_particle_system_name.s
+Global last_particle_group_name.s
 
 ; ===============================================================================================================================
 
@@ -258,6 +305,416 @@ Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
   b2Body_SetAngularVelocity(tmp_body, velocity)
 EndProcedure
 
+
+Procedure b2World_LoadParticleSystems()
+  
+  LoadJSON(3, "particle_system.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(3), particle_system_json())       
+
+  particle_system_name.s
+  
+  ForEach particle_system_json()
+    
+    particle_system_name = MapKey(particle_system_json())
+    
+    If particle_system_name <> "system name"
+    
+      ParseJSON(3, particle_system_json(particle_system_name))
+      AddMapElement(particle_system(), particle_system_name)
+      
+      particle_system()\active                          = GetJSONInteger(GetJSONElement(JSONValue(3), 1))
+      particle_system()\colorMixingStrength             = GetJSONDouble(GetJSONElement(JSONValue(3), 2))
+      particle_system()\dampingStrength                 = GetJSONDouble(GetJSONElement(JSONValue(3), 3))
+      particle_system()\destroyByAge                    = GetJSONDouble(GetJSONElement(JSONValue(3), 4))
+      particle_system()\ejectionStrength                = GetJSONDouble(GetJSONElement(JSONValue(3), 5))
+      particle_system()\elasticStrength                 = GetJSONDouble(GetJSONElement(JSONValue(3), 6))
+      particle_system()\lifetimeGranularity             = GetJSONDouble(GetJSONElement(JSONValue(3), 7))
+      particle_system()\powderStrength                  = GetJSONDouble(GetJSONElement(JSONValue(3), 8))
+      particle_system()\pressureStrength                = GetJSONDouble(GetJSONElement(JSONValue(3), 9))
+      particle_system()\particleRadius                  = GetJSONDouble(GetJSONElement(JSONValue(3), 10))
+      particle_system()\repulsiveStrength               = GetJSONDouble(GetJSONElement(JSONValue(3), 11))
+      particle_system()\springStrength                  = GetJSONDouble(GetJSONElement(JSONValue(3), 12))
+      particle_system()\staticPressureIterations        = GetJSONDouble(GetJSONElement(JSONValue(3), 13))
+      particle_system()\staticPressureRelaxation        = GetJSONDouble(GetJSONElement(JSONValue(3), 14))
+      particle_system()\staticPressureStrength          = GetJSONDouble(GetJSONElement(JSONValue(3), 15))
+      particle_system()\surfaceTensionNormalStrength    = GetJSONDouble(GetJSONElement(JSONValue(3), 16))
+      particle_system()\surfaceTensionPressureStrength  = GetJSONDouble(GetJSONElement(JSONValue(3), 17))
+      particle_system()\viscousStrength                 = GetJSONDouble(GetJSONElement(JSONValue(3), 18))
+      particle_system()\particleDensity                 = GetJSONDouble(GetJSONElement(JSONValue(3), 19))
+      particle_system()\texture_name                    = GetJSONString(GetJSONElement(JSONValue(3), 20))
+      particle_system()\particle_size                   = GetJSONDouble(GetJSONElement(JSONValue(3), 21))
+      particle_system()\particle_blending               = GetJSONInteger(GetJSONElement(JSONValue(3), 22))
+      
+;       If active = 1
+;         
+;         tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, particleRadius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength)
+;         b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particleDensity)
+;         
+;         AddMapElement(particle_system(), particle_system_name)
+;         particle_system()\particle_system_ptr = tmp_particle_system_ptr
+;         particle_system()\texture_name = texture_name
+;         particle_system()\particle_size = particle_size
+;         particle_system()\particle_blending = particle_blending
+;         
+;       EndIf
+    EndIf
+  Next
+
+EndProcedure
+
+
+Procedure b2World_CreateParticleSystem2(system_name.s)
+  
+  tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, particle_system(system_name)\colorMixingStrength, particle_system(system_name)\dampingStrength, particle_system(system_name)\destroyByAge, particle_system(system_name)\ejectionStrength, particle_system(system_name)\elasticStrength, particle_system(system_name)\lifetimeGranularity, particle_system(system_name)\powderStrength, particle_system(system_name)\pressureStrength, particle_system(system_name)\particleRadius, particle_system(system_name)\repulsiveStrength, particle_system(system_name)\springStrength, particle_system(system_name)\staticPressureIterations, particle_system(system_name)\staticPressureRelaxation, particle_system(system_name)\staticPressureStrength, particle_system(system_name)\surfaceTensionNormalStrength, particle_system(system_name)\surfaceTensionPressureStrength, particle_system(system_name)\viscousStrength)
+  b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particle_system(system_name)\particleDensity)
+  particle_system(system_name)\particle_system_ptr = tmp_particle_system_ptr
+
+EndProcedure
+
+
+Procedure b2World_LoadParticleGroups()
+  
+  LoadJSON(4, "particle_group.json")
+  ;Debug JSONErrorMessage()
+  ExtractJSONMap(JSONValue(4), particle_group_json())       
+  
+  group_name.s
+  
+  ForEach particle_group_json()
+    
+    group_name = MapKey(particle_group_json())
+    
+    If group_name <> "group name"
+      
+      ParseJSON(4, particle_group_json(group_name))
+      AddMapElement(particle_group(), group_name)
+      
+      particle_group()\system_name       = GetJSONString(GetJSONElement(JSONValue(4), 0))
+      particle_group()\active            = GetJSONInteger(GetJSONElement(JSONValue(4), 1))
+      particle_group()\angle             = GetJSONDouble(GetJSONElement(JSONValue(4), 2))
+      particle_group()\angularVelocity   = GetJSONDouble(GetJSONElement(JSONValue(4), 3))
+      particle_group()\colorR            = GetJSONDouble(GetJSONElement(JSONValue(4), 4))
+      particle_group()\colorG            = GetJSONDouble(GetJSONElement(JSONValue(4), 5))
+      particle_group()\colorB            = GetJSONDouble(GetJSONElement(JSONValue(4), 6))
+      particle_group()\colorA            = GetJSONDouble(GetJSONElement(JSONValue(4), 7))
+      particle_group()\flags             = GetJSONString(GetJSONElement(JSONValue(4), 8))
+      particle_group()\group             = GetJSONDouble(GetJSONElement(JSONValue(4), 9))
+      particle_group()\groupFlags        = GetJSONString(GetJSONElement(JSONValue(4), 10))
+      particle_group()\lifetime          = GetJSONDouble(GetJSONElement(JSONValue(4), 11))
+      particle_group()\linearVelocityX   = GetJSONDouble(GetJSONElement(JSONValue(4), 12))
+      particle_group()\linearVelocityY   = GetJSONDouble(GetJSONElement(JSONValue(4), 13))
+      particle_group()\positionX         = GetJSONDouble(GetJSONElement(JSONValue(4), 14))
+      particle_group()\positionY         = GetJSONDouble(GetJSONElement(JSONValue(4), 15))
+      particle_group()\positionData      = GetJSONDouble(GetJSONElement(JSONValue(4), 16))
+      particle_group()\particleCount     = GetJSONDouble(GetJSONElement(JSONValue(4), 17))
+      particle_group()\strength          = GetJSONDouble(GetJSONElement(JSONValue(4), 18))
+      particle_group()\stride            = GetJSONDouble(GetJSONElement(JSONValue(4), 19))
+      particle_group()\userData          = GetJSONDouble(GetJSONElement(JSONValue(4), 20))
+      particle_group()\px                = GetJSONDouble(GetJSONElement(JSONValue(4), 21))
+      particle_group()\py                = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
+      particle_group()\radius            = GetJSONDouble(GetJSONElement(JSONValue(4), 23))
+      
+;       If active = 1
+;               
+;         flags_int.i
+;         
+;         If flags = "water"
+;           
+;           flags_int = #b2_waterParticle
+;         EndIf
+;         
+;         If flags = "zombie"
+;           
+;           flags_int = #b2_zombieParticle
+;         EndIf
+;         
+;         If flags = "wall"
+;           
+;           flags_int = #b2_wallParticle
+;         EndIf
+;         
+;         If flags = "spring"
+;           
+;           flags_int = #b2_springParticle
+;         EndIf
+;         
+;         If flags = "elastic"
+;           
+;           flags_int = #b2_elasticParticle
+;         EndIf
+;         
+;         If flags = "viscous"
+;           
+;           flags_int = #b2_viscousParticle
+;         EndIf
+;         
+;         If flags = "powder"
+;           
+;           flags_int = #b2_powderParticle
+;         EndIf
+;         
+;         If flags = "tensile"
+;           
+;           flags_int = #b2_tensileParticle
+;         EndIf
+;         
+;         If flags = "color mixing"
+;           
+;           flags_int = #b2_colorMixingParticle
+;         EndIf
+;         
+;         If flags = "destruction listener"
+;           
+;           flags_int = #b2_destructionListenerParticle
+;         EndIf
+;         
+;         If flags = "barrier"
+;           
+;           flags_int = #b2_barrierParticle
+;         EndIf
+;         
+;         If flags = "static pressure"
+;           
+;           flags_int = #b2_staticPressureParticle
+;         EndIf
+;         
+;         If flags = "reactive"
+;           
+;           flags_int = #b2_reactiveParticle
+;         EndIf
+;         
+;         If flags = "repulsive"
+;           
+;           flags_int = #b2_repulsiveParticle
+;         EndIf
+;         
+;         If flags = "fixture contact listener"
+;           
+;           flags_int = #b2_fixtureContactListenerParticle
+;         EndIf
+;         
+;         If flags = "particle contact listener"
+;           
+;           flags_int = #b2_particleContactListenerParticle
+;         EndIf
+;         
+;         If flags = "fixture contact filter"
+;           
+;           flags_int = #b2_fixtureContactFilterParticle
+;         EndIf
+;         
+;         If flags = "particle contact filter"
+;           
+;           flags_int = #b2_particleContactFilterParticle
+;         EndIf
+;         
+;         groupFlags_int.i = -1
+;         
+;         If groupFlags = "solid"
+;           
+;           groupFlags_int = #b2_solidParticleGroup
+;         EndIf
+;         
+;         If groupFlags = "rigid"
+;           
+;           groupFlags_int = #b2_rigidParticleGroup
+;         EndIf
+;         
+;         If groupFlags = "can be empty"
+;           
+;           groupFlags_int = #b2_particleGroupCanBeEmpty
+;         EndIf
+;         
+;         If groupFlags = "will be destroyed"
+;           
+;           groupFlags_int = #b2_particleGroupWillBeDestroyed
+;         EndIf
+;         
+;         If groupFlags = "needs update depth"
+;           
+;           groupFlags_int = #b2_particleGroupNeedsUpdateDepth
+;         EndIf
+;         
+;         If groupFlags = "internal mask"
+;           
+;           groupFlags_int = #b2_particleGroupInternalMask
+;         EndIf
+;         
+;         If radius_override > -1
+;           
+;           radius = radius_override
+;         EndIf
+;         
+;         tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
+;         
+;         AddMapElement(particle_group_struct(), group_name)
+;         particle_group_struct()\particle_group_ptr = tmp_particle_group_ptr
+;         particle_group_struct()\active = active
+;         particle_group_struct()\radius = radius
+;                 
+
+    ;  EndIf
+    EndIf
+  Next
+    
+  ; Update the Particle System with the latest info
+;   ResetMap(particle_system_struct())
+;   
+;   While NextMapElement(particle_system_struct())
+;     
+;     particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
+;     particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
+;   Wend
+
+EndProcedure
+
+
+Procedure b2World_CreateParticleGroup2(group_name.s)
+  
+          
+  flags_int.i
+  
+  If particle_group(group_name)\flags = "water"
+    
+    flags_int = #b2_waterParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "zombie"
+    
+    flags_int = #b2_zombieParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "wall"
+    
+    flags_int = #b2_wallParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "spring"
+    
+    flags_int = #b2_springParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "elastic"
+    
+    flags_int = #b2_elasticParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "viscous"
+    
+    flags_int = #b2_viscousParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "powder"
+    
+    flags_int = #b2_powderParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "tensile"
+    
+    flags_int = #b2_tensileParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "color mixing"
+    
+    flags_int = #b2_colorMixingParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "destruction listener"
+    
+    flags_int = #b2_destructionListenerParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "barrier"
+    
+    flags_int = #b2_barrierParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "static pressure"
+    
+    flags_int = #b2_staticPressureParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "reactive"
+    
+    flags_int = #b2_reactiveParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "repulsive"
+    
+    flags_int = #b2_repulsiveParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "fixture contact listener"
+    
+    flags_int = #b2_fixtureContactListenerParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "particle contact listener"
+    
+    flags_int = #b2_particleContactListenerParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "fixture contact filter"
+    
+    flags_int = #b2_fixtureContactFilterParticle
+  EndIf
+  
+  If particle_group(group_name)\flags = "particle contact filter"
+    
+    flags_int = #b2_particleContactFilterParticle
+  EndIf
+  
+  groupFlags_int.i = -1
+  
+  If particle_group(group_name)\groupFlags = "solid"
+    
+    groupFlags_int = #b2_solidParticleGroup
+  EndIf
+  
+  If particle_group(group_name)\groupFlags = "rigid"
+    
+    groupFlags_int = #b2_rigidParticleGroup
+  EndIf
+  
+  If particle_group(group_name)\groupFlags = "can be empty"
+    
+    groupFlags_int = #b2_particleGroupCanBeEmpty
+  EndIf
+  
+  If particle_group(group_name)\groupFlags = "will be destroyed"
+    
+    groupFlags_int = #b2_particleGroupWillBeDestroyed
+  EndIf
+  
+  If particle_group(group_name)\groupFlags = "needs update depth"
+    
+    groupFlags_int = #b2_particleGroupNeedsUpdateDepth
+  EndIf
+  
+  If particle_group(group_name)\groupFlags = "internal mask"
+    
+    groupFlags_int = #b2_particleGroupInternalMask
+  EndIf
+  
+  ;If radius_override > -1
+    
+  ;  radius = radius_override
+  ;EndIf
+  
+  tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system(particle_group(group_name)\system_name)\particle_system_ptr, particle_group(group_name)\angle, particle_group(group_name)\angularVelocity, particle_group(group_name)\colorR, particle_group(group_name)\colorG, particle_group(group_name)\colorB, particle_group(group_name)\colorA, flags_int, particle_group(group_name)\group, groupFlags_int, particle_group(group_name)\lifetime, particle_group(group_name)\linearVelocityX, particle_group(group_name)\linearVelocityY, particle_group(group_name)\positionX, particle_group(group_name)\positionY, particle_group(group_name)\positionData, particle_group(group_name)\particleCount, particle_group(group_name)\strength, particle_group(group_name)\stride, particle_group(group_name)\userData,	particle_group(group_name)\px, particle_group(group_name)\py,	particle_group(group_name)\radius)
+  particle_group(group_name)\particle_group_ptr = tmp_particle_group_ptr
+  
+    
+  ; Update the Particle System with the latest info
+  particle_system(particle_group(group_name)\system_name)\particle_count = b2ParticleSystem_GetParticleCount(particle_system(particle_group(group_name)\system_name)\particle_system_ptr)
+  particle_system(particle_group(group_name)\system_name)\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system(particle_group(group_name)\system_name)\particle_system_ptr)
+  
+  
+EndProcedure
+
+
+
 Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
 
   LoadJSON(0, "body.json")
@@ -271,14 +728,10 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   LoadJSON(2, "texture.json")
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(2), texture())   
-
-  LoadJSON(3, "particle_system.json")
-  ;Debug JSONErrorMessage()
-  ExtractJSONMap(JSONValue(3), particle_system())       
   
-  LoadJSON(4, "particle_group.json")
-  ;Debug JSONErrorMessage()
-  ExtractJSONMap(JSONValue(4), particle_group())       
+  b2World_LoadParticleSystems()
+  b2World_LoadParticleGroups()
+  
   
   LoadJSON(5, "joint.json")
   ;Debug JSONErrorMessage()
@@ -288,6 +741,12 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   gravity\y = gravity_y
   world = b2World_Create(gravity\x, gravity\y)
 EndProcedure
+
+
+
+
+
+
 
 Procedure glCreateTexture(*tmp_gl_texture.gl_Texture, filename.s)
   
@@ -570,6 +1029,7 @@ Procedure glDrawParticleSystem(*tmp_particle_system.b2_ParticleSystem)
   *positionbuffer_ptr.b2Vec2 = *tmp_particle_system\particle_position_buffer
   
   For i = 0 To (Int(*tmp_particle_system\particle_count) - 1)
+    
 
     *tmp_particle_system\particle_texture_vertice[(i * 4) + 0]\x = 1.0
     *tmp_particle_system\particle_texture_vertice[(i * 4) + 0]\y = 1.0
@@ -1329,281 +1789,68 @@ Procedure b2World_CreateTextures()
 EndProcedure
 
 
-Procedure b2World_CreateParticleSystems(single_system_name.s = "")
-  
-  Global NewMap particle_system_struct.b2_ParticleSystem()
-  particle_system_name.s
-  
-  ForEach particle_system()
+Procedure b2World_CreateParticleSystems()
+            
+  ResetMap(particle_system())
+
+  While NextMapElement(particle_system())
     
-    particle_system_name = MapKey(particle_system())
-    
-    If particle_system_name <> "system name"
-    
-      ParseJSON(3, particle_system(particle_system_name))
-      active.i                          = GetJSONInteger(GetJSONElement(JSONValue(3), 1))
-      colorMixingStrength.d             = GetJSONDouble(GetJSONElement(JSONValue(3), 2))
-      dampingStrength.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 3))
-      destroyByAge.d                    = GetJSONDouble(GetJSONElement(JSONValue(3), 4))
-      ejectionStrength.d                = GetJSONDouble(GetJSONElement(JSONValue(3), 5))
-      elasticStrength.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 6))
-      lifetimeGranularity.d             = GetJSONDouble(GetJSONElement(JSONValue(3), 7))
-      powderStrength.d                  = GetJSONDouble(GetJSONElement(JSONValue(3), 8))
-      pressureStrength.d                = GetJSONDouble(GetJSONElement(JSONValue(3), 9))
-      particleRadius.d                  = GetJSONDouble(GetJSONElement(JSONValue(3), 10))
-      repulsiveStrength.d               = GetJSONDouble(GetJSONElement(JSONValue(3), 11))
-      springStrength.d                  = GetJSONDouble(GetJSONElement(JSONValue(3), 12))
-      staticPressureIterations.d        = GetJSONDouble(GetJSONElement(JSONValue(3), 13))
-      staticPressureRelaxation.d        = GetJSONDouble(GetJSONElement(JSONValue(3), 14))
-      staticPressureStrength.d          = GetJSONDouble(GetJSONElement(JSONValue(3), 15))
-      surfaceTensionNormalStrength.d    = GetJSONDouble(GetJSONElement(JSONValue(3), 16))
-      surfaceTensionPressureStrength.d  = GetJSONDouble(GetJSONElement(JSONValue(3), 17))
-      viscousStrength.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 18))
-      particleDensity.d                 = GetJSONDouble(GetJSONElement(JSONValue(3), 19))
-      texture_name.s                    = GetJSONString(GetJSONElement(JSONValue(3), 20))
-      particle_size.d                   = GetJSONDouble(GetJSONElement(JSONValue(3), 21))
-      particle_blending.i               = GetJSONInteger(GetJSONElement(JSONValue(3), 22))
+    If particle_system()\active = 1
       
-      If active = 1 Or single_system_name = particle_system_name
-        
-        tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, colorMixingStrength, dampingStrength, destroyByAge, ejectionStrength, elasticStrength, lifetimeGranularity, powderStrength, pressureStrength, particleRadius, repulsiveStrength, springStrength, staticPressureIterations, staticPressureRelaxation, staticPressureStrength, surfaceTensionNormalStrength, surfaceTensionPressureStrength, viscousStrength)
-        b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particleDensity)
-        
-        AddMapElement(particle_system_struct(), particle_system_name)
-        particle_system_struct()\particle_system_ptr = tmp_particle_system_ptr
-        particle_system_struct()\texture_name = texture_name
-        particle_system_struct()\particle_size = particle_size
-        particle_system_struct()\particle_blending = particle_blending
-        
-        If single_system_name = particle_system_name
-          
-          Break
-        EndIf
-      EndIf
+      last_particle_system_name = MapKey(particle_system())
+      b2World_CreateParticleSystem2(last_particle_system_name)
     EndIf
-  Next
+  Wend
 
 EndProcedure
 
 Procedure b2World_DestroyParticleSystems()
   
     ; Destroy the LiquidFun Particle Systems
-    ResetMap(particle_system_struct())
+    ResetMap(particle_system())
 
-    While NextMapElement(particle_system_struct())
-       
-      b2World_DestroyParticleSystem(world, particle_system_struct()\particle_system_ptr)
+    While NextMapElement(particle_system())
+      
+      If particle_system()\active = 1
+        
+        b2World_DestroyParticleSystem(world, particle_system()\particle_system_ptr)
+      EndIf
     Wend
      
-    FreeMap(particle_system_struct())
+   ; FreeMap(particle_system_struct())
 EndProcedure
-  
-Procedure b2World_CreateParticleGroups(single_group_name.s = "", radius_override.d = -1)
-  
-  Global NewMap particle_group_struct.b2_ParticleGroup()
-  group_name.s
-  
-  ForEach particle_group()
-    
-    group_name = MapKey(particle_group())
-    
-    If group_name <> "group name"
-      
-      ParseJSON(4, particle_group(group_name))
-      system_name.s       = GetJSONString(GetJSONElement(JSONValue(4), 0))
-      active.i            = GetJSONInteger(GetJSONElement(JSONValue(4), 1))
-      angle.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 2))
-      angularVelocity.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 3))
-      colorR.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 4))
-      colorG.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 5))
-      colorB.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 6))
-      colorA.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 7))
-      flags.s             = GetJSONString(GetJSONElement(JSONValue(4), 8))
-      group.d             = GetJSONDouble(GetJSONElement(JSONValue(4), 9))
-      groupFlags.s        = GetJSONString(GetJSONElement(JSONValue(4), 10))
-      lifetime.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 11))
-      linearVelocityX.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 12))
-      linearVelocityY.d   = GetJSONDouble(GetJSONElement(JSONValue(4), 13))
-      positionX.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 14))
-      positionY.d         = GetJSONDouble(GetJSONElement(JSONValue(4), 15))
-      positionData.d      = GetJSONDouble(GetJSONElement(JSONValue(4), 16))
-      particleCount.d     = GetJSONDouble(GetJSONElement(JSONValue(4), 17))
-      strength.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 18))
-      stride.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 19))
-      userData.d          = GetJSONDouble(GetJSONElement(JSONValue(4), 20))
-      px.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 21))
-      py.d                = GetJSONDouble(GetJSONElement(JSONValue(4), 22))
-      radius.d            = GetJSONDouble(GetJSONElement(JSONValue(4), 23))
-      
-      If active = 1 Or single_group_name = group_name
-              
-        flags_int.i
-        
-        If flags = "water"
-          
-          flags_int = #b2_waterParticle
-        EndIf
-        
-        If flags = "zombie"
-          
-          flags_int = #b2_zombieParticle
-        EndIf
-        
-        If flags = "wall"
-          
-          flags_int = #b2_wallParticle
-        EndIf
-        
-        If flags = "spring"
-          
-          flags_int = #b2_springParticle
-        EndIf
-        
-        If flags = "elastic"
-          
-          flags_int = #b2_elasticParticle
-        EndIf
-        
-        If flags = "viscous"
-          
-          flags_int = #b2_viscousParticle
-        EndIf
-        
-        If flags = "powder"
-          
-          flags_int = #b2_powderParticle
-        EndIf
-        
-        If flags = "tensile"
-          
-          flags_int = #b2_tensileParticle
-        EndIf
-        
-        If flags = "color mixing"
-          
-          flags_int = #b2_colorMixingParticle
-        EndIf
-        
-        If flags = "destruction listener"
-          
-          flags_int = #b2_destructionListenerParticle
-        EndIf
-        
-        If flags = "barrier"
-          
-          flags_int = #b2_barrierParticle
-        EndIf
-        
-        If flags = "static pressure"
-          
-          flags_int = #b2_staticPressureParticle
-        EndIf
-        
-        If flags = "reactive"
-          
-          flags_int = #b2_reactiveParticle
-        EndIf
-        
-        If flags = "repulsive"
-          
-          flags_int = #b2_repulsiveParticle
-        EndIf
-        
-        If flags = "fixture contact listener"
-          
-          flags_int = #b2_fixtureContactListenerParticle
-        EndIf
-        
-        If flags = "particle contact listener"
-          
-          flags_int = #b2_particleContactListenerParticle
-        EndIf
-        
-        If flags = "fixture contact filter"
-          
-          flags_int = #b2_fixtureContactFilterParticle
-        EndIf
-        
-        If flags = "particle contact filter"
-          
-          flags_int = #b2_particleContactFilterParticle
-        EndIf
-        
-        groupFlags_int.i = -1
-        
-        If groupFlags = "solid"
-          
-          groupFlags_int = #b2_solidParticleGroup
-        EndIf
-        
-        If groupFlags = "rigid"
-          
-          groupFlags_int = #b2_rigidParticleGroup
-        EndIf
-        
-        If groupFlags = "can be empty"
-          
-          groupFlags_int = #b2_particleGroupCanBeEmpty
-        EndIf
-        
-        If groupFlags = "will be destroyed"
-          
-          groupFlags_int = #b2_particleGroupWillBeDestroyed
-        EndIf
-        
-        If groupFlags = "needs update depth"
-          
-          groupFlags_int = #b2_particleGroupNeedsUpdateDepth
-        EndIf
-        
-        If groupFlags = "internal mask"
-          
-          groupFlags_int = #b2_particleGroupInternalMask
-        EndIf
-        
-        If radius_override > -1
-          
-          radius = radius_override
-        EndIf
-        
-        tmp_particle_group_ptr.l = b2CircleShape_CreateParticleGroup(particle_system_struct(system_name)\particle_system_ptr, angle, angularVelocity, colorR, colorG, colorB, colorA, flags_int, group, groupFlags_int, lifetime, linearVelocityX, linearVelocityY, positionX, positionY, positionData, particleCount, strength, stride, userData,	px, py,	radius)
-        
-        AddMapElement(particle_group_struct(), group_name)
-        particle_group_struct()\particle_group_ptr = tmp_particle_group_ptr
-        particle_group_struct()\active = active
-        particle_group_struct()\radius = radius
-                
-        If single_group_name = group_name
-          
-          Break
-        EndIf
 
-      EndIf
+
+Procedure b2World_CreateParticleGroups()
+      
+  ResetMap(particle_group())
+     
+  While NextMapElement(particle_group())
+    
+    If particle_group()\active = 1
+      
+      last_particle_group_name = MapKey(particle_group())
+      b2World_CreateParticleGroup2(last_particle_group_name)
     EndIf
-  Next
     
-  ; Update the Particle System with the latest info
-  ResetMap(particle_system_struct())
-  
-  While NextMapElement(particle_system_struct())
-    
-    particle_system_struct()\particle_count = b2ParticleSystem_GetParticleCount(particle_system_struct()\particle_system_ptr)
-    particle_system_struct()\particle_position_buffer = b2ParticleSystem_GetPositionBuffer(particle_system_struct()\particle_system_ptr)
   Wend
 
 EndProcedure
-
+ 
 Procedure b2World_DestroyParticleGroups()
 
     ; Destroy the LiquidFun Particle Groups
-    ResetMap(particle_group_struct())
+    ResetMap(particle_group())
      
-    While NextMapElement(particle_group_struct())
-    
-      b2ParticleGroup_DestroyParticles(particle_group_struct()\particle_group_ptr, 0)
+    While NextMapElement(particle_group())
+      
+      If particle_group()\active = 1
+        
+        b2ParticleGroup_DestroyParticles(particle_group()\particle_group_ptr, 0)
+      EndIf
     Wend
       
-    FreeMap(particle_group_struct())
+  ; FreeMap(particle_group())
   
 EndProcedure
 
@@ -1619,12 +1866,15 @@ Procedure glDrawFixtures()
 EndProcedure
 
 Procedure glDrawParticles()
-
-  ResetMap(particle_system_struct())
+ 
+  ResetMap(particle_system())
   
-  While NextMapElement(particle_system_struct())
+  While NextMapElement(particle_system())
     
-    glDrawParticleSystem(particle_system_struct())
+    If particle_system()\active = 1
+      
+      glDrawParticleSystem(particle_system())
+    EndIf
   Wend
 EndProcedure
 
@@ -1694,8 +1944,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1690
-; FirstLine = 1655
-; Folding = ------
+; CursorPosition = 1832
+; FirstLine = 1820
+; Folding = -------
 ; EnableXP
 ; EnableUnicode

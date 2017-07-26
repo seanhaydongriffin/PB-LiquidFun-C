@@ -9,6 +9,7 @@ Global num_frames.i = 0
 Global fps.i = 0
 Global animation_speed.f = 1.0
 Global is_convex_and_clockwise.i
+Global curr_particle_system_name.s = "water"
 
 ; Box2D Bodies
 Global body_mass.d
@@ -45,9 +46,8 @@ b2World_CreateEx(0.0, -10.0)
 b2World_CreateBodies()
 b2World_CreateJoints()
 b2World_CreateFixtures()
-b2World_CreateParticleSystems("water")
-b2World_CreateParticleGroups("water")
-
+b2World_CreateParticleSystems()
+b2World_CreateParticleGroups()
 
   
 ; ============
@@ -294,9 +294,10 @@ Repeat
           b2World_CreateBodies()
           b2World_CreateJoints()
           b2World_CreateFixtures()
-          b2World_CreateParticleSystems("water")
-          b2World_CreateParticleGroups("water")
-
+          b2World_CreateParticleSystems()
+          b2World_CreateParticleGroups()
+          
+          
       EndSelect
       
       ; For specific menus            
@@ -355,13 +356,14 @@ Repeat
             b2DestroyScene(0, 0, 1)
             ;b2CreateScene(0, 0, 1)
             
-            b2World_CreateParticleSystems("water")
-            b2World_CreateParticleGroups("water")
+            b2World_CreateParticleSystems()
+            b2World_CreateParticleGroups()
+            
 
             
           Case #PB_Shortcut_C
             
-            tmp_radius.d = particle_group_struct(first_particle_group_name)\radius - 0.5
+            particle_group(curr_particle_system_name)\radius = particle_group(curr_particle_system_name)\radius - 0.5
             
             ; Destroy the Particle Groups
             b2World_DestroyParticleGroups()
@@ -370,11 +372,11 @@ Repeat
             b2World_Step(world, (1 / 60.0), 6, 2)
             
             ; Create the Particle Groups
-            b2World_CreateParticleGroups("water", tmp_radius)
+            b2World_CreateParticleGroups()
 
           Case #PB_Shortcut_V
             
-            tmp_radius.d = particle_group_struct(first_particle_group_name)\radius + 0.5
+            particle_group(curr_particle_system_name)\radius = particle_group(curr_particle_system_name)\radius + 0.5
             
             ; Destroy the Particle Groups
             b2World_DestroyParticleGroups()
@@ -383,41 +385,84 @@ Repeat
             b2World_Step(world, (1 / 60.0), 6, 2)
             
             ; Create the Particle Groups
-            b2World_CreateParticleGroups("water", tmp_radius)
+            b2World_CreateParticleGroups()
             
           Case #PB_Shortcut_Y
             
-            If particle_system_struct(current_particle_system_name)\particle_blending = 0
+            If particle_system(curr_particle_system_name)\particle_blending = 0
               
-              particle_system_struct(current_particle_system_name)\particle_blending = 1
+              particle_system(curr_particle_system_name)\particle_blending = 1
             Else
               
-              particle_system_struct(current_particle_system_name)\particle_blending = 0
+              particle_system(curr_particle_system_name)\particle_blending = 0
             EndIf
             
           Case #PB_Shortcut_U
             
-            particle_system_struct(current_particle_system_name)\particle_size = particle_system_struct(current_particle_system_name)\particle_size - 0.05
+            particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size - 0.05
             
-            If particle_system_struct(current_particle_system_name)\particle_size < 0.05
+            If particle_system(curr_particle_system_name)\particle_size < 0.05
               
-              particle_system_struct(current_particle_system_name)\particle_size = 0.05
+              particle_system(curr_particle_system_name)\particle_size = 0.05
             EndIf
             
           Case #PB_Shortcut_I
             
-            particle_system_struct(current_particle_system_name)\particle_size = particle_system_struct(current_particle_system_name)\particle_size + 0.05
+            particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size + 0.05
+            
+          Case #PB_Shortcut_M
+            
+            b2ParticleGroup_DestroyParticles(particle_group(curr_particle_system_name)\particle_group_ptr, 0)
+            b2World_DestroyParticleSystem(world, particle_system(curr_particle_system_name)\particle_system_ptr)
+  
+            ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+            b2World_Step(world, (1 / 60.0), 6, 2)
+
+            particle_group(curr_particle_system_name)\active = 0
+            particle_system(curr_particle_system_name)\active = 0
+
+            Select curr_particle_system_name
+                
+              Case "water"
+                
+                curr_particle_system_name = "elastic"
+                
+              Case "elastic"
+                
+                curr_particle_system_name = "spring"
+                
+              Case "spring"
+                
+                curr_particle_system_name = "viscous"
+                
+              Case "viscous"
+                
+                curr_particle_system_name = "powder"
+                
+              Case "powder"
+                
+                curr_particle_system_name = "tensile"
+                
+              Case "tensile"
+                
+                curr_particle_system_name = "barrier"
+                
+              Case "barrier"
+                
+                curr_particle_system_name = "water"
+                
+            EndSelect
+            
+            particle_system(curr_particle_system_name)\active = 1
+            particle_group(curr_particle_system_name)\active = 1
+            b2World_CreateParticleSystem2(curr_particle_system_name)
+            b2World_CreateParticleGroup2(curr_particle_system_name)
+
+            
         EndSelect
         
       EndSelect
           
-;        Case #PB_Shortcut_O
-          
-;          animation_speed = animation_speed - 0.5
-          
-;        Case #PB_Shortcut_P
-          
-;          animation_speed = animation_speed + 0.5
           
 
     ;  EndSelect
@@ -761,9 +806,6 @@ Procedure text_window_handler(*Value)
 
         Case #particle_menu
           
-            ResetMap(particle_system_struct())
-  NextMapElement(particle_system_struct())
-
           msg.s = "Particle Menu" + Chr(10) +
                   "------------------" + Chr(10) +
                   "Keys & Mouse" + Chr(10) +
@@ -783,9 +825,9 @@ Procedure text_window_handler(*Value)
                   "-------" + Chr(10) +
                   "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
                   "Mouse: Gadget Pos=" + Str(mouse_position\x) + "," + Str(mouse_position\y) + "; World Pos=" + StrF((mouse_position\x - 400) * 0.171, 2) + "," + StrF((300 - mouse_position\y) * 0.171, 2) + Chr(10) +
-                  "Particle System: Number of Particles=" + Str(particle_system_struct(current_particle_system_name)\particle_count) + Chr(10) + 
-                  "Particle Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(particle_group_struct(first_particle_group_name)\radius, 2) + Chr(10) + 
-                  "Particle: Size=" + StrF(particle_system_struct(current_particle_system_name)\particle_size) + "; Blending=" + Str(particle_system_struct(current_particle_system_name)\particle_blending) + Chr(10) + 
+                  "Particle System: Name=" + curr_particle_system_name + "; Number of Particles=" + Str(particle_system(curr_particle_system_name)\particle_count) + Chr(10) + 
+                  "Particle Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(particle_group(curr_particle_system_name)\radius, 2) + Chr(10) + 
+                  "Particle: Size=" + StrF(particle_system(curr_particle_system_name)\particle_size, 2) + "; Blending=" + Str(particle_system(curr_particle_system_name)\particle_blending) + Chr(10) + 
                   "Animation: Frames Per Sec=" + Str(fps) + " fps"
           
       EndSelect
@@ -793,7 +835,6 @@ Procedure text_window_handler(*Value)
       SetGadgetText(5, msg)
       
 
-;                        "Animation: Speed=" + StrF(animation_speed / 60.0) + " ms" + Chr(10) + 
 
 ;              "Draw: Pos=" + StrF(draw_world_start_position\x, 2) + "," + StrF(draw_world_start_position\y, 2) + "; Length=" + StrF(_Box2C_b2Vec2_Distance(draw_world_start_position\x, draw_world_start_position\y, draw_world_end_position\x, draw_world_end_position\y), 2) + "; Angle=" + StrF(Degree(draw_world_angle), 2) + Chr(10) +
 ;                        "O, P: Adjusts the Animation Speed (helps with low fps)" + Chr(10)
@@ -816,8 +857,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 385
-; FirstLine = 382
+; CursorPosition = 829
+; FirstLine = 818
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe
