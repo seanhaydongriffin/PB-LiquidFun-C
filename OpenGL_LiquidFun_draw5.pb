@@ -48,24 +48,24 @@ b2World_CreateJoints()
 b2World_CreateFixtures()
 b2World_CreateParticleSystems()
 b2World_CreateParticleGroups()
-
   
 ; ============
 ; Setup OpenGL
 ; ============
 
 ; Setup the OpenGL Windows (main_window_x, main_window_y, main_window_width, main_window_height, main_window_title, openglgadget_x, openglgadget_y, openglgadget_width, openglgadget_height, text_window_width, text_window_height, text_window_background_colour, text_window_text_colour, open_console_window)
-glSetupWindows(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
+glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
 
 ; Setup the OpenGL World (field_of_view, aspect_ratio, viewer_to_near_clipping_plane_distance, viewer_to_far_clipping_plane_distance, camera_x, camera_y, camera_z)
-;glSetupWorld(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
-glSetupWorld(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
+;glWorld_Setup(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
+glWorld_Setup(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
 
 ; Setup OpenGL Textures
 ; Remember! In Paint.NET save images as 32-bit PNG for the below to work
 ; Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions in powers of 2
 ;   i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
-b2World_CreateTextures()
+glWorld_CreateTextures()
+
 
 
 ; ========================
@@ -103,11 +103,11 @@ Repeat
     
             
     ; Draw the LiquidFun Particles (texture, particle_quad_size)
-    glDrawParticles()
+    glDraw_Particles()
     
     
     ; Draw the Box2D Bodies (body, fixture, texture)
-    glDrawFixtures()
+    glDraw_Fixtures()
 
     
     
@@ -137,7 +137,7 @@ Repeat
       
       glEnable_(#GL_TEXTURE_2D)
 
-      glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture_struct("speed boat")\image_number), ImageHeight(texture_struct("speed boat")\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture_struct("speed boat")\image_bitmap\bmBits)
+      glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture("speed boat")\image_number), ImageHeight(texture("speed boat")\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture("speed boat")\image_bitmap\bmBits)
       
       ;50, 10, -50, 10, -50, -10, 50, -10
       Dim tmp_quad_vertice.Vec3f(4)
@@ -245,9 +245,9 @@ Repeat
     
     glTranslatef_(camera_linearvelocity\x, camera_linearvelocity\y, camera_linearvelocity\z)
     
-    b2Body_SetAngularVelocityPercent(body_ptr("ground"), 99)
+    b2Body_SetAngularVelocityPercent(body("ground")\body_ptr, 99)
     
-    body_mass.d = b2Body_GetMass(body_ptr("boat"))
+    body_mass.d = b2Body_GetMass(body("boat")\body_ptr)
     
     num_frames = num_frames + 1
   EndIf
@@ -290,7 +290,7 @@ Repeat
           
           b2DestroyScene(1, 1, 1)
           ;b2CreateScene(1, 1, 1)
-          
+
           b2World_CreateBodies()
           b2World_CreateJoints()
           b2World_CreateFixtures()
@@ -594,12 +594,12 @@ Procedure keyboard_mouse_handler(*Value)
           
           If GetAsyncKeyState_(#VK_Q)
             
-            b2Body_AddAngularVelocity(body_ptr("ground"), Radian(1))
+            b2Body_AddAngularVelocity(body("ground")\body_ptr, Radian(1))
           EndIf
           
           If GetAsyncKeyState_(#VK_E)
             
-            b2Body_AddAngularVelocity(body_ptr("ground"), Radian(-1))
+            b2Body_AddAngularVelocity(body("ground")\body_ptr, Radian(-1))
           EndIf
           
         ; player menu (keyboard)
@@ -607,74 +607,74 @@ Procedure keyboard_mouse_handler(*Value)
     
           If GetAsyncKeyState_(#VK_A)
             
-            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-            b2Body_ApplyForce(body_ptr("boat"), body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body("boat")\body_ptr, tmp_pos())
+            b2Body_ApplyForce(body("boat")\body_ptr, body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
             
-      ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-       ;     b2Body_ApplyForce(body_ptr("boat"), -80, 0, tmp_pos(0), tmp_pos(1), 1)
+      ;      b2Body_GetPosition(body("boat")\body_ptr, tmp_pos())
+       ;     b2Body_ApplyForce(body("boat")\body_ptr, -80, 0, tmp_pos(0), tmp_pos(1), 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_D)
     
-            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-            b2Body_ApplyForce(body_ptr("boat"), body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body("boat")\body_ptr, tmp_pos())
+            b2Body_ApplyForce(body("boat")\body_ptr, body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
             
-      ;      b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-      ;      b2Body_ApplyForce(body_ptr("boat"), 80, 0, tmp_pos(0), tmp_pos(1), 1)
+      ;      b2Body_GetPosition(body("boat")\body_ptr, tmp_pos())
+      ;      b2Body_ApplyForce(body("boat")\body_ptr, 80, 0, tmp_pos(0), tmp_pos(1), 1)
           EndIf
 
           If GetAsyncKeyState_(#VK_W)
             
-            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-            b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body("boat")\body_ptr, tmp_pos())
+            b2Body_ApplyForce(body("boat")\body_ptr, 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_S)
             
-            b2Body_GetPosition(body_ptr("boat"), tmp_pos())
-            b2Body_ApplyForce(body_ptr("boat"), 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body("boat")\body_ptr, tmp_pos())
+            b2Body_ApplyForce(body("boat")\body_ptr, 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_Q)
                             
-            tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
+            tmp_velocity.d = b2Body_GetAngularVelocity(body("boat prop")\body_ptr)
             
             If tmp_velocity < 30
               
               tmp_velocity = tmp_velocity + Radian(100)
             EndIf
             
-            b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+            b2Body_SetAngularVelocity(body("boat prop")\body_ptr, tmp_velocity)
             
-    ;        b2Body_ApplyTorque(body_ptr("body"), body_mass * body_user_applied_angular_force, 1)
+    ;        b2Body_ApplyTorque(body("body")\body_ptr, body_mass * body_user_applied_angular_force, 1)
             
-     ;       b2Body_ApplyTorque(body_ptr("boat"), 50, 1)
+     ;       b2Body_ApplyTorque(body("boat")\body_ptr, 50, 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_E)
                     
-            tmp_velocity.d = b2Body_GetAngularVelocity(body_ptr("boat prop"))
+            tmp_velocity.d = b2Body_GetAngularVelocity(body("boat prop")\body_ptr)
             
             If tmp_velocity > -30
     
               tmp_velocity = tmp_velocity - Radian(100)
             EndIf
             
-            b2Body_SetAngularVelocity(body_ptr("boat prop"), tmp_velocity)
+            b2Body_SetAngularVelocity(body("boat prop")\body_ptr, tmp_velocity)
     
-    ;        b2Body_ApplyTorque(body_ptr("body"), body_mass * -body_user_applied_angular_force, 1)
+    ;        b2Body_ApplyTorque(body("body")\body_ptr, body_mass * -body_user_applied_angular_force, 1)
             
-     ;       b2Body_ApplyTorque(body_ptr("boat"), -50, 1)
+     ;       b2Body_ApplyTorque(body("boat")\body_ptr, -50, 1)
           EndIf
           
           If GetAsyncKeyState_(#VK_F)
 
-            b2Body_SetMassData(body_ptr("boat"), body_mass - 1.0, 0, 0, 0)
+            b2Body_SetMassData(body("boat")\body_ptr, body_mass - 1.0, 0, 0, 0)
           EndIf
           
           If GetAsyncKeyState_(#VK_G)
           
-            b2Body_SetMassData(body_ptr("boat"), body_mass + 1.0, 0, 0, 0)
+            b2Body_SetMassData(body("boat")\body_ptr, body_mass + 1.0, 0, 0, 0)
           EndIf
 
           
@@ -857,8 +857,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 527
-; FirstLine = 524
+; CursorPosition = 292
+; FirstLine = 258
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe
