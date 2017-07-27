@@ -306,160 +306,188 @@ Repeat
         ; main menu
         Case #main_menu
 
-        Select key
+          Select key
+    
+            Case #PB_Shortcut_T
+              
+              If texture_drawing_mode = 0
+    
+                texture_drawing_mode = 1
+        ;        tmp_quad(0)\x = (mouse_position\x - 400) * 0.171
+        ;        tmp_quad(0)\y = (300 - mouse_position\y) * 0.171
+                
+                tmp_quad(0)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
+                tmp_quad(0)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+    
+              EndIf
+              
+              If texture_drawing_mode = 3
+                
+                texture_drawing_mode = 0
+              EndIf
+              
+              If texture_drawing_mode = 2
+                
+                texture_drawing_mode = 3
+              EndIf
+        
+            Case #PB_Shortcut_6
+              
+              If fixture_drawing_mode = 0
+                
+                fixture_drawing_mode = 1
+                tmp_fixture_vector_num = 0
+              
+                tmp_fixture_vector(tmp_fixture_vector_num)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
+                tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+              EndIf
+              
+              tmp_fixture_vector_num = tmp_fixture_vector_num + 1
   
-          Case #PB_Shortcut_T
-            
-            If texture_drawing_mode = 0
-  
-              texture_drawing_mode = 1
-      ;        tmp_quad(0)\x = (mouse_position\x - 400) * 0.171
-      ;        tmp_quad(0)\y = (300 - mouse_position\y) * 0.171
-              
-              tmp_quad(0)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-              tmp_quad(0)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
-  
-            EndIf
-            
-            If texture_drawing_mode = 3
-              
-              texture_drawing_mode = 0
-            EndIf
-            
-            If texture_drawing_mode = 2
-              
-              texture_drawing_mode = 3
-            EndIf
-      
-          Case #PB_Shortcut_6
-            
-            If fixture_drawing_mode = 0
-              
-              fixture_drawing_mode = 1
-              tmp_fixture_vector_num = 0
-            
-              tmp_fixture_vector(tmp_fixture_vector_num)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-              tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
-            EndIf
-            
-            tmp_fixture_vector_num = tmp_fixture_vector_num + 1
-
-        EndSelect
+          EndSelect
           
+        ; player menu
+        Case #player_menu
+
+          Select key
+  
+            Case #PB_Shortcut_X
+              
+              b2World_DestroyJoint(world, joint("prop spring")\joint_ptr)
+              joint("prop spring")\active = 0
+              b2World_DestroyBody(world, body("boat")\body_ptr)
+              body("boat")\active = 0
+              b2World_DestroyBody(world, body("boat prop")\body_ptr)
+              body("boat prop")\active = 0
+              
+              body("car")\active = 1
+              b2World_CreateBodyEx("car")
+        ;      body("wheel1")\active = 1
+        ;      b2World_CreateBodyEx("wheel1")
+        ;      body("wheel2")\active = 1
+        ;      b2World_CreateBodyEx("wheel2")
+        ;      joint("wheel1 spring")\active = 1
+        ;      b2World_CreateJointEx("wheel1 spring")
+        ;      joint("wheel2 spring")\active = 1
+        ;      b2World_CreateJointEx("wheel2 spring")
+              
+              
+          EndSelect
+              
         ; particle menu
         Case #particle_menu
 
-        Select key
-
-          Case #PB_Shortcut_K
-            
-            b2DestroyScene(0, 0, 1)
-            ;b2CreateScene(0, 0, 1)
-            
-            b2World_CreateParticleSystems()
-            b2World_CreateParticleGroups()
-            
-
-            
-          Case #PB_Shortcut_C
-            
-            particle_group(curr_particle_system_name)\radius = particle_group(curr_particle_system_name)\radius - 0.5
-            
-            ; Destroy the Particle Groups
-            b2World_DestroyParticleGroups()
-          
-            ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-            b2World_Step(world, (1 / 60.0), 6, 2)
-            
-            ; Create the Particle Groups
-            b2World_CreateParticleGroups()
-
-          Case #PB_Shortcut_V
-            
-            particle_group(curr_particle_system_name)\radius = particle_group(curr_particle_system_name)\radius + 0.5
-            
-            ; Destroy the Particle Groups
-            b2World_DestroyParticleGroups()
-          
-            ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-            b2World_Step(world, (1 / 60.0), 6, 2)
-            
-            ; Create the Particle Groups
-            b2World_CreateParticleGroups()
-            
-          Case #PB_Shortcut_Y
-            
-            If particle_system(curr_particle_system_name)\particle_blending = 0
-              
-              particle_system(curr_particle_system_name)\particle_blending = 1
-            Else
-              
-              particle_system(curr_particle_system_name)\particle_blending = 0
-            EndIf
-            
-          Case #PB_Shortcut_U
-            
-            particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size - 0.05
-            
-            If particle_system(curr_particle_system_name)\particle_size < 0.05
-              
-              particle_system(curr_particle_system_name)\particle_size = 0.05
-            EndIf
-            
-          Case #PB_Shortcut_I
-            
-            particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size + 0.05
-            
-          Case #PB_Shortcut_M
-            
-            b2ParticleGroup_DestroyParticles(particle_group(curr_particle_system_name)\particle_group_ptr, 0)
-            b2World_DestroyParticleSystem(world, particle_system(curr_particle_system_name)\particle_system_ptr)
+          Select key
   
-            ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-            b2World_Step(world, (1 / 60.0), 6, 2)
-
-            particle_group(curr_particle_system_name)\active = 0
-            particle_system(curr_particle_system_name)\active = 0
-
-            Select curr_particle_system_name
-                
-              Case "water"
-                
-                curr_particle_system_name = "elastic"
-                
-              Case "elastic"
-                
-                curr_particle_system_name = "spring"
-                
-              Case "spring"
-                
-                curr_particle_system_name = "viscous"
-                
-              Case "viscous"
-                
-                curr_particle_system_name = "powder"
-                
-              Case "powder"
-                
-                curr_particle_system_name = "tensile"
-                
-              Case "tensile"
-                
-                curr_particle_system_name = "barrier"
-                
-              Case "barrier"
-                
-                curr_particle_system_name = "water"
-                
-            EndSelect
+            Case #PB_Shortcut_K
+              
+              b2DestroyScene(0, 0, 1)
+              ;b2CreateScene(0, 0, 1)
+              
+              b2World_CreateParticleSystems()
+              b2World_CreateParticleGroups()
+              
+  
+              
+            Case #PB_Shortcut_C
+              
+              particle_group(curr_particle_system_name)\radius = particle_group(curr_particle_system_name)\radius - 0.5
+              
+              ; Destroy the Particle Groups
+              b2World_DestroyParticleGroups()
             
-            particle_system(curr_particle_system_name)\active = 1
-            particle_group(curr_particle_system_name)\active = 1
-            b2World_CreateParticleSystemEx(curr_particle_system_name)
-            b2World_CreateParticleGroupEx(curr_particle_system_name)
-
+              ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+              b2World_Step(world, (1 / 60.0), 6, 2)
+              
+              ; Create the Particle Groups
+              b2World_CreateParticleGroups()
+  
+            Case #PB_Shortcut_V
+              
+              particle_group(curr_particle_system_name)\radius = particle_group(curr_particle_system_name)\radius + 0.5
+              
+              ; Destroy the Particle Groups
+              b2World_DestroyParticleGroups()
             
-        EndSelect
+              ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+              b2World_Step(world, (1 / 60.0), 6, 2)
+              
+              ; Create the Particle Groups
+              b2World_CreateParticleGroups()
+              
+            Case #PB_Shortcut_Y
+              
+              If particle_system(curr_particle_system_name)\particle_blending = 0
+                
+                particle_system(curr_particle_system_name)\particle_blending = 1
+              Else
+                
+                particle_system(curr_particle_system_name)\particle_blending = 0
+              EndIf
+              
+            Case #PB_Shortcut_U
+              
+              particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size - 0.05
+              
+              If particle_system(curr_particle_system_name)\particle_size < 0.05
+                
+                particle_system(curr_particle_system_name)\particle_size = 0.05
+              EndIf
+              
+            Case #PB_Shortcut_I
+              
+              particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size + 0.05
+              
+            Case #PB_Shortcut_M
+              
+              b2ParticleGroup_DestroyParticles(particle_group(curr_particle_system_name)\particle_group_ptr, 0)
+              b2World_DestroyParticleSystem(world, particle_system(curr_particle_system_name)\particle_system_ptr)
+    
+              ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+              b2World_Step(world, (1 / 60.0), 6, 2)
+  
+              particle_group(curr_particle_system_name)\active = 0
+              particle_system(curr_particle_system_name)\active = 0
+  
+              Select curr_particle_system_name
+                  
+                Case "water"
+                  
+                  curr_particle_system_name = "elastic"
+                  
+                Case "elastic"
+                  
+                  curr_particle_system_name = "spring"
+                  
+                Case "spring"
+                  
+                  curr_particle_system_name = "viscous"
+                  
+                Case "viscous"
+                  
+                  curr_particle_system_name = "powder"
+                  
+                Case "powder"
+                  
+                  curr_particle_system_name = "tensile"
+                  
+                Case "tensile"
+                  
+                  curr_particle_system_name = "barrier"
+                  
+                Case "barrier"
+                  
+                  curr_particle_system_name = "water"
+                  
+              EndSelect
+              
+              particle_system(curr_particle_system_name)\active = 1
+              particle_group(curr_particle_system_name)\active = 1
+              b2World_CreateParticleSystemEx(curr_particle_system_name)
+              b2World_CreateParticleGroupEx(curr_particle_system_name)
+  
+              
+          EndSelect
         
       EndSelect
           
@@ -819,6 +847,7 @@ Procedure text_window_handler(*Value)
                   "C, V: Changes the starting radius of the water group" + Chr(10) +
                   "Y: Toggles water particle texture blending" + Chr(10) +
                   "U, I: Changes the water particle size" + Chr(10) +
+                  "M: Changes the particle system name / type" + Chr(10) +
                   "K: Restarts the water group" + Chr(10) +
                   "-------" + Chr(10) +
                   "Info" + Chr(10) +
@@ -857,8 +886,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 292
-; FirstLine = 258
+; CursorPosition = 371
+; FirstLine = 341
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw5.exe

@@ -1969,8 +1969,11 @@ EndProcedure
 
 
 
+Procedure b2World_CreateBodyEx(body_name.s)
 
+  body(body_name)\body_ptr = b2World_CreateBody(world, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\angle), body(body_name)\angularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\linearVelocityX, body(body_name)\linearVelocityY, body(body_name)\positionX, body(body_name)\positionY, body(body_name)\type, body(body_name)\userData)
 
+EndProcedure
 
 Procedure b2World_CreateBodies()
               
@@ -1980,7 +1983,7 @@ Procedure b2World_CreateBodies()
     
     If body()\active = 1
       
-      body()\body_ptr = b2World_CreateBody(world, body()\active, body()\allowSleep, Radian(body()\angle), body()\angularVelocity, body()\angularDamping, body()\awake, body()\bullet, body()\fixedRotation, body()\gravityScale, body()\linearDamping, body()\linearVelocityX, body()\linearVelocityY, body()\positionX, body()\positionY, body()\type, body()\userData)
+      b2World_CreateBodyEx(MapKey(body()))
     EndIf
   Wend
 
@@ -2061,7 +2064,7 @@ Procedure b2World_CreateFixtures()
       EndIf
       
       If fixture()\draw_type_str = "line strip"
-        Debug "line stripxxx"
+        
         fixture()\draw_type = #gl_line_strip2
       EndIf
       
@@ -2075,6 +2078,14 @@ Procedure b2World_CreateFixtures()
 
 EndProcedure
 
+Procedure b2World_CreateJointEx(joint_name.s)
+
+  If joint(joint_name)\joint_type = "wheel"
+    
+    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world, body(joint(joint_name)\body_a_name)\body_ptr, body(joint(joint_name)\body_b_name)\body_ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
+  EndIf
+
+EndProcedure
 
 Procedure b2World_CreateJoints()
   
@@ -2082,13 +2093,10 @@ Procedure b2World_CreateJoints()
 
   While NextMapElement(joint())
       
-      If joint()\active = 1
+    If joint()\active = 1
       
-        If joint()\joint_type = "wheel"
-          
-          joint()\joint_ptr = b2WheelJointDef_Create(world, body(joint()\body_a_name)\body_ptr, body(joint()\body_b_name)\body_ptr, joint()\collideConnected, joint()\dampingRatio, joint()\enableMotor, joint()\frequencyHz, joint()\localAnchorAx, joint()\localAnchorAy, joint()\localAnchorBx, joint()\localAnchorBy, joint()\localAxisAx, joint()\localAxisAy, joint()\maxMotorTorque, joint()\motorSpeed)
-        EndIf
-      EndIf
+      b2World_CreateJointEx(MapKey(joint()))
+    EndIf
   Wend
 EndProcedure
 
@@ -2103,7 +2111,7 @@ Procedure b2World_DestroyJoints()
       If joint()\active = 1
 
         b2World_DestroyJoint(world, joint()\joint_ptr)
-      endif
+      EndIf
     Wend
     
 
@@ -2298,8 +2306,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 2105
-; FirstLine = 2076
+; CursorPosition = 2066
+; FirstLine = 2037
 ; Folding = --------
 ; EnableXP
 ; EnableUnicode
