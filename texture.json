@@ -5,5 +5,6 @@
   "body":             "crate128x128.png", 
   "water":            "waterparticle-3-64x64.png",
   "bucket ball":      "bucketball128x128.png",
-  "speed boat":       "speedboat256x256.png"
+  "speed boat":       "speedboat256x256.png",
+  "zero zero":        "zerozero32x32.png"
 }

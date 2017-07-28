@@ -249,6 +249,7 @@ Global NewMap body.b2_Body()
 ; Box2D Fixtures
 Global NewMap fixture_json.s()
 Global NewMap fixture.b2_Fixture()
+Global NewList fixture_order.s()
 
 ; Box2D Joints
 Global NewMap joint_json.s()
@@ -764,6 +765,9 @@ Procedure glWorld_Setup(field_of_view.d, aspect_ratio.d, viewer_to_near_clipping
   gluPerspective_(field_of_view, aspect_ratio, viewer_to_near_clipping_plane_distance, viewer_to_far_clipping_plane_distance) 
   glMatrixMode_(#GL_MODELVIEW)
   glTranslatef_(camera_x, camera_y, camera_z)
+  camera_position\x = camera_x
+  camera_position\y = camera_y
+  camera_position\z = camera_z
   glEnable_(#GL_CULL_FACE)                                              ; Will enhance the rendering speed as all the back face will be culled
   glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)  ; For texture mapping
   glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)  ; For texture mapping
@@ -1380,16 +1384,38 @@ EndProcedure
 
 Procedure b2Fixture_LoadAll()
   
+  ReadFile(1, "fixture.json") 
+  
+  While Eof(1) = 0         
+    
+    line.s = ReadString(1)   
+    colon_pos.i = FindString(line, ":")
+    
+    If colon_pos > 0
+      
+      key.s = Left(line, colon_pos - 1)
+      key = Trim(ReplaceString(key, Chr(34), ""))
+      
+      If key <> "fixture name"
+        
+        AddElement(fixture_order())
+        fixture_order() = key
+      EndIf
+    EndIf
+  Wend
+  
+  CloseFile(1)             
+
   LoadJSON(1, "fixture.json")
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(1), fixture_json())       
-
+  
   fixture_name.s
   
-  ForEach fixture_json()
+  ForEach fixture_order()
     
-    fixture_name = MapKey(fixture_json())
-    
+    fixture_name = fixture_order()
+   ; Debug fixture_name
     If fixture_name <> "fixture name"
       
       ParseJSON(1, fixture_json(fixture_name))
@@ -1470,6 +1496,30 @@ EndProcedure
 
 
 
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_SetPosition
+; Description ...: Sets the position (metres) of a body (b2Body)
+; Syntax.........: b2Body_SetPosition(tmp_body.l, x.d, y.d)
+; Parameters ....: tmp_body - a pointer to the body (b2Body)
+;				           x - the horizontal position (metres)
+;				           y - the vertical position (metres)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_SetPosition(tmp_body.l, x.d, y.d)
+  
+  curr_angle.d = b2Body_GetAngle(tmp_body)
+  b2Body_SetTransform(tmp_body, x, y, curr_angle)
+  
+  ProcedureReturn 1
+EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
@@ -2005,74 +2055,76 @@ Procedure b2World_DestroyBodies()
 
 EndProcedure
 
+Procedure b2World_CreateFixtureEx(fixture_name.s)
+  
+  
+      If fixture(fixture_name)\shape_type_str = "circle"
+        
+        fixture(fixture_name)\shape_type = #b2_circle
+      EndIf
+      
+      If fixture(fixture_name)\shape_type_str = "edge"
+        
+        fixture(fixture_name)\shape_type = #b2_edge
+      EndIf
+      
+      If fixture(fixture_name)\shape_type_str = "polygon"
+        
+        fixture(fixture_name)\shape_type = #b2_polygon
+      EndIf
+      
+      If fixture(fixture_name)\shape_type_str = "chain"
+        
+        fixture(fixture_name)\shape_type = #b2_chain
+      EndIf
+      
+      If fixture(fixture_name)\shape_type_str = "box"
+        
+        fixture(fixture_name)\shape_type = #b2_box
+      EndIf
+      
+      If fixture(fixture_name)\shape_type_str = "sprite"
+        
+        fixture(fixture_name)\shape_type = #b2_sprite
+      EndIf
+      
+      fixture(fixture_name)\draw_type = -1
+      
+      If fixture(fixture_name)\draw_type_str = "texture"
+        
+        fixture(fixture_name)\draw_type = #gl_texture2
+      EndIf
+      
+      If fixture(fixture_name)\draw_type_str = "texture and line loop"
+        
+        fixture(fixture_name)\draw_type = #gl_texture2_and_line_loop2
+      EndIf
+      
+      If fixture(fixture_name)\draw_type_str = "line loop"
+        
+        fixture(fixture_name)\draw_type = #gl_line_loop2
+      EndIf
+      
+      If fixture(fixture_name)\draw_type_str = "line strip"
+        
+        fixture(fixture_name)\draw_type = #gl_line_strip2
+      EndIf
+      
+      b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\body_ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
+
+EndProcedure
+
+
 Procedure b2World_CreateFixtures()
-  
-  
-  
             
   ResetMap(fixture())
 
   While NextMapElement(fixture())
 
     If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 ;And b2Body_IsActive(body(fixture()\body_name)\body_ptr) = 1
-
-      If fixture()\shape_type_str = "circle"
-        
-        fixture()\shape_type = #b2_circle
-      EndIf
       
-      If fixture()\shape_type_str = "edge"
-        
-        fixture()\shape_type = #b2_edge
-      EndIf
-      
-      If fixture()\shape_type_str = "polygon"
-        
-        fixture()\shape_type = #b2_polygon
-      EndIf
-      
-      If fixture()\shape_type_str = "chain"
-        
-        fixture()\shape_type = #b2_chain
-      EndIf
-      
-      If fixture()\shape_type_str = "box"
-        
-        fixture()\shape_type = #b2_box
-      EndIf
-      
-      If fixture()\shape_type_str = "sprite"
-        
-        fixture()\shape_type = #b2_sprite
-      EndIf
-      
-      fixture()\draw_type = -1
-      
-      If fixture()\draw_type_str = "texture"
-        
-        fixture()\draw_type = #gl_texture2
-      EndIf
-      
-      If fixture()\draw_type_str = "texture and line loop"
-        
-        fixture()\draw_type = #gl_texture2_and_line_loop2
-      EndIf
-      
-      If fixture()\draw_type_str = "line loop"
-        
-        fixture()\draw_type = #gl_line_loop2
-      EndIf
-      
-      If fixture()\draw_type_str = "line strip"
-        
-        fixture()\draw_type = #gl_line_strip2
-      EndIf
-      
-      b2PolygonShape_CreateFixture(fixture(), body(fixture()\body_name)\body_ptr, fixture()\density, fixture()\friction, fixture()\isSensor, fixture()\restitution, fixture()\categoryBits, fixture()\groupIndex, fixture()\maskBits, fixture()\shape_type, fixture()\vertices_str, fixture()\sprite_size, fixture()\sprite_offset_x, fixture()\sprite_offset_y, fixture()\draw_type, fixture()\line_width, fixture()\line_red, fixture()\line_green, fixture()\line_blue, fixture()\body_offset_x, fixture()\body_offset_y, @texture(fixture()\texture_name))
+      b2World_CreateFixtureEx(MapKey(fixture()))
     EndIf
-
-  
-    
   Wend
 
 
@@ -2273,16 +2325,23 @@ EndProcedure
 
 
 Procedure glDraw_Fixtures()
-    
-  ResetMap(fixture())
   
-  While NextMapElement(fixture())
+  ForEach fixture_order()
     
+    FindMapElement(fixture(), fixture_order())
+  
+  
+;  ResetMap(fixture())
+  
+;  While NextMapElement(fixture())
+   ; Debug fixture()\body_name
     If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1
 
       glDraw_Fixture(fixture())
     EndIf
-  Wend
+    ; Wend
+    
+  Next
 EndProcedure
 
 Procedure glDraw_Particles()
@@ -2306,8 +2365,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 2066
-; FirstLine = 2037
+; CursorPosition = 765
+; FirstLine = 761
 ; Folding = --------
 ; EnableXP
 ; EnableUnicode
