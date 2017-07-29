@@ -81,8 +81,14 @@ Structure b2_World
   mainCameraCurrentPositionX.d        ; the current horizontal position of the main camera (since the last b2World_Step call)
   mainCameraCurrentPositionY.d        ; the current vertical position of the main camera (since the last b2World_Step call)
   mainCameraCurrentPositionZ.d        ; the current Z position of the main camera (since the last b2World_Step call)
-  mouseCurrentPositionX.d             ; the current horizontal position of the mouse (since the last b2World_Step call)
-  mouseCurrentPositionY.d             ; the current vertical position of the mouse (since the last b2World_Step call)
+  mouseDisplacementPositionX.i        ; the horizontal distance the mouse has moved (since the last GetGadgetAttribute call)
+  mouseDisplacementPositionY.i        ; the vertical distance the mouse has moved (since the last GetGadgetAttribute call)
+  mousePreviousPositionX.i            ; the previous horizontal position of the mouse (since the last b2World_Step call)
+  mousePreviousPositionY.i            ; the previous vertical position of the mouse (since the last b2World_Step call)
+  mouseCurrentPositionX.i             ; the current horizontal position of the mouse (since the last b2World_Step call)
+  mouseCurrentPositionY.i             ; the current vertical position of the mouse (since the last b2World_Step call)
+  mouseLeftButtonPressed.i            ; true / false if the left mouse button is currently pressed
+  mouseWheelPosition.i
 EndStructure
 
 Structure b2_Body
@@ -99,6 +105,8 @@ Structure b2_Body
   linearDamping.d
   linearVelocityX.d         ; the original horizontal velocity of the body (from JSON file)
   linearVelocityY.d         ; the original vertical velocity of the body (from JSON file)
+  currentLinearVelocityX.d  ; the current horizontal linear velocity of the body (since the last b2World_Step call)
+  currentLinearVelocityY.d  ; the current vertical linear velocity of the body (since the last b2World_Step call)
   positionX.d               ; the original horizontal position of the body (from JSON file)
   positionY.d               ; the original vertical position of the body (from JSON file)
   type.d
@@ -259,11 +267,15 @@ Global __clockwise.i
 
 ; Box2D Vectors
 Global Dim tmp_pos.f(2)
+Global Dim tmp_vel.f(2)
 
 
 ; Box2D Worlds
 Global gravity.b2Vec2
 Global world.b2_World
+world\mousePreviousPositionX = -99999
+world\mousePreviousPositionY = -99999
+
 
 ; Box2D Bodies
 Global NewMap body_json.s()
@@ -296,21 +308,6 @@ Global NewMap particle_group.b2_ParticleGroup()
 Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
 
 ; Game Controls
-Global mouse_position.Vec2i
-mouse_position\x = 0
-mouse_position\y = 0
-Global draw_world_start_position.b2Vec2
-draw_world_start_position\x = 999999
-draw_world_start_position\y = 999999
-Global draw_world_end_position.b2Vec2
-draw_world_end_position\x = 999999
-draw_world_end_position\y = 999999
-Global draw_world_angle.f
-Global old_mouse_position.Vec2i
-old_mouse_position\x = -99999
-old_mouse_position\y = -99999
-Global mouse_left_button_down.i = 0
-Global mouse_wheel_position.i = 0
 Global texture_drawing_mode.i = 0
 Global fixture_drawing_mode.i = 0
 Global end_game.i = 0
@@ -1507,6 +1504,28 @@ Procedure b2Body_LoadAll()
 EndProcedure
 
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_GetLinearVelocityEx
+; Description ...: Gets the linear velocity (meters per second) of a body (b2Body)
+; Syntax.........: b2Body_GetLinearVelocityEx(body_name.s)
+; Parameters ....: body_name - the name of the body (from JSON file)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_GetLinearVelocityEx(body_name.s)
+  
+  b2Body_GetLinearVelocity(body(body_name)\ptr, tmp_vel())
+  body(body_name)\currentLinearVelocityX = tmp_vel(0)
+  body(body_name)\currentLinearVelocityY = tmp_vel(1)
+  
+  ProcedureReturn 1
+EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_GetPositionEx
@@ -2413,8 +2432,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 2066
-; FirstLine = 2048
+; CursorPosition = 1522
+; FirstLine = 1519
 ; Folding = ---------
 ; EnableXP
 ; EnableUnicode

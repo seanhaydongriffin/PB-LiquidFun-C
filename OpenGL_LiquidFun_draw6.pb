@@ -4,7 +4,6 @@ UsePNGImageDecoder()
 
 ; #GLOBALS# ===================================================================================================================
 
-Global Dim tmp_vel.f(2)
 Global num_frames.i = 0
 Global fps.i = 0
 Global animation_speed.f = 1.0
@@ -260,6 +259,7 @@ Repeat
     b2Body_SetAngularVelocityPercent(body("ground")\ptr, 99)
     
     body_mass.d = b2Body_GetMass(body(player_main_body_name)\ptr)
+    b2Body_GetLinearVelocityEx(player_main_body_name)
     
     num_frames = num_frames + 1
   EndIf
@@ -645,8 +645,12 @@ Repeat
     ; if the mouse is moved then capture it's position for later on
     Case #PB_EventType_MouseMove
       
+      previous_mouse_position_x.d = world\mouseCurrentPositionX
+      previous_mouse_position_y.d = world\mouseCurrentPositionY
       world\mouseCurrentPositionX = GetGadgetAttribute(0, #PB_OpenGL_MouseX)
       world\mouseCurrentPositionY = GetGadgetAttribute(0, #PB_OpenGL_MouseY)
+      world\mouseDisplacementPositionX = previous_mouse_position_x - world\mouseCurrentPositionX
+      world\mouseDisplacementPositionY = previous_mouse_position_y - world\mouseCurrentPositionY
       
       If texture_drawing_mode = 1
         
@@ -672,12 +676,12 @@ Repeat
     ; if the mouse is clicked then flag this for later on
     Case #PB_EventType_LeftButtonDown
       
-      mouse_left_button_down = 1
+      world\mouseLeftButtonPressed = 1
       
     ; if the mouse is unclicked then flag this for later on
     Case #PB_EventType_LeftButtonUp
       
-      mouse_left_button_down = 0
+      world\mouseLeftButtonPressed = 0
       
 ;       If texture_drawing_mode = 0
 ;         
@@ -720,15 +724,15 @@ Repeat
 
       SetClipboardText(clipboard_str)
 
-      draw_world_end_position\x = 999999
-      draw_world_end_position\y = 999999
+   ;   draw_world_end_position\x = 999999
+   ;   draw_world_end_position\y = 999999
       tmp_fixture_vector_num = -1
       
       
     ; if the mouse wheel is moved then capture it's position for later on
     Case #PB_EventType_MouseWheel
       
-      mouse_wheel_position = GetGadgetAttribute(0, #PB_OpenGL_WheelDelta)
+      world\mouseWheelPosition = GetGadgetAttribute(0, #PB_OpenGL_WheelDelta)
   EndSelect
       
 Until Eventxx = #PB_Event_CloseWindow Or end_game = 1
@@ -852,44 +856,47 @@ Procedure keyboard_mouse_handler(*Value)
       ; camera control (mouse)
             
             
-      If mouse_wheel_position > 0  
+      If world\mouseWheelPosition > 0  
         
-        mouse_wheel_position = 0
+        world\mouseWheelPosition = 0
         world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ + 10
         world\mainCameraPositionZ = world\mainCameraPositionZ - 10
       EndIf
             
-      If mouse_wheel_position < 0  
+      If world\mouseWheelPosition < 0  
               
-        mouse_wheel_position = 0
+        world\mouseWheelPosition = 0
         world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ - 10
         world\mainCameraPositionZ = world\mainCameraPositionZ + 10
       EndIf
       
       If player_tracking = 0
 
-        If mouse_left_button_down = 1
+        If world\mouseLeftButtonPressed = 1
           
-          If old_mouse_position\x = -99999
+          If world\mousePreviousPositionX = -99999
             
-            old_mouse_position\x = world\mouseCurrentPositionX
+            world\mousePreviousPositionX = world\mouseCurrentPositionX
           EndIf
           
-          If old_mouse_position\y = -99999
+          If world\mousePreviousPositionY = -99999
             
-            old_mouse_position\y = world\mouseCurrentPositionY
+            world\mousePreviousPositionY = world\mouseCurrentPositionY
           EndIf
           
-          world\mainCameraDisplacementPositionX = world\mainCameraDisplacementPositionX + ((world\mouseCurrentPositionX - old_mouse_position\x) * (world\mainCameraPositionZ / 1125))
-          world\mainCameraDisplacementPositionY = world\mainCameraDisplacementPositionY - ((world\mouseCurrentPositionY - old_mouse_position\y) * (world\mainCameraPositionZ / 1125))
+          world\mainCameraDisplacementPositionX = world\mainCameraDisplacementPositionX + ((world\mouseCurrentPositionX - world\mousePreviousPositionX) * (world\mainCameraPositionZ / 1125))
+          world\mainCameraDisplacementPositionY = world\mainCameraDisplacementPositionY - ((world\mouseCurrentPositionY - world\mousePreviousPositionY) * (world\mainCameraPositionZ / 1125))
+          
+ ;         world\mainCameraDisplacementPositionX = world\mainCameraDisplacementPositionX + (world\mouseDisplacementPositionX * (world\mainCameraPositionZ / 1125))
+ ;         world\mainCameraDisplacementPositionY = world\mainCameraDisplacementPositionY - (world\mouseDisplacementPositionY * (world\mainCameraPositionZ / 1125))
           
           
-          old_mouse_position\x = world\mouseCurrentPositionX
-          old_mouse_position\y = world\mouseCurrentPositionY
+          world\mousePreviousPositionX = world\mouseCurrentPositionX
+          world\mousePreviousPositionY = world\mouseCurrentPositionY
         Else
           
-          old_mouse_position\x = -99999
-          old_mouse_position\y = -99999
+          world\mousePreviousPositionX = -99999
+          world\mousePreviousPositionY = -99999
         EndIf
       EndIf
       
@@ -927,6 +934,12 @@ Procedure text_window_handler(*Value)
       fps = num_frames + 1
       num_frames = 0
       
+      opengl_info.s = "OpenGL: Ver=" + sgGlVersion
+      camera_info.s = "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + " m x " + StrF(world\mainCameraPositionY, 2) + " m x " + StrF(world\mainCameraPositionZ, 2) + " m"
+      mouse_info.s = "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + " p x " + StrF(world\mouseCurrentPositionY, 2) + " p; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + " m x " + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + " m"
+      animation_info.s = "Animation: Rate=" + Str(fps) + " fps"
+
+      
       Select menu_type
           
         Case #main_menu
@@ -948,10 +961,10 @@ Procedure text_window_handler(*Value)
                   "-------" + Chr(10) +
                   "Info" + Chr(10) +
                   "-------" + Chr(10) +
-                  "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-                  "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + "," + StrF(world\mainCameraPositionY, 2) + "," + StrF(world\mainCameraPositionZ, 2) + Chr(10) + 
-                  "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + "," + StrF(world\mouseCurrentPositionY, 2) + "; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + "," + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + Chr(10) +
-                  "Animation: Frames Per Sec=" + Str(fps) + " fps"
+                  opengl_info + Chr(10) + 
+                  camera_info + Chr(10) + 
+                  mouse_info + Chr(10) +
+                  animation_info
           
         Case #player_menu
           
@@ -973,11 +986,11 @@ Procedure text_window_handler(*Value)
                   "-------" + Chr(10) +
                   "Info" + Chr(10) +
                   "-------" + Chr(10) +
-                  "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-                  "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + "," + StrF(world\mainCameraPositionY, 2) + "," + StrF(world\mainCameraPositionZ, 2) + Chr(10) + 
-                  "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + "," + StrF(world\mouseCurrentPositionY, 2) + "; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + "," + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + Chr(10) +
-                  "Player: Mass=" + StrF(body_mass, 2) + Chr(10) + 
-                  "Animation: Frames Per Sec=" + Str(fps) + " fps"
+                  opengl_info + Chr(10) + 
+                  camera_info + Chr(10) + 
+                  mouse_info + Chr(10) +
+                  "Player: Mass=" + StrF(body_mass, 2) + " kg; Linear Velocity=" + StrF(body(player_main_body_name)\currentLinearVelocityX, 2) + " m/s x " + StrF(body(player_main_body_name)\currentLinearVelocityY, 2) + " m/s" + Chr(10) + 
+                  animation_info
 
         Case #particle_menu
           
@@ -999,13 +1012,13 @@ Procedure text_window_handler(*Value)
                   "-------" + Chr(10) +
                   "Info" + Chr(10) +
                   "-------" + Chr(10) +
-                  "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-                  "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + "," + StrF(world\mainCameraPositionY, 2) + "," + StrF(world\mainCameraPositionZ, 2) + Chr(10) + 
-                  "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + "," + StrF(world\mouseCurrentPositionY, 2) + "; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + "," + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + Chr(10) +
+                  opengl_info + Chr(10) + 
+                  camera_info + Chr(10) + 
+                  mouse_info + Chr(10) +
                   "Particle System: Name=" + curr_particle_system_name + "; Number of Particles=" + Str(particle_system(curr_particle_system_name)\particle_count) + Chr(10) + 
                   "Particle Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(particle_group(curr_particle_system_name)\radius, 2) + Chr(10) + 
                   "Particle: Size=" + StrF(particle_system(curr_particle_system_name)\particle_size, 2) + "; Blending=" + Str(particle_system(curr_particle_system_name)\particle_blending) + Chr(10) + 
-                  "Animation: Frames Per Sec=" + Str(fps) + " fps"
+                  animation_info
           
       EndSelect
 
@@ -1023,7 +1036,7 @@ Procedure text_window_handler(*Value)
 ;              "OpenGL extensions = " + sgGlExtn + Chr(10) + 
 ;             "OpenGL vendor = " + sgGlVendor + Chr(10) + 
 ;              "OpenGL renderer = " + sgGlRender + Chr(10) + 
-;             "Mouse change = " + Str(world\mouseCurrentPositionX - old_mouse_position\x) + ", " + Str(world\mouseCurrentPositionY - old_mouse_position\y) + Chr(10) + 
+;             "Mouse change = " + Str(world\mouseCurrentPositionX - world\mousePreviousPositionX) + ", " + Str(world\mouseCurrentPositionY - world\mousePreviousPositionY) + Chr(10) + 
 
     EndIf
   Wend
@@ -1033,8 +1046,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 864
-; FirstLine = 849
+; CursorPosition = 1020
+; FirstLine = 992
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw6.exe
