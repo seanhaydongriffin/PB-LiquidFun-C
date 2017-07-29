@@ -581,7 +581,7 @@ Repeat
               
               particle_system(curr_particle_system_name)\particle_size = particle_system(curr_particle_system_name)\particle_size + 0.05
               
-            Case #PB_Shortcut_M
+            Case #PB_Shortcut_X
               
               b2ParticleGroup_DestroyParticles(particle_group(curr_particle_system_name)\particle_group_ptr, 0)
               b2World_DestroyParticleSystem(world\ptr, particle_system(curr_particle_system_name)\particle_system_ptr)
@@ -1007,7 +1007,7 @@ Procedure text_window_handler(*Value)
                   "Q, E: Changes the starting radius of the water group" + Chr(10) +
                   "Y: Toggles water particle texture blending" + Chr(10) +
                   "U, I: Changes the water particle size" + Chr(10) +
-                  "M: Changes the particle system name / type" + Chr(10) +
+                  "X: Changes the particle system name / type" + Chr(10) +
                   "K: Restarts the water group" + Chr(10) +
                   "-------" + Chr(10) +
                   "Info" + Chr(10) +
@@ -1046,8 +1046,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1020
-; FirstLine = 992
+; CursorPosition = 583
+; FirstLine = 515
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw6.exe
