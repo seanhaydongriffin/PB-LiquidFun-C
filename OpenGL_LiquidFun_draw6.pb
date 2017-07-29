@@ -4,7 +4,6 @@ UsePNGImageDecoder()
 
 ; #GLOBALS# ===================================================================================================================
 
-Global Dim tmp_pos.f(2)
 Global Dim tmp_vel.f(2)
 Global num_frames.i = 0
 Global fps.i = 0
@@ -14,6 +13,7 @@ Global curr_particle_system_name.s = "water"
 Global player_main_body_name.s = "boat"
 Global player_spinning_body_name.s = "boat prop"
 Global player_tracking.i = 0
+Global player_tracking_angle.d = 0
 
 ; Box2D Bodies
 Global body_mass.d
@@ -96,7 +96,7 @@ Repeat
     
     
     ; Step the Box2D World
-    b2World_Step(world, (animation_speed / 60.0), 6, 2)
+    b2World_Step(world\ptr, (animation_speed / 60.0), 6, 2)
     
 
     ; Clear the OpenGLGadget
@@ -231,22 +231,35 @@ Repeat
     
     If player_tracking = 0
       
-      glTranslatef_(camera_linearvelocity\x, camera_linearvelocity\y, camera_linearvelocity\z)
+      glTranslatef_(world\mainCameraDisplacementPositionX, world\mainCameraDisplacementPositionY, world\mainCameraDisplacementPositionZ)
     Else
-    
-      b2Body_GetLinearVelocity(body(player_main_body_name)\body_ptr, tmp_vel())
-      glTranslatef_(-tmp_vel(0) * 0.0167, -tmp_vel(1) * 0.0167, camera_linearvelocity\z)
+      
+      ; unrotate world first
+;      glRotatef_(Degree(player_tracking_angle), 0, 0, 1)
+      
+      ; move the camera a vector that's equivalent to the velocity step of the player
+      ; so the player always appears in the center of the window
+      b2World_FollowBody(player_main_body_name)
+      
+      ; rotate the world back to where it was
+;      glRotatef_(-Degree(player_tracking_angle), 0, 0, 1)
+      
+      ; rotate the camera
+;      tmp_body_angle_offset.d = b2Body_GetAngularVelocity(body(player_main_body_name)\ptr)
+;      tmp_body_angle_offset = tmp_body_angle_offset * 0.0167
+;      glRotatef_(-Degree(tmp_body_angle_offset), 0, 0, 1)
+;      player_tracking_angle = player_tracking_angle - tmp_body_angle_offset
     EndIf
     
-    camera_position\x = camera_position\x - camera_linearvelocity\x
-    camera_position\y = camera_position\y + camera_linearvelocity\y
-    camera_linearvelocity\x=0
-    camera_linearvelocity\y=0
-    camera_linearvelocity\z=0
+    world\mainCameraPositionX = world\mainCameraPositionX - world\mainCameraDisplacementPositionX
+    world\mainCameraPositionY = world\mainCameraPositionY - world\mainCameraDisplacementPositionY
+    world\mainCameraDisplacementPositionX=0
+    world\mainCameraDisplacementPositionY=0
+    world\mainCameraDisplacementPositionZ=0
     
-    b2Body_SetAngularVelocityPercent(body("ground")\body_ptr, 99)
+    b2Body_SetAngularVelocityPercent(body("ground")\ptr, 99)
     
-    body_mass.d = b2Body_GetMass(body(player_main_body_name)\body_ptr)
+    body_mass.d = b2Body_GetMass(body(player_main_body_name)\ptr)
     
     num_frames = num_frames + 1
   EndIf
@@ -286,6 +299,8 @@ Repeat
           
         ; if R is pressed then reset the Box2D World
         Case #PB_Shortcut_R
+          
+          player_tracking = 0
           
           b2DestroyScene(1, 1, 1)
           ;b2CreateScene(1, 1, 1)
@@ -339,16 +354,37 @@ Repeat
 
           Select key
     
+            Case #PB_Shortcut_B
+              
+              If body("bucket")\active = 0
+              
+                body("bucket")\active = 1
+                b2World_CreateBodyEx("bucket")
+                b2World_CreateFixtureEx("bucket main")
+                b2World_CreateFixtureEx("bucket under box 1")
+                b2World_CreateFixtureEx("bucket under box 2")
+                b2World_CreateFixtureEx("bucket under box 3")
+                body("bucket ball")\active = 1
+                b2World_CreateBodyEx("bucket ball")
+                b2World_CreateFixtureEx("bucket ball")
+              Else
+                
+                b2World_DestroyBody(world\ptr, body("bucket")\ptr)
+                body("bucket")\active = 0
+                b2World_DestroyBody(world\ptr, body("bucket ball")\ptr)
+                body("bucket ball")\active = 0
+              EndIf
+
             Case #PB_Shortcut_T
               
               If texture_drawing_mode = 0
     
                 texture_drawing_mode = 1
-        ;        tmp_quad(0)\x = (mouse_position\x - 400) * 0.171
-        ;        tmp_quad(0)\y = (300 - mouse_position\y) * 0.171
+        ;        tmp_quad(0)\x = (world\mouseCurrentPositionX - 400) * 0.171
+        ;        tmp_quad(0)\y = (300 - world\mouseCurrentPositionY) * 0.171
                 
-                tmp_quad(0)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-                tmp_quad(0)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+                tmp_quad(0)\x = ((world\mouseCurrentPositionX - 400) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionX
+                tmp_quad(0)\y = ((300 - world\mouseCurrentPositionY) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionY
     
               EndIf
               
@@ -369,8 +405,8 @@ Repeat
                 fixture_drawing_mode = 1
                 tmp_fixture_vector_num = 0
               
-                tmp_fixture_vector(tmp_fixture_vector_num)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-                tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+                tmp_fixture_vector(tmp_fixture_vector_num)\x = ((world\mouseCurrentPositionX - 400) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionX
+                tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - world\mouseCurrentPositionY) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionY
               EndIf
               
               tmp_fixture_vector_num = tmp_fixture_vector_num + 1
@@ -387,12 +423,10 @@ Repeat
               If player_tracking = 0
                 
                 player_tracking = 1
-                b2Body_GetPosition(body(player_main_body_name)\body_ptr, tmp_pos())
-                tmp_x.d = camera_position\x - tmp_pos(0)
-                tmp_y.d = camera_position\y - tmp_pos(1) + 15
-                ; Debug camera_linearvelocity\x
-                glTranslatef_(tmp_x, tmp_y, 0)
-
+                b2World_FollowBody(player_main_body_name, 1)
+ ;             	tmp_angle.d = b2Body_GetAngle(body(player_main_body_name)\ptr)
+ ;               glRotatef_(-Degree(tmp_angle), 0, 0, 1)
+  ;              player_tracking_angle = tmp_angle
               Else
                 
                 player_tracking = 0
@@ -400,20 +434,20 @@ Repeat
 
             Case #PB_Shortcut_X
               
-              b2Body_GetPosition(body(player_main_body_name)\body_ptr, tmp_pos())
-            	tmp_angle.d = b2Body_GetAngle (body(player_main_body_name)\body_ptr)
-              b2Body_GetLinearVelocity(body(player_main_body_name)\body_ptr, tmp_vel())
-              tmp_torque.d = b2Body_GetAngularVelocity (body(player_main_body_name)\body_ptr)
+              b2Body_GetPosition(body(player_main_body_name)\ptr, tmp_pos())
+            	tmp_angle.d = b2Body_GetAngle (body(player_main_body_name)\ptr)
+              b2Body_GetLinearVelocity(body(player_main_body_name)\ptr, tmp_vel())
+              tmp_torque.d = b2Body_GetAngularVelocity (body(player_main_body_name)\ptr)
 
               Select player_main_body_name
                   
                 Case "boat"
                   
-                  b2World_DestroyJoint(world, joint("prop spring")\joint_ptr)
+                  b2World_DestroyJoint(world\ptr, joint("prop spring")\joint_ptr)
                   joint("prop spring")\active = 0
-                  b2World_DestroyBody(world, body("boat")\body_ptr)
+                  b2World_DestroyBody(world\ptr, body("boat")\ptr)
                   body("boat")\active = 0
-                  b2World_DestroyBody(world, body("boat prop")\body_ptr)
+                  b2World_DestroyBody(world\ptr, body("boat prop")\ptr)
                   body("boat prop")\active = 0
                   
                   body("car")\positionX = tmp_pos(0)
@@ -445,15 +479,15 @@ Repeat
                   
                 Case "car"
                   
-                  b2World_DestroyJoint(world, joint("wheel1 spring")\joint_ptr)
+                  b2World_DestroyJoint(world\ptr, joint("wheel1 spring")\joint_ptr)
                   joint("wheel1 spring")\active = 0
-                  b2World_DestroyJoint(world, joint("wheel2 spring")\joint_ptr)
+                  b2World_DestroyJoint(world\ptr, joint("wheel2 spring")\joint_ptr)
                   joint("wheel2 spring")\active = 0
-                  b2World_DestroyBody(world, body("car")\body_ptr)
+                  b2World_DestroyBody(world\ptr, body("car")\ptr)
                   body("car")\active = 0
-                  b2World_DestroyBody(world, body("wheel1")\body_ptr)
+                  b2World_DestroyBody(world\ptr, body("wheel1")\ptr)
                   body("wheel1")\active = 0
-                  b2World_DestroyBody(world, body("wheel2")\body_ptr)
+                  b2World_DestroyBody(world\ptr, body("wheel2")\ptr)
                   body("wheel2")\active = 0
                   
                   body("boat")\positionX = tmp_pos(0)
@@ -506,7 +540,7 @@ Repeat
               b2World_DestroyParticleGroups()
             
               ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-              b2World_Step(world, (1 / 60.0), 6, 2)
+              b2World_Step(world\ptr, (1 / 60.0), 6, 2)
               
               ; Create the Particle Groups
               b2World_CreateParticleGroups()
@@ -519,7 +553,7 @@ Repeat
               b2World_DestroyParticleGroups()
             
               ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-              b2World_Step(world, (1 / 60.0), 6, 2)
+              b2World_Step(world\ptr, (1 / 60.0), 6, 2)
               
               ; Create the Particle Groups
               b2World_CreateParticleGroups()
@@ -550,10 +584,10 @@ Repeat
             Case #PB_Shortcut_M
               
               b2ParticleGroup_DestroyParticles(particle_group(curr_particle_system_name)\particle_group_ptr, 0)
-              b2World_DestroyParticleSystem(world, particle_system(curr_particle_system_name)\particle_system_ptr)
+              b2World_DestroyParticleSystem(world\ptr, particle_system(curr_particle_system_name)\particle_system_ptr)
     
               ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-              b2World_Step(world, (1 / 60.0), 6, 2)
+              b2World_Step(world\ptr, (1 / 60.0), 6, 2)
   
               particle_group(curr_particle_system_name)\active = 0
               particle_system(curr_particle_system_name)\active = 0
@@ -586,6 +620,10 @@ Repeat
                   
                 Case "barrier"
                   
+                  curr_particle_system_name = "blank"
+                  
+                Case "blank"
+                  
                   curr_particle_system_name = "water"
                   
               EndSelect
@@ -607,8 +645,8 @@ Repeat
     ; if the mouse is moved then capture it's position for later on
     Case #PB_EventType_MouseMove
       
-      mouse_position\x = GetGadgetAttribute(0, #PB_OpenGL_MouseX)
-      mouse_position\y = GetGadgetAttribute(0, #PB_OpenGL_MouseY)
+      world\mouseCurrentPositionX = GetGadgetAttribute(0, #PB_OpenGL_MouseX)
+      world\mouseCurrentPositionY = GetGadgetAttribute(0, #PB_OpenGL_MouseY)
       
       If texture_drawing_mode = 1
         
@@ -617,17 +655,14 @@ Repeat
       
       If texture_drawing_mode = 2
 
- ;       tmp_quad(1)\x = (mouse_position\x - 400) * 0.171
- ;       tmp_quad(1)\y = (300 - mouse_position\y) * 0.171
-        
-        tmp_quad(1)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-        tmp_quad(1)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+        tmp_quad(1)\x = ((world\mouseCurrentPositionX - 400) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionX
+        tmp_quad(1)\y = ((300 - world\mouseCurrentPositionY) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionY
       EndIf
       
       If fixture_drawing_mode = 1
 
-        tmp_fixture_vector(tmp_fixture_vector_num)\x = ((mouse_position\x - 400) * (0.17 - (camera_position\z / 1250))) - camera_position\x
-        tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - mouse_position\y) * (0.17 - (camera_position\z / 1250))) - camera_position\y
+        tmp_fixture_vector(tmp_fixture_vector_num)\x = ((world\mouseCurrentPositionX - 400) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionX
+        tmp_fixture_vector(tmp_fixture_vector_num)\y = ((300 - world\mouseCurrentPositionY) * (0.17 - (world\mainCameraPositionZ / 1250))) - world\mainCameraPositionY
         
         ; note below is radians
   ;      tmp_fixture_angle(tmp_fixture_vector_num) = ATan2(tmp_fixture_vector(tmp_fixture_vector_num - 1)\y - tmp_fixture_vector(tmp_fixture_vector_num)\y, tmp_fixture_vector(tmp_fixture_vector_num - 1)\x - tmp_fixture_vector(tmp_fixture_vector_num)\x)
@@ -647,8 +682,8 @@ Repeat
 ;       If texture_drawing_mode = 0
 ;         
 ;         tmp_fixture_vector_num = 0
-;         tmp_fixture_vector(tmp_fixture_vector_num)\x = (mouse_position\x - 400) * 0.171
-;         tmp_fixture_vector(tmp_fixture_vector_num)\y = (300 - mouse_position\y) * 0.171
+;         tmp_fixture_vector(tmp_fixture_vector_num)\x = (world\mouseCurrentPositionX - 400) * 0.171
+;         tmp_fixture_vector(tmp_fixture_vector_num)\y = (300 - world\mouseCurrentPositionY) * 0.171
 ;       EndIf
 ;       
       
@@ -731,12 +766,12 @@ Procedure keyboard_mouse_handler(*Value)
           
           If GetAsyncKeyState_(#VK_Q)
             
-            b2Body_AddAngularVelocity(body("ground")\body_ptr, Radian(1))
+            b2Body_AddAngularVelocity(body("ground")\ptr, Radian(1))
           EndIf
           
           If GetAsyncKeyState_(#VK_E)
             
-            b2Body_AddAngularVelocity(body("ground")\body_ptr, Radian(-1))
+            b2Body_AddAngularVelocity(body("ground")\ptr, Radian(-1))
           EndIf
           
         ; player menu (keyboard)
@@ -744,26 +779,26 @@ Procedure keyboard_mouse_handler(*Value)
     
           If GetAsyncKeyState_(#VK_A)
             
-            b2Body_GetPosition(body(player_main_body_name)\body_ptr, tmp_pos())
-            b2Body_ApplyForce(body(player_main_body_name)\body_ptr, body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body(player_main_body_name)\ptr, tmp_pos())
+            b2Body_ApplyForce(body(player_main_body_name)\ptr, body_mass * -body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_D)
     
-            b2Body_GetPosition(body(player_main_body_name)\body_ptr, tmp_pos())
-            b2Body_ApplyForce(body(player_main_body_name)\body_ptr, body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body(player_main_body_name)\ptr, tmp_pos())
+            b2Body_ApplyForce(body(player_main_body_name)\ptr, body_mass * body_user_applied_linear_force, 0, tmp_pos(0), tmp_pos(1), 1)
           EndIf
 
           If GetAsyncKeyState_(#VK_W)
             
-            b2Body_GetPosition(body(player_main_body_name)\body_ptr, tmp_pos())
-            b2Body_ApplyForce(body(player_main_body_name)\body_ptr, 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body(player_main_body_name)\ptr, tmp_pos())
+            b2Body_ApplyForce(body(player_main_body_name)\ptr, 0, body_mass * body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_S)
             
-            b2Body_GetPosition(body(player_main_body_name)\body_ptr, tmp_pos())
-            b2Body_ApplyForce(body(player_main_body_name)\body_ptr, 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
+            b2Body_GetPosition(body(player_main_body_name)\ptr, tmp_pos())
+            b2Body_ApplyForce(body(player_main_body_name)\ptr, 0, body_mass * -body_user_applied_linear_force, tmp_pos(0), tmp_pos(1), 1)
           EndIf
     
           If GetAsyncKeyState_(#VK_Q)
@@ -773,18 +808,14 @@ Procedure keyboard_mouse_handler(*Value)
               player_spinning_body_name = "wheel1"
             EndIf
             
-            tmp_velocity.d = b2Body_GetAngularVelocity(body(player_spinning_body_name)\body_ptr)
+            tmp_velocity.d = b2Body_GetAngularVelocity(body(player_spinning_body_name)\ptr)
             
             If tmp_velocity < 30
               
               tmp_velocity = tmp_velocity + Radian(300)
             EndIf
             
-            b2Body_SetAngularVelocity(body(player_spinning_body_name)\body_ptr, tmp_velocity)
-            
-    ;        b2Body_ApplyTorque(body("body")\body_ptr, body_mass * body_user_applied_angular_force, 1)
-            
-     ;       b2Body_ApplyTorque(body(player_main_body_name)\body_ptr, 50, 1)
+            b2Body_SetAngularVelocity(body(player_spinning_body_name)\ptr, tmp_velocity)
           EndIf
     
           If GetAsyncKeyState_(#VK_E)
@@ -794,28 +825,24 @@ Procedure keyboard_mouse_handler(*Value)
               player_spinning_body_name = "wheel2"
             EndIf
                     
-            tmp_velocity.d = b2Body_GetAngularVelocity(body(player_spinning_body_name)\body_ptr)
+            tmp_velocity.d = b2Body_GetAngularVelocity(body(player_spinning_body_name)\ptr)
             
             If tmp_velocity > -30
     
               tmp_velocity = tmp_velocity - Radian(300)
             EndIf
             
-            b2Body_SetAngularVelocity(body(player_spinning_body_name)\body_ptr, tmp_velocity)
-    
-    ;        b2Body_ApplyTorque(body("body")\body_ptr, body_mass * -body_user_applied_angular_force, 1)
-            
-     ;       b2Body_ApplyTorque(body(player_main_body_name)\body_ptr, -50, 1)
+            b2Body_SetAngularVelocity(body(player_spinning_body_name)\ptr, tmp_velocity)
           EndIf
           
           If GetAsyncKeyState_(#VK_F)
 
-            b2Body_SetMassData(body(player_main_body_name)\body_ptr, body_mass - 1.0, 0, 0, 0)
+            b2Body_SetMassData(body(player_main_body_name)\ptr, body_mass - 1.0, 0, 0, 0)
           EndIf
           
           If GetAsyncKeyState_(#VK_G)
           
-            b2Body_SetMassData(body(player_main_body_name)\body_ptr, body_mass + 1.0, 0, 0, 0)
+            b2Body_SetMassData(body(player_main_body_name)\ptr, body_mass + 1.0, 0, 0, 0)
           EndIf
 
           
@@ -828,41 +855,43 @@ Procedure keyboard_mouse_handler(*Value)
       If mouse_wheel_position > 0  
         
         mouse_wheel_position = 0
-        camera_linearvelocity\z = camera_linearvelocity\z + 10
-        camera_position\z = camera_position\z + 10
+        world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ + 10
+        world\mainCameraPositionZ = world\mainCameraPositionZ - 10
       EndIf
             
       If mouse_wheel_position < 0  
               
         mouse_wheel_position = 0
-        camera_linearvelocity\z = camera_linearvelocity\z - 10
-        camera_position\z = camera_position\z - 10
-      EndIf
-            
-      If mouse_left_button_down = 1
-        
-        If old_mouse_position\x = -99999
-          
-          old_mouse_position\x = mouse_position\x
-        EndIf
-        
-        If old_mouse_position\y = -99999
-          
-          old_mouse_position\y = mouse_position\y
-        EndIf
-        
-        camera_linearvelocity\x = camera_linearvelocity\x - ((mouse_position\x - old_mouse_position\x) * (camera_position\z / 1125))
-        camera_linearvelocity\y = camera_linearvelocity\y + ((mouse_position\y - old_mouse_position\y) * (camera_position\z / 1125))
-        
-        
-        old_mouse_position\x = mouse_position\x
-        old_mouse_position\y = mouse_position\y
-      Else
-        
-        old_mouse_position\x = -99999
-        old_mouse_position\y = -99999
+        world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ - 10
+        world\mainCameraPositionZ = world\mainCameraPositionZ + 10
       EndIf
       
+      If player_tracking = 0
+
+        If mouse_left_button_down = 1
+          
+          If old_mouse_position\x = -99999
+            
+            old_mouse_position\x = world\mouseCurrentPositionX
+          EndIf
+          
+          If old_mouse_position\y = -99999
+            
+            old_mouse_position\y = world\mouseCurrentPositionY
+          EndIf
+          
+          world\mainCameraDisplacementPositionX = world\mainCameraDisplacementPositionX + ((world\mouseCurrentPositionX - old_mouse_position\x) * (world\mainCameraPositionZ / 1125))
+          world\mainCameraDisplacementPositionY = world\mainCameraDisplacementPositionY - ((world\mouseCurrentPositionY - old_mouse_position\y) * (world\mainCameraPositionZ / 1125))
+          
+          
+          old_mouse_position\x = world\mouseCurrentPositionX
+          old_mouse_position\y = world\mouseCurrentPositionY
+        Else
+          
+          old_mouse_position\x = -99999
+          old_mouse_position\y = -99999
+        EndIf
+      EndIf
       
     EndIf
       
@@ -913,14 +942,15 @@ Procedure text_window_handler(*Value)
                   "Left Mouse Button & Drag: Pans the camera" + Chr(10) +
                   "Mouse Wheel: Zooms the camera in & out" + Chr(10) +
                   "Q, E: Adds torque to the platform" + Chr(10) +
+                  "B: Toggles the Bucket" + Chr(10) +
                   "T: Toggles sprite image drawing (experimental)" + Chr(10) +
                   "6: Toggles CCW convex polygon shape drawing (experimental)" + Chr(10) +
                   "-------" + Chr(10) +
                   "Info" + Chr(10) +
                   "-------" + Chr(10) +
                   "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-                  "Camera: Pos=" + StrF(camera_position\x, 2) + "," + StrF(camera_position\y, 2) + "," + StrF(camera_position\z, 2) + Chr(10) + 
-                  "Mouse: Gadget Pos=" + StrF(mouse_position\x, 2) + "," + StrF(mouse_position\y, 2) + "; World Pos=" + StrF(camera_position\x + ((400 - mouse_position\x) * (camera_position\z / 1125)), 2) + "," + StrF(camera_position\y + 1.1 + ((300 - mouse_position\y) * (camera_position\z / 1125)), 2) + Chr(10) +
+                  "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + "," + StrF(world\mainCameraPositionY, 2) + "," + StrF(world\mainCameraPositionZ, 2) + Chr(10) + 
+                  "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + "," + StrF(world\mouseCurrentPositionY, 2) + "; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + "," + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + Chr(10) +
                   "Animation: Frames Per Sec=" + Str(fps) + " fps"
           
         Case #player_menu
@@ -944,8 +974,8 @@ Procedure text_window_handler(*Value)
                   "Info" + Chr(10) +
                   "-------" + Chr(10) +
                   "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-                  "Camera: Pos=" + StrF(camera_position\x, 2) + "," + StrF(camera_position\y, 2) + "," + StrF(camera_position\z, 2) + Chr(10) + 
-                  "Mouse: Gadget Pos=" + StrF(mouse_position\x, 2) + "," + StrF(mouse_position\y, 2) + "; World Pos=" + StrF(camera_position\x + ((400 - mouse_position\x) * (camera_position\z / 1125)), 2) + "," + StrF(camera_position\y + 1.1 + ((300 - mouse_position\y) * (camera_position\z / 1125)), 2) + Chr(10) +
+                  "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + "," + StrF(world\mainCameraPositionY, 2) + "," + StrF(world\mainCameraPositionZ, 2) + Chr(10) + 
+                  "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + "," + StrF(world\mouseCurrentPositionY, 2) + "; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + "," + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + Chr(10) +
                   "Player: Mass=" + StrF(body_mass, 2) + Chr(10) + 
                   "Animation: Frames Per Sec=" + Str(fps) + " fps"
 
@@ -970,8 +1000,8 @@ Procedure text_window_handler(*Value)
                   "Info" + Chr(10) +
                   "-------" + Chr(10) +
                   "OpenGL: Ver=" + sgGlVersion + Chr(10) + 
-                  "Camera: Pos=" + StrF(camera_position\x, 2) + "," + StrF(camera_position\y, 2) + "," + StrF(camera_position\z, 2) + Chr(10) + 
-                  "Mouse: Gadget Pos=" + StrF(mouse_position\x, 2) + "," + StrF(mouse_position\y, 2) + "; World Pos=" + StrF(camera_position\x + ((400 - mouse_position\x) * (camera_position\z / 1125)), 2) + "," + StrF(camera_position\y + 1.1 + ((300 - mouse_position\y) * (camera_position\z / 1125)), 2) + Chr(10) +
+                  "Camera: Pos=" + StrF(world\mainCameraPositionX, 2) + "," + StrF(world\mainCameraPositionY, 2) + "," + StrF(world\mainCameraPositionZ, 2) + Chr(10) + 
+                  "Mouse: Gadget Pos=" + StrF(world\mouseCurrentPositionX, 2) + "," + StrF(world\mouseCurrentPositionY, 2) + "; World Pos=" + StrF(world\mainCameraPositionX + ((400 - world\mouseCurrentPositionX) * (world\mainCameraPositionZ / 1125)), 2) + "," + StrF(world\mainCameraPositionY + 1.1 + ((300 - world\mouseCurrentPositionY) * (world\mainCameraPositionZ / 1125)), 2) + Chr(10) +
                   "Particle System: Name=" + curr_particle_system_name + "; Number of Particles=" + Str(particle_system(curr_particle_system_name)\particle_count) + Chr(10) + 
                   "Particle Group: Starting Pos=" + Str(water_position_x) + "," + Str(water_position_y) + "; Strength=" + Str(water_strength) + "; Stride=" + Str(water_stride) + "; Radius=" + StrF(particle_group(curr_particle_system_name)\radius, 2) + Chr(10) + 
                   "Particle: Size=" + StrF(particle_system(curr_particle_system_name)\particle_size, 2) + "; Blending=" + Str(particle_system(curr_particle_system_name)\particle_blending) + Chr(10) + 
@@ -993,7 +1023,7 @@ Procedure text_window_handler(*Value)
 ;              "OpenGL extensions = " + sgGlExtn + Chr(10) + 
 ;             "OpenGL vendor = " + sgGlVendor + Chr(10) + 
 ;              "OpenGL renderer = " + sgGlRender + Chr(10) + 
-;             "Mouse change = " + Str(mouse_position\x - old_mouse_position\x) + ", " + Str(mouse_position\y - old_mouse_position\y) + Chr(10) + 
+;             "Mouse change = " + Str(world\mouseCurrentPositionX - old_mouse_position\x) + ", " + Str(world\mouseCurrentPositionY - old_mouse_position\y) + Chr(10) + 
 
     EndIf
   Wend
@@ -1003,8 +1033,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 391
-; FirstLine = 372
+; CursorPosition = 864
+; FirstLine = 849
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw6.exe

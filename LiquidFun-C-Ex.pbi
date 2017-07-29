@@ -69,9 +69,24 @@ Structure gl_Texture
   image_number.i  
   image_bitmap.BITMAP
 EndStructure
-    
+
+Structure b2_World
+  ptr.l
+  mainCameraPositionX.d               ; the original horizontal position of the body
+  mainCameraPositionY.d               ; the original vertical position of the body
+  mainCameraPositionZ.d               ; the original Z position of the body
+  mainCameraDisplacementPositionX.d   ; the horizontal distance the main camera has moved (since the last b2World_Step call)
+  mainCameraDisplacementPositionY.d   ; the vertical distance the main camera has moved (since the last b2World_Step call)
+  mainCameraDisplacementPositionZ.d   ; the Z distance the main camera has moved (since the last b2World_Step call)
+  mainCameraCurrentPositionX.d        ; the current horizontal position of the main camera (since the last b2World_Step call)
+  mainCameraCurrentPositionY.d        ; the current vertical position of the main camera (since the last b2World_Step call)
+  mainCameraCurrentPositionZ.d        ; the current Z position of the main camera (since the last b2World_Step call)
+  mouseCurrentPositionX.d             ; the current horizontal position of the mouse (since the last b2World_Step call)
+  mouseCurrentPositionY.d             ; the current vertical position of the mouse (since the last b2World_Step call)
+EndStructure
+
 Structure b2_Body
-  body_ptr.l
+  ptr.l
   active.d
   allowSleep.d
   angle.d
@@ -82,12 +97,16 @@ Structure b2_Body
   fixedRotation.d
   gravityScale.d
   linearDamping.d
-  linearVelocityX.d
-  linearVelocityY.d
-  positionX.d
-  positionY.d
+  linearVelocityX.d         ; the original horizontal velocity of the body (from JSON file)
+  linearVelocityY.d         ; the original vertical velocity of the body (from JSON file)
+  positionX.d               ; the original horizontal position of the body (from JSON file)
+  positionY.d               ; the original vertical position of the body (from JSON file)
   type.d
   userData.d
+  displacementPositionX.d   ; the horizontal distance the body has moved (since the last b2World_Step call)
+  displacementPositionY.d   ; the vertical distance the body has moved (since the last b2World_Step call)
+  currentPositionX.d        ; the current horizontal position of the body (since the last b2World_Step call)
+  currentPositionY.d        ; the current horizontal position of the body (since the last b2World_Step call)
 EndStructure
     
 Structure b2_Fixture
@@ -238,9 +257,13 @@ EndStructure
 Global window.l
 Global __clockwise.i
 
+; Box2D Vectors
+Global Dim tmp_pos.f(2)
+
+
 ; Box2D Worlds
-Global world.l
 Global gravity.b2Vec2
+Global world.b2_World
 
 ; Box2D Bodies
 Global NewMap body_json.s()
@@ -273,14 +296,6 @@ Global NewMap particle_group.b2_ParticleGroup()
 Global sgGlVersion.s, sgGlVendor.s, sgGlRender.s, sgGlExtn.s
 
 ; Game Controls
-Global camera_linearvelocity.Vec3f
-camera_linearvelocity\x = 0
-camera_linearvelocity\y = 0
-camera_linearvelocity\z = 0
-Global camera_position.Vec3f
-camera_position\x = 0
-camera_position\y = 0
-camera_position\z = 0
 Global mouse_position.Vec2i
 mouse_position\x = 0
 mouse_position\y = 0
@@ -329,7 +344,6 @@ EndProcedure
 
 Procedure animate_body_sfSprite(tmp_body.l, tmp_sprite.l)
   
-  Dim tmp_pos.f(2)
   tmp_angle.d
   tmp_sprite_pos.sfVector2f
     
@@ -425,7 +439,7 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
   
   If *tmp_fixture\draw_type = #gl_texture2 Or *tmp_fixture\draw_type = #gl_texture2_and_line_loop2
     
-    tmp_body.l = body(*tmp_fixture\body_name)\body_ptr
+    tmp_body.l = body(*tmp_fixture\body_name)\ptr
     
  ;   If tmp_texture_ptr > -1
        
@@ -438,7 +452,6 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
     glEnable_(#GL_TEXTURE_2D)
     
     glTexImage2D_(#GL_TEXTURE_2D, 0, #GL_RGBA, ImageWidth(texture(*tmp_fixture\texture_name)\image_number), ImageHeight(texture(*tmp_fixture\texture_name)\image_number), 0, #GL_BGRA_EXT, #GL_UNSIGNED_BYTE, texture(*tmp_fixture\texture_name)\image_bitmap\bmBits)
-    Dim tmp_pos.f(2)
     b2Body_GetPosition(tmp_body, tmp_pos())
     tmp_angle.d = b2Body_GetAngle(tmp_body)
     
@@ -513,7 +526,6 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
     
     tmp_body.l = *tmp_fixture\body_ptr
    
-    Dim tmp_pos.f(2)
     b2Body_GetPosition(tmp_body, tmp_pos())
     tmp_angle.d = b2Body_GetAngle(tmp_body)
       
@@ -765,9 +777,9 @@ Procedure glWorld_Setup(field_of_view.d, aspect_ratio.d, viewer_to_near_clipping
   gluPerspective_(field_of_view, aspect_ratio, viewer_to_near_clipping_plane_distance, viewer_to_far_clipping_plane_distance) 
   glMatrixMode_(#GL_MODELVIEW)
   glTranslatef_(camera_x, camera_y, camera_z)
-  camera_position\x = camera_x
-  camera_position\y = camera_y
-  camera_position\z = camera_z
+  world\mainCameraPositionX = -camera_x
+  world\mainCameraPositionY = -camera_y
+  world\mainCameraPositionZ = -camera_z
   glEnable_(#GL_CULL_FACE)                                              ; Will enhance the rendering speed as all the back face will be culled
   glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MIN_FILTER, #GL_LINEAR)  ; For texture mapping
   glTexParameteri_(#GL_TEXTURE_2D, #GL_TEXTURE_MAG_FILTER, #GL_LINEAR)  ; For texture mapping
@@ -1496,6 +1508,33 @@ EndProcedure
 
 
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_GetPositionEx
+; Description ...: Gets the position (metres) of a body (b2Body)
+; Syntax.........: b2Body_GetPositionEx(body_name.s)
+; Parameters ....: body_name - the name of the body (from JSON file)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_GetPositionEx(body_name.s)
+  
+  previous_positionX.d = body(body_name)\currentPositionX
+  previous_positionY.d = body(body_name)\currentPositionY
+  b2Body_GetPosition(body(body_name)\ptr, tmp_pos())
+  body(body_name)\currentPositionX = tmp_pos(0)
+  body(body_name)\currentPositionY = tmp_pos(1)
+  body(body_name)\displacementPositionX = body(body_name)\currentPositionX - previous_positionX
+  body(body_name)\displacementPositionY = body(body_name)\currentPositionY - previous_positionY
+  
+  ProcedureReturn 1
+EndProcedure
+
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_SetPosition
@@ -1539,8 +1578,6 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2Body_SetAngle(tmp_body.l, tmp_angle.d)
   
-  Dim tmp_pos.f(2)
-    
   b2Body_GetPosition(tmp_body, tmp_pos())
   b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), tmp_angle)
   
@@ -1564,7 +1601,6 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2Body_AddAngle(tmp_body.l, add_angle.d)
   
-  Dim tmp_pos.f(2)
   b2Body_GetPosition(tmp_body, tmp_pos())
   curr_angle.d = b2Body_GetAngle(tmp_body)
   b2Body_SetTransform(tmp_body, tmp_pos(0), tmp_pos(1), curr_angle + add_angle)
@@ -1815,7 +1851,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2World_CreateParticleSystemEx(system_name.s)
   
-  tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world, particle_system(system_name)\colorMixingStrength, particle_system(system_name)\dampingStrength, particle_system(system_name)\destroyByAge, particle_system(system_name)\ejectionStrength, particle_system(system_name)\elasticStrength, particle_system(system_name)\lifetimeGranularity, particle_system(system_name)\powderStrength, particle_system(system_name)\pressureStrength, particle_system(system_name)\particleRadius, particle_system(system_name)\repulsiveStrength, particle_system(system_name)\springStrength, particle_system(system_name)\staticPressureIterations, particle_system(system_name)\staticPressureRelaxation, particle_system(system_name)\staticPressureStrength, particle_system(system_name)\surfaceTensionNormalStrength, particle_system(system_name)\surfaceTensionPressureStrength, particle_system(system_name)\viscousStrength)
+  tmp_particle_system_ptr.l = b2World_CreateParticleSystem(world\ptr, particle_system(system_name)\colorMixingStrength, particle_system(system_name)\dampingStrength, particle_system(system_name)\destroyByAge, particle_system(system_name)\ejectionStrength, particle_system(system_name)\elasticStrength, particle_system(system_name)\lifetimeGranularity, particle_system(system_name)\powderStrength, particle_system(system_name)\pressureStrength, particle_system(system_name)\particleRadius, particle_system(system_name)\repulsiveStrength, particle_system(system_name)\springStrength, particle_system(system_name)\staticPressureIterations, particle_system(system_name)\staticPressureRelaxation, particle_system(system_name)\staticPressureStrength, particle_system(system_name)\surfaceTensionNormalStrength, particle_system(system_name)\surfaceTensionPressureStrength, particle_system(system_name)\viscousStrength)
   b2ParticleSystem_SetDensity(tmp_particle_system_ptr, particle_system(system_name)\particleDensity)
   particle_system(system_name)\particle_system_ptr = tmp_particle_system_ptr
 
@@ -1998,7 +2034,7 @@ Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
   
   gravity\x = gravity_x
   gravity\y = gravity_y
-  world = b2World_Create(gravity\x, gravity\y)
+  world\ptr = b2World_Create(gravity\x, gravity\y)
   
   ProcedureReturn 1
 EndProcedure
@@ -2013,6 +2049,27 @@ EndProcedure
   
 
 
+Procedure b2World_FollowBody(body_name.s, initial.i = 0)
+  
+  b2Body_GetPositionEx(body_name)
+
+  If initial = 1
+  
+    tmp_x.d = world\mainCameraPositionX - body(body_name)\currentPositionX
+    tmp_y.d = world\mainCameraPositionY - body(body_name)\currentPositionY
+    glTranslatef_(tmp_x, tmp_y, 0)
+    world\mainCameraPositionX = world\mainCameraPositionX - tmp_x
+    world\mainCameraPositionY = world\mainCameraPositionY - tmp_y
+  Else
+  
+    glTranslatef_(-body(body_name)\displacementPositionX, -body(body_name)\displacementPositionY, world\mainCameraDisplacementPositionZ)
+    world\mainCameraPositionX = world\mainCameraPositionX + body(body_name)\displacementPositionX
+    world\mainCameraPositionY = world\mainCameraPositionY + body(body_name)\displacementPositionY
+  EndIf
+
+EndProcedure
+
+
 
 
 
@@ -2021,7 +2078,7 @@ EndProcedure
 
 Procedure b2World_CreateBodyEx(body_name.s)
 
-  body(body_name)\body_ptr = b2World_CreateBody(world, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\angle), body(body_name)\angularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\linearVelocityX, body(body_name)\linearVelocityY, body(body_name)\positionX, body(body_name)\positionY, body(body_name)\type, body(body_name)\userData)
+  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\angle), body(body_name)\angularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\linearVelocityX, body(body_name)\linearVelocityY, body(body_name)\positionX, body(body_name)\positionY, body(body_name)\type, body(body_name)\userData)
 
 EndProcedure
 
@@ -2049,7 +2106,7 @@ Procedure b2World_DestroyBodies()
       
       If body()\active = 1
 
-        b2World_DestroyBody(world, body()\body_ptr)
+        b2World_DestroyBody(world\ptr, body()\ptr)
       EndIf
     Wend
 
@@ -2110,7 +2167,7 @@ Procedure b2World_CreateFixtureEx(fixture_name.s)
         fixture(fixture_name)\draw_type = #gl_line_strip2
       EndIf
       
-      b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\body_ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
+      b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
 
 EndProcedure
 
@@ -2121,7 +2178,7 @@ Procedure b2World_CreateFixtures()
 
   While NextMapElement(fixture())
 
-    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 ;And b2Body_IsActive(body(fixture()\body_name)\body_ptr) = 1
+    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 ;And b2Body_IsActive(body(fixture()\body_name)\ptr) = 1
       
       b2World_CreateFixtureEx(MapKey(fixture()))
     EndIf
@@ -2134,7 +2191,7 @@ Procedure b2World_CreateJointEx(joint_name.s)
 
   If joint(joint_name)\joint_type = "wheel"
     
-    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world, body(joint(joint_name)\body_a_name)\body_ptr, body(joint(joint_name)\body_b_name)\body_ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
+    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world\ptr, body(joint(joint_name)\body_a_name)\ptr, body(joint(joint_name)\body_b_name)\ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
   EndIf
 
 EndProcedure
@@ -2162,7 +2219,7 @@ Procedure b2World_DestroyJoints()
       
       If joint()\active = 1
 
-        b2World_DestroyJoint(world, joint()\joint_ptr)
+        b2World_DestroyJoint(world\ptr, joint()\joint_ptr)
       EndIf
     Wend
     
@@ -2213,7 +2270,7 @@ Procedure b2World_DestroyParticleSystems()
       
       If particle_system()\active = 1
         
-        b2World_DestroyParticleSystem(world, particle_system()\particle_system_ptr)
+        b2World_DestroyParticleSystem(world\ptr, particle_system()\particle_system_ptr)
       EndIf
     Wend
      
@@ -2275,20 +2332,11 @@ EndProcedure
 Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_system.i)
   
   If destroy_fixtures = 1
-;     
-;     ; Destroy the Box2D Fixtures  
-; ;    b2Body_DestroyFixture(groundBody, groundBodyFixture\fixture_ptr)
-;  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture1\fixture_ptr)
-;  ;   b2Body_DestroyFixture(groundBody, groundBodySubFixture2\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("body"), fixture_struct("body")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket main")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 1")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 2")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket"), fixture_struct("bucket under box 3")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("bucket ball"), fixture_struct("bucket ball")\fixture_ptr)
-;     b2Body_DestroyFixture(body_ptr("boat"), fixture_struct("boat")\fixture_ptr)
+    
+    ; I believe LiquidFun / Box2D automatically destorys fixtures when the associated body is destroyed.
+    ; So nothing required here.
      
-  ;  FreeMap(fixture())
+    ;  FreeMap(fixture())
 
   EndIf
   
@@ -2311,7 +2359,7 @@ Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_
     b2World_DestroyParticleSystems()
   
     ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-    b2World_Step(world, (1 / 60.0), 6, 2)
+    b2World_Step(world\ptr, (1 / 60.0), 6, 2)
   EndIf
   
 EndProcedure
@@ -2365,8 +2413,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 765
-; FirstLine = 761
-; Folding = --------
+; CursorPosition = 2066
+; FirstLine = 2048
+; Folding = ---------
 ; EnableXP
 ; EnableUnicode
