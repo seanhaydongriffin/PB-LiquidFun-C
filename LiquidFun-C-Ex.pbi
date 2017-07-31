@@ -38,6 +38,7 @@ Enumeration MenuType
     #main_menu
     #player_menu
     #particle_menu
+    #edit_menu
 EndEnumeration
 
 ; ===============================================================================================================================
@@ -95,26 +96,28 @@ Structure b2_Body
   ptr.l
   active.d
   allowSleep.d
-  angle.d
-  angularVelocity.d
+  angle.d                             ; the original angle of the body (from the JSON file)
+  currentAngle.d                      ; the current angle of the body
+  angularVelocity.d                   ; the original angular velocity of the body (from the JSON file)
+  currentAngularVelocity.d            ; the current angular velocity of the body
   angularDamping.d
   awake.d
   bullet.d
   fixedRotation.d
   gravityScale.d
   linearDamping.d
-  linearVelocityX.d         ; the original horizontal velocity of the body (from JSON file)
-  linearVelocityY.d         ; the original vertical velocity of the body (from JSON file)
-  currentLinearVelocityX.d  ; the current horizontal linear velocity of the body (since the last b2World_Step call)
-  currentLinearVelocityY.d  ; the current vertical linear velocity of the body (since the last b2World_Step call)
-  positionX.d               ; the original horizontal position of the body (from JSON file)
-  positionY.d               ; the original vertical position of the body (from JSON file)
+  linearVelocityX.d                   ; the original horizontal velocity of the body (from the JSON file)
+  linearVelocityY.d                   ; the original vertical velocity of the body (from the JSON file)
+  currentLinearVelocityX.d            ; the current horizontal linear velocity of the body (since the last b2World_Step call)
+  currentLinearVelocityY.d            ; the current vertical linear velocity of the body (since the last b2World_Step call)
+  positionX.d                         ; the original horizontal position of the body (from the JSON file)
+  positionY.d                         ; the original vertical position of the body (from the JSON file)
+  currentPositionX.d                  ; the current horizontal position of the body (since the last b2World_Step call)
+  currentPositionY.d                  ; the current horizontal position of the body (since the last b2World_Step call)
   type.d
   userData.d
-  displacementPositionX.d   ; the horizontal distance the body has moved (since the last b2World_Step call)
-  displacementPositionY.d   ; the vertical distance the body has moved (since the last b2World_Step call)
-  currentPositionX.d        ; the current horizontal position of the body (since the last b2World_Step call)
-  currentPositionY.d        ; the current horizontal position of the body (since the last b2World_Step call)
+  displacementPositionX.d             ; the horizontal distance the body has moved (since the last b2World_Step call)
+  displacementPositionY.d             ; the vertical distance the body has moved (since the last b2World_Step call)
 EndStructure
     
 Structure b2_Fixture
@@ -140,8 +143,9 @@ Structure b2_Fixture
   sprite_vertex.b2Vec2[4]
   body_offset_x.d
   body_offset_y.d
-  draw_type_str.s
-  draw_type.i
+  draw_type_str.s           ; the original draw type (as a string)
+  draw_type.i               ; the original draw type (as an integer)
+  current_draw_type.i       ; the current draw type (as an integer)
   line_width.f
   line_red.f
   line_green.f
@@ -480,7 +484,7 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
   
   ; if the drawing is texture
   
-  If *tmp_fixture\draw_type = #gl_texture2 Or *tmp_fixture\draw_type = #gl_texture2_and_line_loop2
+  If *tmp_fixture\current_draw_type = #gl_texture2 Or *tmp_fixture\current_draw_type = #gl_texture2_and_line_loop2
     
     tmp_body.l = body(*tmp_fixture\body_name)\ptr
     
@@ -562,7 +566,7 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
   
   ; if the drawing is wireframe
   
-  If *tmp_fixture\draw_type >= #gl_texture2_and_line_loop2
+  If *tmp_fixture\current_draw_type >= #gl_texture2_and_line_loop2
   
     glLineWidth_(*tmp_fixture\line_width)
     glColor3f_(*tmp_fixture\line_red, *tmp_fixture\line_green, *tmp_fixture\line_blue)
@@ -589,7 +593,7 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
     glEnableClientState_(#GL_VERTEX_ARRAY )
     glVertexPointer_( 3, #GL_FLOAT, SizeOf(Vec3f), @tmp_chain_vertice(0)\x )
     
-    If *tmp_fixture\draw_type = #gl_line_strip2
+    If *tmp_fixture\current_draw_type = #gl_line_strip2
       
       glDrawArrays_( #GL_LINE_STRIP, 0, ArraySize(tmp_chain_vertice()) )
     Else
@@ -886,7 +890,9 @@ EndProcedure
 ;				           Failure - 0
 ; Author ........: Sean Griffin
 ; Modified.......:
-; Remarks .......:
+; Remarks .......: Remember! In Paint.NET save images As 32-bit PNG For the below To work
+;                   Also for backward compatibility to OpenGL v1 we use images (textures) with dimensions in powers of 2
+;                   i.e. 2x2, 4x4, 16x16, 32x32, 64x64, 128x128, 256x256
 ; Related .......:
 ; Link ..........:
 ; Example .......:
@@ -1283,7 +1289,7 @@ Procedure b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, t
   
   *tmp_b2_fixture\body_ptr = tmp_body
   *tmp_b2_fixture\shape_type = tmp_shape_type
-  *tmp_b2_fixture\draw_type = tmp_draw_type
+  *tmp_b2_fixture\current_draw_type = tmp_draw_type
   *tmp_b2_fixture\line_width = tmp_line_width
   *tmp_b2_fixture\line_red = tmp_line_red
   *tmp_b2_fixture\line_green = tmp_line_green
@@ -1605,22 +1611,28 @@ Procedure b2Body_LoadAll(filename.s = "body.json")
       ParseJSON(0, body_json(body_name))
       AddMapElement(body(), body_name)
       
-      body()\active            = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
-      body()\allowSleep        = GetJSONDouble(GetJSONElement(JSONValue(0), 2))
-      body()\angle             = GetJSONDouble(GetJSONElement(JSONValue(0), 3))
-      body()\angularVelocity   = GetJSONDouble(GetJSONElement(JSONValue(0), 4))
-      body()\angularDamping    = GetJSONDouble(GetJSONElement(JSONValue(0), 5))
-      body()\awake             = GetJSONDouble(GetJSONElement(JSONValue(0), 6))
-      body()\bullet            = GetJSONDouble(GetJSONElement(JSONValue(0), 7))
-      body()\fixedRotation     = GetJSONDouble(GetJSONElement(JSONValue(0), 8))
-      body()\gravityScale      = GetJSONDouble(GetJSONElement(JSONValue(0), 9))
-      body()\linearDamping     = GetJSONDouble(GetJSONElement(JSONValue(0), 10))
-      body()\linearVelocityX   = GetJSONDouble(GetJSONElement(JSONValue(0), 11))
-      body()\linearVelocityY   = GetJSONDouble(GetJSONElement(JSONValue(0), 12))
-      body()\positionX         = GetJSONDouble(GetJSONElement(JSONValue(0), 13))
-      body()\positionY         = GetJSONDouble(GetJSONElement(JSONValue(0), 14))
-      body()\type              = GetJSONDouble(GetJSONElement(JSONValue(0), 15))
-      body()\userData          = GetJSONDouble(GetJSONElement(JSONValue(0), 16))
+      body()\active                 = GetJSONDouble(GetJSONElement(JSONValue(0), 1))
+      body()\allowSleep             = GetJSONDouble(GetJSONElement(JSONValue(0), 2))
+      body()\angle                  = GetJSONDouble(GetJSONElement(JSONValue(0), 3))
+      body()\currentAngle           = body()\angle
+      body()\angularVelocity        = GetJSONDouble(GetJSONElement(JSONValue(0), 4))
+      body()\currentAngularVelocity = body()\angularVelocity
+      body()\angularDamping         = GetJSONDouble(GetJSONElement(JSONValue(0), 5))
+      body()\awake                  = GetJSONDouble(GetJSONElement(JSONValue(0), 6))
+      body()\bullet                 = GetJSONDouble(GetJSONElement(JSONValue(0), 7))
+      body()\fixedRotation          = GetJSONDouble(GetJSONElement(JSONValue(0), 8))
+      body()\gravityScale           = GetJSONDouble(GetJSONElement(JSONValue(0), 9))
+      body()\linearDamping          = GetJSONDouble(GetJSONElement(JSONValue(0), 10))
+      body()\linearVelocityX        = GetJSONDouble(GetJSONElement(JSONValue(0), 11))
+      body()\linearVelocityY        = GetJSONDouble(GetJSONElement(JSONValue(0), 12))
+      body()\currentLinearVelocityX = body()\linearVelocityX
+      body()\currentLinearVelocityY = body()\linearVelocityY
+      body()\positionX              = GetJSONDouble(GetJSONElement(JSONValue(0), 13))
+      body()\positionY              = GetJSONDouble(GetJSONElement(JSONValue(0), 14))
+      body()\currentPositionX       = body()\positionX
+      body()\currentPositionY       = body()\positionY
+      body()\type                   = GetJSONDouble(GetJSONElement(JSONValue(0), 15))
+      body()\userData               = GetJSONDouble(GetJSONElement(JSONValue(0), 16))
     EndIf
   Next
 EndProcedure
@@ -2032,7 +2044,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2World_CreateBodyEx(body_name.s)
 
-  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\angle), body(body_name)\angularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\linearVelocityX, body(body_name)\linearVelocityY, body(body_name)\positionX, body(body_name)\positionY, body(body_name)\type, body(body_name)\userData)
+  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\currentAngle), body(body_name)\currentAngularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\currentLinearVelocityX, body(body_name)\currentLinearVelocityY, body(body_name)\currentPositionX, body(body_name)\currentPositionY, body(body_name)\type, body(body_name)\userData)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
@@ -2060,6 +2072,25 @@ Procedure b2World_CreateBodies()
     EndIf
   Wend
 
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyBodyEx
+; Description ...: Destroys a Box2D body, loaded from the JSON data.
+; Syntax.........: b2World_DestroyBodyEx(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to destroy
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyBodyEx(body_name.s)
+  
+  b2World_DestroyBody(world\ptr, body(body_name)\ptr)
+  body(body_name)\active = 0
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
@@ -2191,7 +2222,9 @@ Procedure b2World_CreateFixtureEx(fixture_name.s)
     fixture(fixture_name)\draw_type = #gl_line_strip2
   EndIf
   
-  b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
+  fixture(fixture_name)\current_draw_type = fixture(fixture_name)\draw_type
+  
+  b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\current_draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
 
 EndProcedure
 
@@ -2217,6 +2250,72 @@ Procedure b2World_CreateFixtures()
     If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 ;And b2Body_IsActive(body(fixture()\body_name)\ptr) = 1
       
       b2World_CreateFixtureEx(MapKey(fixture()))
+    EndIf
+  Wend
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateBodyAndFixtures
+; Description ...: Creates a Box2D body and it's associated Box2D fixtures, loaded from the JSON data.
+; Syntax.........: b2World_CreateBodyAndFixtures(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to create
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateBodyAndFixtures(body_name.s)
+  
+  body(body_name)\active = 1
+
+  b2World_CreateBodyEx(body_name)
+              
+  ResetMap(fixture())
+
+  While NextMapElement(fixture())
+
+    If fixture()\body_name = body_name
+      
+      b2World_CreateFixtureEx(MapKey(fixture()))
+    EndIf
+  Wend
+  
+  
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_SetFixturesDrawType
+; Description ...: Sets the current draw type for all texture-based fixtures.
+; Syntax.........: b2World_SetFixturesDrawType(draw_type.i = -1)
+; Parameters ....: draw_type - one of the following:
+;                   #gl_texture2_and_line_loop2 - to set all texture-based fixtures to texture and line loop drawing
+;                   -1 - to set the current draw type back to the original draw type, loaded from the JSON file
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_SetFixturesDrawType(draw_type.i = -1)
+                            
+  ResetMap(fixture())
+
+  While NextMapElement(fixture())
+
+    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 And fixture()\draw_type = #gl_texture2
+        
+      If draw_type = -1
+        
+        fixture()\current_draw_type = fixture()\draw_type
+      Else
+        
+        fixture()\current_draw_type = draw_type
+      EndIf                     
     EndIf
   Wend
 EndProcedure
@@ -2607,11 +2706,74 @@ EndProcedure
 ; EndProcedure
 
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateAll
+; Description ...: Creates all Box2D bodies, joints, fixtures, particle systems and groups, loaded from the JSON file.
+; Syntax.........: b2World_CreateAll()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateAll()
+  
+  b2World_CreateBodies()
+  b2World_CreateJoints()
+  b2World_CreateFixtures()
+  b2World_CreateParticleSystems()
+  b2World_CreateParticleGroups()
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyAll
+; Description ...: Destroys all Box2D bodies, joints, fixtures, particle systems and groups, loaded from the JSON file.
+; Syntax.........: b2World_DestroyAll()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyAll()
+  
+  b2World_DestroyJoints()
+  b2World_DestroyBodies()
+  b2World_DestroyParticleGroups()
+  b2World_DestroyParticleSystems()
+      
+  ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+  b2World_Step(world\ptr, (1 / 60.0), 6, 2)
+  
+  ; reset all the data back to what was loaded from JSON
+  ResetMap(body())
+
+  While NextMapElement(body())
+    
+    If body()\active = 1
+      
+      body()\currentPositionX = body()\positionX
+      body()\currentPositionY = body()\positionY
+      body()\currentLinearVelocityX = body()\linearVelocityX
+      body()\currentLinearVelocityY = body()\linearVelocityY
+      body()\currentAngle = body()\angle
+      body()\currentAngularVelocity = body()\angularVelocity
+    EndIf
+  Wend
+
+EndProcedure
+
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 2297
-; FirstLine = 2260
-; Folding = ---------
+; CursorPosition = 2271
+; FirstLine = 2254
+; Folding = ----------
 ; EnableXP
 ; EnableUnicode
