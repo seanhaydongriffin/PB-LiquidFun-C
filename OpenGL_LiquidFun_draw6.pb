@@ -182,87 +182,57 @@ Repeat
   
               Case #PB_Shortcut_X
                 
-                b2Body_GetPosition(body(player_main_body_name)\ptr, tmp_pos())
-              	tmp_angle.d = b2Body_GetAngle (body(player_main_body_name)\ptr)
-                b2Body_GetLinearVelocity(body(player_main_body_name)\ptr, tmp_vel())
-                tmp_torque.d = b2Body_GetAngularVelocity (body(player_main_body_name)\ptr)
-  
+                b2Body_GetPositionEx(player_main_body_name)
+                b2Body_GetAngleEx(player_main_body_name)
+                b2Body_GetLinearVelocityEx(player_main_body_name)
+                b2Body_GetAngularVelocityEx(player_main_body_name)
+                
                 Select player_main_body_name
                     
                   Case "boat"
                     
-                    b2World_DestroyJoint(world\ptr, joint("prop spring")\joint_ptr)
-                    joint("prop spring")\active = 0
-                    b2World_DestroyBody(world\ptr, body("boat")\ptr)
-                    body("boat")\active = 0
-                    b2World_DestroyBody(world\ptr, body("boat prop")\ptr)
-                    body("boat prop")\active = 0
+                    b2World_DestroyBodyAndJoints("boat prop")
+                    b2World_DestroyBodyAndJoints("boat")
                     
-                    body("car")\currentPositionX = tmp_pos(0)
-                    body("car")\currentPositionY = tmp_pos(1) + 3
-                    body("car")\angle = tmp_angle
-                    body("car")\currentLinearVelocityX = tmp_vel(0)
-                    body("car")\currentLinearVelocityY = tmp_vel(1)
-                    body("car")\currentAngularVelocity = tmp_torque
+                    body("car")\currentPositionX = body("boat")\currentPositionX
+                    body("car")\currentPositionY = body("boat")\currentPositionY + 3
+                    body("car")\currentAngle = body("boat")\currentAngle
+                    body("car")\currentLinearVelocityX = body("boat")\currentLinearVelocityX
+                    body("car")\currentLinearVelocityY = body("boat")\currentLinearVelocityY
+                    body("car")\currentAngularVelocity = body("boat")\currentAngularVelocity
                     body("wheel1")\currentPositionX = body("car")\currentPositionX - 2
                     body("wheel1")\currentPositionY = body("car")\currentPositionY - 3
                     body("wheel2")\currentPositionX = body("car")\currentPositionX + 2
                     body("wheel2")\currentPositionY = body("car")\currentPositionY - 3
-                    body("car")\active = 1
-                    b2World_CreateBodyEx("car")
-                    b2World_CreateFixtureEx("car")
-                    body("wheel1")\active = 1
-                    b2World_CreateBodyEx("wheel1")
-                    b2World_CreateFixtureEx("wheel1")
-                    body("wheel2")\active = 1
-                    b2World_CreateBodyEx("wheel2")
-                    b2World_CreateFixtureEx("wheel2")
-                    joint("wheel1 spring")\active = 1
-                    b2World_CreateJointEx("wheel1 spring")
-                    joint("wheel2 spring")\active = 1
-                    b2World_CreateJointEx("wheel2 spring")
                     
+                    b2World_CreateBodyAndFixtures("car")
+                    b2World_CreateBodyAndFixturesAndJoints("wheel1")
+                    b2World_CreateBodyAndFixturesAndJoints("wheel2")
+
                     player_main_body_name = "car"
                     player_spinning_body_name = "wheel1"
                     
                   Case "car"
                     
-                    b2World_DestroyJoint(world\ptr, joint("wheel1 spring")\joint_ptr)
-                    joint("wheel1 spring")\active = 0
-                    b2World_DestroyJoint(world\ptr, joint("wheel2 spring")\joint_ptr)
-                    joint("wheel2 spring")\active = 0
-                    b2World_DestroyBody(world\ptr, body("car")\ptr)
-                    body("car")\active = 0
-                    b2World_DestroyBody(world\ptr, body("wheel1")\ptr)
-                    body("wheel1")\active = 0
-                    b2World_DestroyBody(world\ptr, body("wheel2")\ptr)
-                    body("wheel2")\active = 0
+                    b2World_DestroyBodyAndJoints("wheel1")
+                    b2World_DestroyBodyAndJoints("wheel2")
+                    b2World_DestroyBodyAndJoints("car")
                     
-                    body("boat")\currentPositionX = tmp_pos(0)
-                    body("boat")\currentPositionY = tmp_pos(1)
-                    body("boat")\angle = tmp_angle
-                    body("boat")\currentLinearVelocityX = tmp_vel(0)
-                    body("boat")\currentLinearVelocityY = tmp_vel(1)
-                    body("boat")\currentAngularVelocity = tmp_torque
+                    body("boat")\currentPositionX = body("car")\currentPositionX ;tmp_pos(0)
+                    body("boat")\currentPositionY = body("car")\currentPositionY ;tmp_pos(1)
+                    body("boat")\currentAngle = body("car")\currentAngle
+                    body("boat")\currentLinearVelocityX = body("car")\currentLinearVelocityX ;tmp_vel(0)
+                    body("boat")\currentLinearVelocityY = body("car")\currentLinearVelocityY ;tmp_vel(1)
+                    body("boat")\currentAngularVelocity = body("car")\currentAngularVelocity ;tmp_torque
                     body("boat prop")\currentPositionX = body("boat")\currentPositionX
                     body("boat prop")\currentPositionY = body("boat")\currentPositionY
-                    body("boat")\active = 1
-                    b2World_CreateBodyEx("boat")
-                    b2World_CreateFixtureEx("boat")
-                    b2World_CreateFixtureEx("boat motor")
-                    body("boat prop")\active = 1
-                    b2World_CreateBodyEx("boat prop")
-                    b2World_CreateFixtureEx("boat prop")
-                    joint("prop spring")\active = 1
-                    b2World_CreateJointEx("prop spring")
+                    
+                    b2World_CreateBodyAndFixtures("boat")
+                    b2World_CreateBodyAndFixturesAndJoints("boat prop")
   
                     player_main_body_name = "boat"
                     player_spinning_body_name = "boat prop"
-  
                 EndSelect
-                
-                
-                
             EndSelect
                 
           ; particle menu
@@ -1032,8 +1002,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 888
-; FirstLine = 867
+; CursorPosition = 235
+; FirstLine = 217
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw6.exe

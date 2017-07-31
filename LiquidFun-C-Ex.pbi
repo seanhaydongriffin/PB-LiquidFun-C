@@ -98,6 +98,7 @@ Structure b2_Body
   allowSleep.d
   angle.d                             ; the original angle of the body (from the JSON file)
   currentAngle.d                      ; the current angle of the body
+  displacementAngle.d                 ; the number of radians the body has moved (since the last b2World_Step call)
   angularVelocity.d                   ; the original angular velocity of the body (from the JSON file)
   currentAngularVelocity.d            ; the current angular velocity of the body
   angularDamping.d
@@ -114,10 +115,10 @@ Structure b2_Body
   positionY.d                         ; the original vertical position of the body (from the JSON file)
   currentPositionX.d                  ; the current horizontal position of the body (since the last b2World_Step call)
   currentPositionY.d                  ; the current horizontal position of the body (since the last b2World_Step call)
-  type.d
-  userData.d
   displacementPositionX.d             ; the horizontal distance the body has moved (since the last b2World_Step call)
   displacementPositionY.d             ; the vertical distance the body has moved (since the last b2World_Step call)
+  type.d
+  userData.d
 EndStructure
     
 Structure b2_Fixture
@@ -1661,6 +1662,28 @@ Procedure b2Body_GetLinearVelocityEx(body_name.s)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_GetAngularVelocityEx
+; Description ...: Gets the angular velocity (meters per second) of a body (b2Body) loaded from a JSON file.
+; Syntax.........: b2Body_GetAngularVelocityEx(body_name.s)
+; Parameters ....: body_name - the name of the body (from the JSON file)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_GetAngularVelocityEx(body_name.s)
+  
+  velocity.d = b2Body_GetAngularVelocity(body(body_name)\ptr)
+  body(body_name)\currentAngularVelocity = velocity
+  
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_GetPositionEx
 ; Description ...: Gets the position (metres) of a body (b2Body) loaded from a JSON file.
 ; Syntax.........: b2Body_GetPositionEx(body_name.s)
@@ -1712,6 +1735,29 @@ Procedure b2Body_SetPosition(tmp_body.l, x.d, y.d)
   ProcedureReturn 1
 EndProcedure
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_GetAngleEx
+; Description ...: Gets the angle (in radians) of a body (b2Body) loaded from a JSON file.
+; Syntax.........: b2Body_GetAngleEx(body_name.s)
+; Parameters ....: body_name - the name of the body (from JSON file)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_GetAngleEx(body_name.s)
+  
+  previous_angle.d = body(body_name)\currentAngle
+  curr_angle.d = b2Body_GetAngle(body(body_name)\ptr)
+  body(body_name)\currentAngle = curr_angle
+  body(body_name)\displacementAngle = body(body_name)\currentAngle - previous_angle
+  
+  ProcedureReturn 1
+EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_SetAngle
@@ -1999,41 +2045,10 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_CreateEx
-; Description ...: Creates a Box2D world, and loads all Box2D and LiquidFun data from JSON files.
-; Syntax.........: b2World_CreateEx(gravity_x.f, gravity_y.f)
-; Parameters ....: gravity_x = the horizontal component of the gravity (in meters per second)
-;                  gravity_y = the vertical component of the gravity (in meters per second)
-; Return values .: Success - 1
-;				           Failure - 0
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
-
-  b2Body_LoadAll()  
-  glTexture_LoadAll()
-  b2Fixture_LoadAll()  
-  b2ParticleSystem_LoadAll()
-  b2ParticleGroup_LoadAll()
-  b2Joint_LoadAll()
-  
-  gravity\x = gravity_x
-  gravity\y = gravity_y
-  world\ptr = b2World_Create(gravity\x, gravity\y)
-  
-  ProcedureReturn 1
-EndProcedure
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_CreateBodyEx
-; Description ...: Creates a Box2D body, loaded from the JSON data.
-; Syntax.........: b2World_CreateBodyEx(body_name.s)
-; Parameters ....: body_name - the name of the body (b2Body) to create
+; Name...........: b2World_CreateJointEx
+; Description ...: Creates a Box2D joint, loaded from the JSON data.
+; Syntax.........: b2World_CreateJointEx(joint_name.s)
+; Parameters ....: fixture_name - the name of the joint (b2Joint) to create
 ; Return values .: None
 ; Author ........: Sean Griffin
 ; Modified.......:
@@ -2042,117 +2057,39 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure b2World_CreateBodyEx(body_name.s)
+Procedure b2World_CreateJointEx(joint_name.s)
 
-  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\currentAngle), body(body_name)\currentAngularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\currentLinearVelocityX, body(body_name)\currentLinearVelocityY, body(body_name)\currentPositionX, body(body_name)\currentPositionY, body(body_name)\type, body(body_name)\userData)
-EndProcedure
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_CreateBodies
-; Description ...: Creates all Box2D bodies, loaded from the JSON file, that are active.
-; Syntax.........: b2World_CreateBodies()
-; Parameters ....: 
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2World_CreateBodies()
-              
-  ResetMap(body())
-
-  While NextMapElement(body())
+  If joint(joint_name)\joint_type = "wheel"
     
-    If body()\active = 1
-      
-      b2World_CreateBodyEx(MapKey(body()))
-    EndIf
-  Wend
-
-EndProcedure
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_DestroyBodyEx
-; Description ...: Destroys a Box2D body, loaded from the JSON data.
-; Syntax.........: b2World_DestroyBodyEx(body_name.s)
-; Parameters ....: body_name - the name of the body (b2Body) to destroy
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2World_DestroyBodyEx(body_name.s)
-  
-  b2World_DestroyBody(world\ptr, body(body_name)\ptr)
-  body(body_name)\active = 0
-EndProcedure
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_DestroyBodies
-; Description ...: Destroys all Box2D bodies, loaded from the JSON file, that are active.
-; Syntax.........: b2World_DestroyBodies()
-; Parameters ....: 
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2World_DestroyBodies()
-  
-    ; Destroy the Box2D Bodies  
-    ResetMap(body())
-    
-    While NextMapElement(body())
-      
-      If body()\active = 1
-
-        b2World_DestroyBody(world\ptr, body()\ptr)
-      EndIf
-    Wend
-
-EndProcedure
-  
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_FollowBody
-; Description ...: Sets the center of the main camera of the Box2D world to the same position as a Box2D body.
-; Syntax.........: b2World_FollowBody(body_name.s, initial.i = 0)
-; Parameters ....: body_name - the name of the body (b2Body) to follow
-;                  initial - a flag (boolean) that indicates if this is the first initial follow action on the body
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2World_FollowBody(body_name.s, initial.i = 0)
-  
-  b2Body_GetPositionEx(body_name)
-
-  If initial = 1
-  
-    tmp_x.d = world\mainCameraPositionX - body(body_name)\currentPositionX
-    tmp_y.d = world\mainCameraPositionY - body(body_name)\currentPositionY
-    glTranslatef_(tmp_x, tmp_y, 0)
-    world\mainCameraPositionX = world\mainCameraPositionX - tmp_x
-    world\mainCameraPositionY = world\mainCameraPositionY - tmp_y
-  Else
-  
-    glTranslatef_(-body(body_name)\displacementPositionX, -body(body_name)\displacementPositionY, world\mainCameraDisplacementPositionZ)
-    world\mainCameraPositionX = world\mainCameraPositionX + body(body_name)\displacementPositionX
-    world\mainCameraPositionY = world\mainCameraPositionY + body(body_name)\displacementPositionY
+    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world\ptr, body(joint(joint_name)\body_a_name)\ptr, body(joint(joint_name)\body_b_name)\ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
   EndIf
 
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateJoints
+; Description ...: Creates all Box2D joints, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateJoints()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateJoints()
+  
+  ResetMap(joint())
+
+  While NextMapElement(joint())
+      
+    If joint()\active = 1
+      
+      b2World_CreateJointEx(MapKey(joint()))
+    EndIf
+  Wend
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
@@ -2255,6 +2192,82 @@ Procedure b2World_CreateFixtures()
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateEx
+; Description ...: Creates a Box2D world, and loads all Box2D and LiquidFun data from JSON files.
+; Syntax.........: b2World_CreateEx(gravity_x.f, gravity_y.f)
+; Parameters ....: gravity_x = the horizontal component of the gravity (in meters per second)
+;                  gravity_y = the vertical component of the gravity (in meters per second)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
+
+  b2Body_LoadAll()  
+  glTexture_LoadAll()
+  b2Fixture_LoadAll()  
+  b2ParticleSystem_LoadAll()
+  b2ParticleGroup_LoadAll()
+  b2Joint_LoadAll()
+  
+  gravity\x = gravity_x
+  gravity\y = gravity_y
+  world\ptr = b2World_Create(gravity\x, gravity\y)
+  
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateBodyEx
+; Description ...: Creates a Box2D body, loaded from the JSON data.
+; Syntax.........: b2World_CreateBodyEx(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to create
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateBodyEx(body_name.s)
+
+  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\currentAngle), body(body_name)\currentAngularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\currentLinearVelocityX, body(body_name)\currentLinearVelocityY, body(body_name)\currentPositionX, body(body_name)\currentPositionY, body(body_name)\type, body(body_name)\userData)
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateBodies
+; Description ...: Creates all Box2D bodies, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateBodies()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateBodies()
+              
+  ResetMap(body())
+
+  While NextMapElement(body())
+    
+    If body()\active = 1
+      
+      b2World_CreateBodyEx(MapKey(body()))
+    EndIf
+  Wend
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: b2World_CreateBodyAndFixtures
 ; Description ...: Creates a Box2D body and it's associated Box2D fixtures, loaded from the JSON data.
 ; Syntax.........: b2World_CreateBodyAndFixtures(body_name.s)
@@ -2282,8 +2295,118 @@ Procedure b2World_CreateBodyAndFixtures(body_name.s)
       b2World_CreateFixtureEx(MapKey(fixture()))
     EndIf
   Wend
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateBodyAndFixturesAndJoints
+; Description ...: Creates a Box2D body and it's associated Box2D fixtures and joints, loaded from the JSON data.
+; Syntax.........: b2World_CreateBodyAndFixturesAndJoints(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to create
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateBodyAndFixturesAndJoints(body_name.s)
   
+  b2World_CreateBodyAndFixtures(body_name)
+    
+  ResetMap(joint())
   
+  While NextMapElement(joint())
+    
+;    If joint()\active = 1 And (joint()\body_a_name = body_name Or joint()\body_b_name = body_name)
+    If joint()\body_a_name = body_name Or joint()\body_b_name = body_name
+      
+      b2World_CreateJointEx(MapKey(joint()))
+      joint()\active = 1
+    EndIf
+  Wend
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyBodyEx
+; Description ...: Destroys a Box2D body, loaded from the JSON data.
+; Syntax.........: b2World_DestroyBodyEx(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to destroy
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyBodyEx(body_name.s)
+  
+  b2World_DestroyBody(world\ptr, body(body_name)\ptr)
+  body(body_name)\active = 0
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyBodies
+; Description ...: Destroys all Box2D bodies, loaded from the JSON file, that are active.
+; Syntax.........: b2World_DestroyBodies()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyBodies()
+  
+    ; Destroy the Box2D Bodies  
+    ResetMap(body())
+    
+    While NextMapElement(body())
+      
+      If body()\active = 1
+
+        b2World_DestroyBody(world\ptr, body()\ptr)
+      EndIf
+    Wend
+
+EndProcedure
+  
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_FollowBody
+; Description ...: Sets the center of the main camera of the Box2D world to the same position as a Box2D body.
+; Syntax.........: b2World_FollowBody(body_name.s, initial.i = 0)
+; Parameters ....: body_name - the name of the body (b2Body) to follow
+;                  initial - a flag (boolean) that indicates if this is the first initial follow action on the body
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_FollowBody(body_name.s, initial.i = 0)
+  
+  b2Body_GetPositionEx(body_name)
+
+  If initial = 1
+  
+    tmp_x.d = world\mainCameraPositionX - body(body_name)\currentPositionX
+    tmp_y.d = world\mainCameraPositionY - body(body_name)\currentPositionY
+    glTranslatef_(tmp_x, tmp_y, 0)
+    world\mainCameraPositionX = world\mainCameraPositionX - tmp_x
+    world\mainCameraPositionY = world\mainCameraPositionY - tmp_y
+  Else
+  
+    glTranslatef_(-body(body_name)\displacementPositionX, -body(body_name)\displacementPositionY, world\mainCameraDisplacementPositionZ)
+    world\mainCameraPositionX = world\mainCameraPositionX + body(body_name)\displacementPositionX
+    world\mainCameraPositionY = world\mainCameraPositionY + body(body_name)\displacementPositionY
+  EndIf
+
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
@@ -2321,10 +2444,10 @@ Procedure b2World_SetFixturesDrawType(draw_type.i = -1)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_CreateJointEx
-; Description ...: Creates a Box2D joint, loaded from the JSON data.
-; Syntax.........: b2World_CreateJointEx(joint_name.s)
-; Parameters ....: fixture_name - the name of the joint (b2Joint) to create
+; Name...........: b2World_DestroyJointEx
+; Description ...: Destroys a Box2D body, loaded from the JSON data.
+; Syntax.........: b2World_DestroyJointEx(joint_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to destroy
 ; Return values .: None
 ; Author ........: Sean Griffin
 ; Modified.......:
@@ -2333,41 +2456,11 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure b2World_CreateJointEx(joint_name.s)
-
-  If joint(joint_name)\joint_type = "wheel"
-    
-    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world\ptr, body(joint(joint_name)\body_a_name)\ptr, body(joint(joint_name)\body_b_name)\ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
-  EndIf
-
-EndProcedure
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_CreateJoints
-; Description ...: Creates all Box2D joints, loaded from the JSON file, that are active.
-; Syntax.........: b2World_CreateJoints()
-; Parameters ....: 
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......:
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2World_CreateJoints()
+Procedure b2World_DestroyJointEx(joint_name.s)
   
-  ResetMap(joint())
-
-  While NextMapElement(joint())
-      
-    If joint()\active = 1
-      
-      b2World_CreateJointEx(MapKey(joint()))
-    EndIf
-  Wend
+  b2World_DestroyJoint(world\ptr, joint(joint_name)\joint_ptr)
+  joint(joint_name)\active = 0
 EndProcedure
-
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2World_DestroyJoints
 ; Description ...: Destroys all Box2D joints, loaded from the JSON file, that are active.
@@ -2383,18 +2476,43 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2World_DestroyJoints()
   
-      ; Destroy the Box2D Joints  
-    ResetMap(joint())
+  ResetMap(joint())
+  
+  While NextMapElement(joint())
     
-    While NextMapElement(joint())
+    If joint()\active = 1
+
+      b2World_DestroyJoint(world\ptr, joint()\joint_ptr)
+    EndIf
+  Wend
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyBodyAndJoints
+; Description ...: Destroys a Box2D body and it's associated Box2D joints, loaded from the JSON data.
+; Syntax.........: b2World_DestroyBodyAndJoints(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to destroy
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyBodyAndJoints(body_name.s)
+  
+  ResetMap(joint())
+  
+  While NextMapElement(joint())
+    
+    If joint()\active = 1 And (joint()\body_a_name = body_name Or joint()\body_b_name = body_name)
       
-      If joint()\active = 1
-
-        b2World_DestroyJoint(world\ptr, joint()\joint_ptr)
-      EndIf
-    Wend
-    
-
+      b2World_DestroyJointEx(MapKey(joint()))
+    EndIf
+  Wend
+  
+  b2World_DestroyBodyEx(body_name)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
@@ -2772,8 +2890,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 2271
-; FirstLine = 2254
-; Folding = ----------
+; CursorPosition = 2321
+; FirstLine = 2288
+; Folding = -----------
 ; EnableXP
 ; EnableUnicode
