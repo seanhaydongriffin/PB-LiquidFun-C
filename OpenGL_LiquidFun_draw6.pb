@@ -302,8 +302,16 @@ Repeat
           
           player_tracking = 0
           
-          b2DestroyScene(1, 1, 1)
-          ;b2CreateScene(1, 1, 1)
+          ; destroy the scene
+          b2World_DestroyJoints()
+          b2World_DestroyBodies()
+          b2World_DestroyParticleGroups()
+          b2World_DestroyParticleSystems()
+  
+          ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+          b2World_Step(world\ptr, (1 / 60.0), 6, 2)
+
+          
           
           body("boat")\positionX = -38
           body("boat")\positionY = 2
@@ -524,12 +532,14 @@ Repeat
   
             Case #PB_Shortcut_K
               
-              b2DestroyScene(0, 0, 1)
-              ;b2CreateScene(0, 0, 1)
+              b2World_DestroyParticleGroups()
+              b2World_DestroyParticleSystems()
+      
+              ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
+;              b2World_Step(world\ptr, (1 / 60.0), 6, 2)
               
               b2World_CreateParticleSystems()
               b2World_CreateParticleGroups()
-              
   
               
             Case #PB_Shortcut_Q
@@ -989,7 +999,7 @@ Procedure text_window_handler(*Value)
                   opengl_info + Chr(10) + 
                   camera_info + Chr(10) + 
                   mouse_info + Chr(10) +
-                  "Player: Mass=" + StrF(body_mass, 2) + " kg; Linear Velocity=" + StrF(body(player_main_body_name)\currentLinearVelocityX, 2) + " m/s x " + StrF(body(player_main_body_name)\currentLinearVelocityY, 2) + " m/s" + Chr(10) + 
+                  "Player: Mass=" + StrF(body_mass, 2) + " kg; Linear Velocity=" + StrF(b2Vec2_LinearVelocity(body(player_main_body_name)\currentLinearVelocityX, body(player_main_body_name)\currentLinearVelocityY), 2) + " m/s; Angular Velocity=" +StrF(b2Body_GetAngularVelocity(body(player_main_body_name)\ptr), 2) + " m/s" + Chr(10) + 
                   animation_info
 
         Case #particle_menu
@@ -1046,8 +1056,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 583
-; FirstLine = 515
+; CursorPosition = 1001
+; FirstLine = 997
 ; Folding = -
 ; EnableXP
 ; Executable = OpenGL_LiquidFun_draw6.exe

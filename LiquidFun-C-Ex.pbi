@@ -322,12 +322,28 @@ Global last_particle_group_name.s
 ; ===============================================================================================================================
 
 
-; #MISCELLANEOOUS FUNCTIONS# ============================================================================================================
+; #INTERNAL FUNCTIONS# ==========================================================================================================
 
 
-Procedure MyWindowCallback(WindowID,Message,wParam,lParam)
+; #FUNCTION# ====================================================================================================================
+; Name...........: _MyWindowCallback
+; Description ...: Callback procedure for the main window
+; Syntax.........: _MyWindowCallback(WindowID, Message, wParam, lParam)
+; Parameters ....: WindowID - 
+;				           Message - 
+;                  wParam -
+;                  lParam -
+; Return values .: 
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure _MyWindowCallback(WindowID, Message, wParam, lParam)
   
-  Result=#PB_ProcessPureBasicEvents
+  Result = #PB_ProcessPureBasicEvents
   
   If Message=#WM_MOVE ; Main window is moving!
     
@@ -339,6 +355,24 @@ Procedure MyWindowCallback(WindowID,Message,wParam,lParam)
 EndProcedure
 
 
+; #SFML FUNCTIONS# ==============================================================================================================
+
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: animate_body_sfSprite
+; Description ...: Animates a Box2D and SFML Sprite combination
+; Syntax.........: animate_body_sfSprite(tmp_body.l, tmp_sprite.l)
+; Parameters ....: tmp_body - a pointer to the Box2D body (b2Body)
+;				           tmp_sprite - a pointer to the SFML sprite (sfSprite)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
 Procedure animate_body_sfSprite(tmp_body.l, tmp_sprite.l)
   
   tmp_angle.d
@@ -356,9 +390,6 @@ EndProcedure
 
 
 ; #GLTEXTURE FUNCTIONS# ============================================================================================================
-
-
-
 
 
 ; #FUNCTION# ====================================================================================================================
@@ -384,12 +415,29 @@ Procedure glTexture_Create(*tmp_gl_texture.gl_Texture)
   ProcedureReturn 1
 EndProcedure
 
-
-
-Procedure glTexture_LoadAll()
+; #FUNCTION# ====================================================================================================================
+; Name...........: glTexture_LoadAll
+; Description ...: Loads all OpenGL textures from a JSON file
+; Syntax.........: glTexture_LoadAll(filename.s = "texture.json")
+; Parameters ....: filename - optional filename for JSON file 
+; Return values .: 1 - Success
+;				           0 - Failure
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure glTexture_LoadAll(filename.s = "texture.json")
     
-  LoadJSON(2, "texture.json")
-  ;Debug JSONErrorMessage()
+  LoadJSON(2, filename)
+  
+  If JSONErrorMessage() <> ""
+    
+    ProcedureReturn 0
+  EndIf
+  
   ExtractJSONMap(JSONValue(2), texture_json())   
 
   texture_name.s
@@ -404,12 +452,10 @@ Procedure glTexture_LoadAll()
       texture()\file_name = texture_json(texture_name)
     EndIf
   Next
+  
+  ProcedureReturn 1
 
 EndProcedure
-
-
-
-
 
 
 ; #GLDRAW FUNCTIONS# ============================================================================================================
@@ -563,6 +609,32 @@ Procedure glDraw_Fixture(*tmp_fixture.b2_Fixture, tmp_texture_ptr.l = -1)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: glDraw_Fixtures
+; Description ...: Draw all Box2D fixtures, loaded from the JSON file, that are active, with OpenGL.
+; Syntax.........: glDraw_Fixtures()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure glDraw_Fixtures()
+  
+  ForEach fixture_order()
+    
+    FindMapElement(fixture(), fixture_order())
+  
+    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1
+
+      glDraw_Fixture(fixture())
+    EndIf
+  Next
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: glDraw_ParticleSystem
 ; Description ...: Draw a LiquidFun Particle System with OpenGL
 ; Syntax.........: glDraw_ParticleSystem(*tmp_particle_system.b2_ParticleSystem)
@@ -581,7 +653,6 @@ Procedure glDraw_ParticleSystem(*tmp_particle_system.b2_ParticleSystem)
   *positionbuffer_ptr.b2Vec2 = *tmp_particle_system\particle_position_buffer
   
   For i = 0 To (Int(*tmp_particle_system\particle_count) - 1)
-    
 
     *tmp_particle_system\particle_texture_vertice[(i * 4) + 0]\x = 1.0
     *tmp_particle_system\particle_texture_vertice[(i * 4) + 0]\y = 1.0
@@ -648,7 +719,31 @@ Procedure glDraw_ParticleSystem(*tmp_particle_system.b2_ParticleSystem)
 
 EndProcedure
 
-
+; #FUNCTION# ====================================================================================================================
+; Name...........: glDraw_Particles
+; Description ...: Draw all LiquidFun particles in all particle systems, loaded from the JSON file, that are active, with OpenGL.
+; Syntax.........: glDraw_Particles()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure glDraw_Particles()
+ 
+  ResetMap(particle_system())
+  
+  While NextMapElement(particle_system())
+    
+    If particle_system()\active = 1
+      
+      glDraw_ParticleSystem(particle_system())
+    EndIf
+  Wend
+EndProcedure
 
 
 ; #GLINFO FUNCTIONS# ============================================================================================================
@@ -707,8 +802,7 @@ EndProcedure
 ;                  text_window_background_colour
 ;                  text_window_text_colour
 ;                  open_console_window
-; Return values .: Success - 1
-;				           Failure - 0
+; Return values .: 
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -723,7 +817,7 @@ Procedure glWindow_Setup(main_window_x.i, main_window_y.i, main_window_width.i, 
   OpenGLGadget(0, openglgadget_x, openglgadget_y, openglgadget_width, openglgadget_height, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
   
   ; Setup the OpenGL Info Window
-  SetWindowCallback(@MyWindowCallback()) ; Set callback for this window.
+  SetWindowCallback(@_MyWindowCallback()) ; Set callback for this window.
   GetWindowRect_(WindowID(0),win.RECT)
   OpenWindow(1, win\left+10, win\top+20, text_window_width, text_window_height, "Follower", #PB_Window_BorderLess, WindowID(0))
   info_text_window = WindowID(1)
@@ -750,7 +844,7 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: glWorld_Setup
-; Description ...: Setup the OpenGL world
+; Description ...: Setup the OpenGL world.
 ; Syntax.........: glWorld_Setup(field_of_view.d, aspect_ratio.d, viewer_to_near_clipping_plane_distance.d, viewer_to_far_clipping_plane_distance.d, camera_x.f, camera_y.f, camera_z.f)
 ; Parameters ....: field_of_view
 ;                  aspect_ratio
@@ -759,8 +853,7 @@ EndProcedure
 ;                  camera_x
 ;                  camera_y
 ;                  camera_z
-; Return values .: Success - 1
-;				           Failure - 0
+; Return values .: 
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -786,7 +879,7 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: glWorld_CreateTextures
-; Description ...: Create the OpenGL textures
+; Description ...: Create all OpenGL textures, loaded from the JSON file.
 ; Syntax.........: glWorld_CreateTextures()
 ; Parameters ....: 
 ; Return values .: Success - 1
@@ -815,6 +908,25 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: b2Vec2_LinearVelocity
+; Description ...: Gets the linear velocity from a vector.
+; Syntax.........: b2Vec2_LinearVelocity (x.f, y.f)
+; Parameters ....: x - horizontal component of the velocity (in meters per second)
+;				           y - vertical component of the velocity (in meters per second)
+; Return values .: The linear velocity of the vector (in meters per second).
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure.f b2Vec2_LinearVelocity (x.f, y.f)
+
+	ProcedureReturn Sqr((x * x) + (y * Y))
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Vec2_Distance
 ; Description ...: Gets the distance between two vectors.
 ; Syntax.........: b2Vec2_Distance (x1.f, y1.f, x2.f, y2.f)
@@ -822,8 +934,7 @@ EndProcedure
 ;				           y1 - vertical component (pixel position) of the vector
 ;				           x2 - horizontal component (pixel position) of the vector
 ;				           y2 - vertical component (pixel position) of the vector
-; Return values .: Success - the length of the vector
-;				           Failure - 0
+; Return values .: The length of the vector (in meters).
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -844,8 +955,7 @@ EndProcedure
 ;				           y1 - vertical component (pixel position) of the vector
 ;				           angle - must be in radians
 ;				           distance - vertical component (pixel position) of the vector
-; Return values .: Success - the length of the vector
-;				           Failure - 0
+; Return values .: The length of the vector (in meters).
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -862,16 +972,12 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Vec2_GetAngleBetweenThreePoints
-; Description ...:
-; Syntax.........: b2Vec2_GetAngleBetweenThreePoints($x1, $y1, $x2, $y2, $x3, $y3, ByRef $clockwise)
-; Parameters ....: $x1 - the first point
-;				           $y1 - the first point
-;				           $x2 - the second point
-;				           $y2 - the second point
-;				           $x3 - the third point
-;				           $y3 - the third point
-;				           $clockwise - returns True if the angle indicates a clockwise movement through the points, otherwise False
-; Return values .: The angle (degrees)
+; Description ...: Gets the angle between three position vectors (b2Vec2).
+; Syntax.........: b2Vec2_GetAngleBetweenThreePoints(*vector1.b2Vec2, *vector2.b2Vec2, *vector3.b2Vec2)
+; Parameters ....: *vector1 - the first vector
+;				           *vector2 - the second vector
+;				           *vector3 - the third vector
+; Return values .: The angle (in degrees).
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -915,11 +1021,13 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Vec2Array_IsConvexAndClockwise
-; Description ...: Check whether an array of vertices (a polygon) is convex and in a clockwise direction.
-;					This is a requirement for a the vertices of a Box2D shape.
-; Syntax.........: b2Vec2Array_IsConvexAndClockwise($vertices)
-; Parameters ....: $vertices - an array of vertices
-; Return values .: True if convex, otherwise False
+; Description ...: Checks whether an array of vertices (a polygon) is convex and in a clockwise direction.
+;					          This is a requirement for the vertices of a Box2D shape.
+; Syntax.........: b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vertices.i)
+; Parameters ....: *vector_ptr - a pointer to the array of vertices
+;                  num_vertices - the number of vertices in the array
+; Return values .: 1 (True) - array is convex
+;                  0 (False) - array is not convex
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -1017,20 +1125,15 @@ Procedure.i b2Vec2Array_IsConvexAndClockwise(*vector_ptr.b2Vec2, num_vertices.i)
 EndProcedure
 
 
-
-
-
-
-
 ; #B2POLYGONSHAPE FUNCTIONS# ============================================================================================================
 
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2PolygonShape_CreateFixture
-; Description ...: Creates a polygon shape and corresponding fixture for a body
+; Description ...: Creates a Box2D polygon shape and corresponding Box2D fixture for a Box2D body.
 ; Syntax.........: b2PolygonShape_CreateFixture(*tmp_b2_fixture.b2_Fixture, tmp_body.l, tmp_density.d, tmp_friction.d, tmp_isSensor.d,	tmp_restitution.d, tmp_categoryBits.d, tmp_groupIndex.d, tmp_maskBits.d, tmp_shape_type.i, tmp_vertices.s, tmp_sprite_size.f, tmp_sprite_offset_x.d, tmp_sprite_offset_y.d, tmp_draw_type.i, tmp_line_width.f, tmp_line_red.f, tmp_line_green.f, tmp_line_blue.f, body_offset_x.d = 0, body_offset_y.d = 0, tmp_texture.l = -1)
-; Parameters ....: *tmp_b2_fixture - a pointer to the b2_Fixture object
-;				           tmp_body - the body to attach the fixture to
+; Parameters ....: *tmp_b2_fixture - a pointer to the fixture (b2_Fixture)
+;				           tmp_body - a pointer to the body (b2Body) to attach the fixture to
 ;                  tmp_density
 ;                  tmp_friction
 ;                  tmp_isSensor
@@ -1191,7 +1294,7 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2PolygonShape_CreateFixture_4_sfSprite
-; Description ...: Creates a 4 vertice polygon shape and corresponding fixture for a body using SFML
+; Description ...: Creates a 4 vertice Box2D polygon shape and corresponding Box2D fixture for a Box2D body using SFML
 ; Syntax.........: b2PolygonShape_CreateFixture_4_sfSprite(*tmp_pb_LiquidFun_SFML.pb_LiquidFun_SFML_struct, body.l, texture.l, x0.d, y0.d, x1.d, y1.d, x2.d, y2.d, x3.d, y3.d, origin_x.d, origin_y.d)
 ; Parameters ....: *tmp_pb_LiquidFun_SFML - a pointer to the LiquidFun SFML object
 ;				           body - the body to attach the fixture to
@@ -1233,12 +1336,12 @@ EndProcedure
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2PolygonShape_CrossProductVectorVector
 ; Description ...:
-; Syntax.........: b2PolygonShape_CrossProductVectorVector($x1, $y1, $x2, $y2)
-; Parameters ....: $x1 -
-;				   $y1 -
-;				   $x2 -
-;				   $y2 -
-; Return values .:
+; Syntax.........: b2PolygonShape_CrossProductVectorVector(x1.f, y1.f, x2.f, y2.f)
+; Parameters ....: x1 -
+;				           y1 -
+;				           x2 -
+;				           y2 -
+; Return values .: The cross product.
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -1253,11 +1356,12 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2PolygonShape_ComputeCentroid
-; Description ...:
-; Syntax.........: b2PolygonShape_ComputeCentroid($vertices)
-; Parameters ....: $x -
-;				   $y -
-; Return values .: A vector (2D element array) of the centroid of the vertices
+; Description ...: Gets the centroid of an array of vertices.
+; Syntax.........: b2PolygonShape_ComputeCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
+; Parameters ....: *vector_ptr - a pointer to the array of vertices
+;				           num_vertices - the number of vertices in the array
+;                  *centroid_ptr - A vector (b2Vec2) of the centroid of the vertices
+; Return values .: None
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -1341,13 +1445,14 @@ EndProcedure
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2PolygonShape_MoveToZeroCentroid
 ; Description ...: Computes the centroid of the shape and moves the vertices such that the centroid becomes 0,0.
-; Syntax.........: b2PolygonShape_MoveToZeroCentroid($vertices)
-; Parameters ....: $vertices
-;				   $format - a StringFormat string to make a vertices smaller.  Try "%4.2f".
+; Syntax.........: b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_vertices.i, *centroid_ptr.b2Vec2)
+; Parameters ....: *vector_ptr - a pointer to the array of vertices
+;				           num_vertices - the number of vertices in the array
+;                  *centroid_ptr - A vector (b2Vec2) of the centroid of the vertices
 ; Return values .: the centroid
 ; Author ........: Sean Griffin
 ; Modified.......:
-; Remarks .......: In the calling script you can apply the returned centroid to understand where the shap has moved to.
+; Remarks .......: In the calling script you can apply the returned centroid to understand where the shape has moved to.
 ; Related .......:
 ; Link ..........:
 ; Example .......:
@@ -1387,13 +1492,23 @@ Procedure b2PolygonShape_MoveToZeroCentroid(*vector_ptr.b2Vec2, num_vertices.i, 
 ;	Return $centroid
 EndProcedure
 
-
-
-
-
-Procedure b2Fixture_LoadAll()
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Fixture_LoadAll
+; Description ...: Loads all Box2D fixtures from a JSON file.
+; Syntax.........: b2Fixture_LoadAll(filename.s = "fixture.json")
+; Parameters ....: filename - optional filename for JSON file 
+; Return values .: 1 - Success
+;				           0 - Failure
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Fixture_LoadAll(filename.s = "fixture.json")
   
-  ReadFile(1, "fixture.json") 
+  ReadFile(1, filename) 
   
   While Eof(1) = 0         
     
@@ -1415,7 +1530,7 @@ Procedure b2Fixture_LoadAll()
   
   CloseFile(1)             
 
-  LoadJSON(1, "fixture.json")
+  LoadJSON(1, filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(1), fixture_json())       
   
@@ -1456,19 +1571,26 @@ Procedure b2Fixture_LoadAll()
 EndProcedure
 
 
-
-
-
-
 ; #B2BODY FUNCTIONS# ============================================================================================================
 
 
-
-
-
-Procedure b2Body_LoadAll()
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Body_LoadAll
+; Description ...: Loads all Box2D bodies from a JSON file.
+; Syntax.........: b2Body_LoadAll(filename.s = "body.json")
+; Parameters ....: filename - optional filename for JSON file 
+; Return values .: 1 - Success
+;				           0 - Failure
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Body_LoadAll(filename.s = "body.json")
   
-  LoadJSON(0, "body.json")
+  LoadJSON(0, filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(0), body_json())       
 
@@ -1503,12 +1625,11 @@ Procedure b2Body_LoadAll()
   Next
 EndProcedure
 
-
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_GetLinearVelocityEx
-; Description ...: Gets the linear velocity (meters per second) of a body (b2Body)
+; Description ...: Gets the linear velocity (meters per second) of a body (b2Body) loaded from a JSON file.
 ; Syntax.........: b2Body_GetLinearVelocityEx(body_name.s)
-; Parameters ....: body_name - the name of the body (from JSON file)
+; Parameters ....: body_name - the name of the body (from the JSON file)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -1529,7 +1650,7 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_GetPositionEx
-; Description ...: Gets the position (metres) of a body (b2Body)
+; Description ...: Gets the position (metres) of a body (b2Body) loaded from a JSON file.
 ; Syntax.........: b2Body_GetPositionEx(body_name.s)
 ; Parameters ....: body_name - the name of the body (from JSON file)
 ; Return values .: Success - 1
@@ -1557,7 +1678,7 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_SetPosition
-; Description ...: Sets the position (metres) of a body (b2Body)
+; Description ...: Sets the position (metres) of a body (b2Body).
 ; Syntax.........: b2Body_SetPosition(tmp_body.l, x.d, y.d)
 ; Parameters ....: tmp_body - a pointer to the body (b2Body)
 ;				           x - the horizontal position (metres)
@@ -1582,10 +1703,10 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_SetAngle
-; Description ...: Sets the angle (radians) of a body (b2Body)
+; Description ...: Sets the angle of a Box2D body.
 ; Syntax.........: b2Body_SetAngle(tmp_body, tmp_angle)
 ; Parameters ....: tmp_body - a pointer to the body (b2Body)
-;				           tmp_angle - the angle (radians)
+;				           tmp_angle - the angle (in radians)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -1605,10 +1726,10 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_AddAngle
-; Description ...: Adds an angle (radians) to a body (b2Body)
+; Description ...: Adds an angle to a Box2D body.
 ; Syntax.........: b2Body_AddAngle(tmp_body.l, add_angle.d)
 ; Parameters ....: tmp_body - a pointer to the body (b2Body)
-;				           add_angle - the angle (radians)
+;				           add_angle - the angle (in radians)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -1629,10 +1750,10 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_AddAngularVelocity
-; Description ...: Adds an angular velocity to a body (b2Body)
+; Description ...: Adds an angular velocity to a Box2D body.
 ; Syntax.........: b2Body_AddAngularVelocity(tmp_body.l, add_angle.d)
 ; Parameters ....: tmp_body - a pointer to the body (b2Body)
-;				           add_velocity - the velocity
+;				           add_velocity - the velocity (in meters per second)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -1653,10 +1774,10 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2Body_SetAngularVelocityPercent
-; Description ...: Sets the angular velocity of a body (b2Body) to a given percentage
+; Description ...: Sets the angular velocity of a Box2D body to a given percentage
 ; Syntax.........: b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
 ; Parameters ....: tmp_body - a pointer to the body (b2Body)
-;				           percent - the percentage
+;				           percent - the percentage (as an integer)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -1675,10 +1796,23 @@ Procedure b2Body_SetAngularVelocityPercent(tmp_body.l, percent.i)
   ProcedureReturn 1
 EndProcedure
 
-
-Procedure b2Joint_LoadAll()
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2Joint_LoadAll
+; Description ...: Loads all Box2D joints from a JSON file
+; Syntax.........: b2Joint_LoadAll(filename.s = "joint.json")
+; Parameters ....: filename - optional filename for JSON file 
+; Return values .: 1 - Success
+;				           0 - Failure
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2Joint_LoadAll(filename.s = "joint.json")
     
-  LoadJSON(5, "joint.json")
+  LoadJSON(5, filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(5), joint_json())       
 
@@ -1721,18 +1855,16 @@ Procedure b2Joint_LoadAll()
 EndProcedure
 
 
-
-
 ; #B2PARTICLESYSTEM FUNCTIONS# ===========================================================================================================
 
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2ParticleSystem_LoadAll
-; Description ...: Loads all the data for the particle systems from the JSON file
-; Syntax.........: b2ParticleSystem_LoadAll()
-; Parameters ....: 
-; Return values .: Success - 1
-;				           Failure - 0
+; Description ...: Loads all LiquidFun particle systems from a JSON file
+; Syntax.........: b2ParticleSystem_LoadAll(filename.s = "particle_system.json")
+; Parameters ....: filename - optional filename for JSON file 
+; Return values .: 1 - Success
+;				           0 - Failure
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -1740,9 +1872,9 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure b2ParticleSystem_LoadAll()
+Procedure b2ParticleSystem_LoadAll(filename.s = "particle_system.json")
   
-  LoadJSON(3, "particle_system.json")
+  LoadJSON(3, filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(3), particle_system_json())       
 
@@ -1791,11 +1923,11 @@ EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: b2ParticleGroup_LoadAll
-; Description ...: Loads all the data for the particle groups from the JSON file
-; Syntax.........: b2ParticleGroup_LoadAll()
-; Parameters ....: 
-; Return values .: Success - 1
-;				           Failure - 0
+; Description ...: Loads all LiquidFun particle groups from a JSON file
+; Syntax.........: b2ParticleGroup_LoadAll(filename.s = "particle_group.json")
+; Parameters ....: filename - optional filename for JSON file 
+; Return values .: 1 - Success
+;				           0 - Failure
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -1803,9 +1935,9 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure b2ParticleGroup_LoadAll()
+Procedure b2ParticleGroup_LoadAll(filename.s = "particle_group.json")
   
-  LoadJSON(4, "particle_group.json")
+  LoadJSON(4, filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(4), particle_group_json())       
   
@@ -1855,10 +1987,322 @@ EndProcedure
 
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateEx
+; Description ...: Creates a Box2D world, and loads all Box2D and LiquidFun data from JSON files.
+; Syntax.........: b2World_CreateEx(gravity_x.f, gravity_y.f)
+; Parameters ....: gravity_x = the horizontal component of the gravity (in meters per second)
+;                  gravity_y = the vertical component of the gravity (in meters per second)
+; Return values .: Success - 1
+;				           Failure - 0
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
+
+  b2Body_LoadAll()  
+  glTexture_LoadAll()
+  b2Fixture_LoadAll()  
+  b2ParticleSystem_LoadAll()
+  b2ParticleGroup_LoadAll()
+  b2Joint_LoadAll()
+  
+  gravity\x = gravity_x
+  gravity\y = gravity_y
+  world\ptr = b2World_Create(gravity\x, gravity\y)
+  
+  ProcedureReturn 1
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateBodyEx
+; Description ...: Creates a Box2D body, loaded from the JSON data.
+; Syntax.........: b2World_CreateBodyEx(body_name.s)
+; Parameters ....: body_name - the name of the body (b2Body) to create
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateBodyEx(body_name.s)
+
+  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\angle), body(body_name)\angularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\linearVelocityX, body(body_name)\linearVelocityY, body(body_name)\positionX, body(body_name)\positionY, body(body_name)\type, body(body_name)\userData)
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateBodies
+; Description ...: Creates all Box2D bodies, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateBodies()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateBodies()
+              
+  ResetMap(body())
+
+  While NextMapElement(body())
+    
+    If body()\active = 1
+      
+      b2World_CreateBodyEx(MapKey(body()))
+    EndIf
+  Wend
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyBodies
+; Description ...: Destroys all Box2D bodies, loaded from the JSON file, that are active.
+; Syntax.........: b2World_DestroyBodies()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyBodies()
+  
+    ; Destroy the Box2D Bodies  
+    ResetMap(body())
+    
+    While NextMapElement(body())
+      
+      If body()\active = 1
+
+        b2World_DestroyBody(world\ptr, body()\ptr)
+      EndIf
+    Wend
+
+EndProcedure
+  
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_FollowBody
+; Description ...: Sets the center of the main camera of the Box2D world to the same position as a Box2D body.
+; Syntax.........: b2World_FollowBody(body_name.s, initial.i = 0)
+; Parameters ....: body_name - the name of the body (b2Body) to follow
+;                  initial - a flag (boolean) that indicates if this is the first initial follow action on the body
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_FollowBody(body_name.s, initial.i = 0)
+  
+  b2Body_GetPositionEx(body_name)
+
+  If initial = 1
+  
+    tmp_x.d = world\mainCameraPositionX - body(body_name)\currentPositionX
+    tmp_y.d = world\mainCameraPositionY - body(body_name)\currentPositionY
+    glTranslatef_(tmp_x, tmp_y, 0)
+    world\mainCameraPositionX = world\mainCameraPositionX - tmp_x
+    world\mainCameraPositionY = world\mainCameraPositionY - tmp_y
+  Else
+  
+    glTranslatef_(-body(body_name)\displacementPositionX, -body(body_name)\displacementPositionY, world\mainCameraDisplacementPositionZ)
+    world\mainCameraPositionX = world\mainCameraPositionX + body(body_name)\displacementPositionX
+    world\mainCameraPositionY = world\mainCameraPositionY + body(body_name)\displacementPositionY
+  EndIf
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateFixtureEx
+; Description ...: Creates a Box2D fixture, loaded from the JSON data.
+; Syntax.........: b2World_CreateFixtureEx(fixture_name.s)
+; Parameters ....: fixture_name - the name of the fixture (b2Fixture) to create
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateFixtureEx(fixture_name.s)
+  
+  If fixture(fixture_name)\shape_type_str = "circle"
+    
+    fixture(fixture_name)\shape_type = #b2_circle
+  EndIf
+  
+  If fixture(fixture_name)\shape_type_str = "edge"
+    
+    fixture(fixture_name)\shape_type = #b2_edge
+  EndIf
+  
+  If fixture(fixture_name)\shape_type_str = "polygon"
+    
+    fixture(fixture_name)\shape_type = #b2_polygon
+  EndIf
+  
+  If fixture(fixture_name)\shape_type_str = "chain"
+    
+    fixture(fixture_name)\shape_type = #b2_chain
+  EndIf
+  
+  If fixture(fixture_name)\shape_type_str = "box"
+    
+    fixture(fixture_name)\shape_type = #b2_box
+  EndIf
+  
+  If fixture(fixture_name)\shape_type_str = "sprite"
+    
+    fixture(fixture_name)\shape_type = #b2_sprite
+  EndIf
+  
+  fixture(fixture_name)\draw_type = -1
+  
+  If fixture(fixture_name)\draw_type_str = "texture"
+    
+    fixture(fixture_name)\draw_type = #gl_texture2
+  EndIf
+  
+  If fixture(fixture_name)\draw_type_str = "texture and line loop"
+    
+    fixture(fixture_name)\draw_type = #gl_texture2_and_line_loop2
+  EndIf
+  
+  If fixture(fixture_name)\draw_type_str = "line loop"
+    
+    fixture(fixture_name)\draw_type = #gl_line_loop2
+  EndIf
+  
+  If fixture(fixture_name)\draw_type_str = "line strip"
+    
+    fixture(fixture_name)\draw_type = #gl_line_strip2
+  EndIf
+  
+  b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateFixtures
+; Description ...: Creates all Box2D fixtures, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateFixtures()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateFixtures()
+            
+  ResetMap(fixture())
+
+  While NextMapElement(fixture())
+
+    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 ;And b2Body_IsActive(body(fixture()\body_name)\ptr) = 1
+      
+      b2World_CreateFixtureEx(MapKey(fixture()))
+    EndIf
+  Wend
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateJointEx
+; Description ...: Creates a Box2D joint, loaded from the JSON data.
+; Syntax.........: b2World_CreateJointEx(joint_name.s)
+; Parameters ....: fixture_name - the name of the joint (b2Joint) to create
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateJointEx(joint_name.s)
+
+  If joint(joint_name)\joint_type = "wheel"
+    
+    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world\ptr, body(joint(joint_name)\body_a_name)\ptr, body(joint(joint_name)\body_b_name)\ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
+  EndIf
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateJoints
+; Description ...: Creates all Box2D joints, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateJoints()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateJoints()
+  
+  ResetMap(joint())
+
+  While NextMapElement(joint())
+      
+    If joint()\active = 1
+      
+      b2World_CreateJointEx(MapKey(joint()))
+    EndIf
+  Wend
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyJoints
+; Description ...: Destroys all Box2D joints, loaded from the JSON file, that are active.
+; Syntax.........: b2World_DestroyJoints()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyJoints()
+  
+      ; Destroy the Box2D Joints  
+    ResetMap(joint())
+    
+    While NextMapElement(joint())
+      
+      If joint()\active = 1
+
+        b2World_DestroyJoint(world\ptr, joint()\joint_ptr)
+      EndIf
+    Wend
+    
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: b2World_CreateParticleSystemEx
-; Description ...: Creates a particle system for a given system name (from the JSON data)
+; Description ...: Creates a particle system for a given system name, from the JSON data.
 ; Syntax.........: b2World_CreateParticleSystemEx(system_name.s)
-; Parameters ....: system_name = the name of the system (in the JSON data)
+; Parameters ....: system_name - the name of the system (in the JSON data)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -1878,10 +2322,67 @@ Procedure b2World_CreateParticleSystemEx(system_name.s)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_CreateParticleSystems
+; Description ...: Creates all LiquidFun particle systems, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateParticleSystems()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_CreateParticleSystems()
+            
+  ResetMap(particle_system())
+
+  While NextMapElement(particle_system())
+    
+    If particle_system()\active = 1
+      
+      last_particle_system_name = MapKey(particle_system())
+      b2World_CreateParticleSystemEx(last_particle_system_name)
+    EndIf
+  Wend
+
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyParticleSystems
+; Description ...: Destroys all LiquidFun particle systems, loaded from the JSON file, that are active.
+; Syntax.........: b2World_DestroyParticleSystems()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyParticleSystems()
+  
+    ; Destroy the LiquidFun Particle Systems
+    ResetMap(particle_system())
+
+    While NextMapElement(particle_system())
+      
+      If particle_system()\active = 1
+        
+        b2World_DestroyParticleSystem(world\ptr, particle_system()\particle_system_ptr)
+      EndIf
+    Wend
+     
+   ; FreeMap(particle_system_struct())
+EndProcedure
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: b2World_CreateParticleGroupEx
-; Description ...: Creates a particle group for a given group name (from the JSON data)
+; Description ...: Creates a particle group for a given group name, loaded from the JSON file.
 ; Syntax.........: b2World_CreateParticleGroupEx(group_name.s)
-; Parameters ....: group_name = the name of the group (in the JSON data)
+; Parameters ....: group_name - the name of the group (in the JSON data)
 ; Return values .: Success - 1
 ;				           Failure - 0
 ; Author ........: Sean Griffin
@@ -2028,13 +2529,11 @@ Procedure b2World_CreateParticleGroupEx(group_name.s)
 EndProcedure
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: b2World_CreateEx
-; Description ...: Creates a Box2D world, and loads all Box2D and LiquidFun data
-; Syntax.........: b2World_CreateEx(gravity_x.f, gravity_y.f)
-; Parameters ....: gravity_x = the horizontal component of the gravity
-;                  gravity_y = the vertical component of the gravity
-; Return values .: Success - 1
-;				           Failure - 0
+; Name...........: b2World_CreateParticleGroups
+; Description ...: Creates all LiquidFun particle groups, loaded from the JSON file, that are active.
+; Syntax.........: b2World_CreateParticleGroups()
+; Parameters ....: 
+; Return values .: None
 ; Author ........: Sean Griffin
 ; Modified.......:
 ; Remarks .......:
@@ -2042,207 +2541,50 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure b2World_CreateEx(gravity_x.f, gravity_y.f)
-
-  b2Body_LoadAll()  
-  glTexture_LoadAll()
-  b2Fixture_LoadAll()  
-  b2ParticleSystem_LoadAll()
-  b2ParticleGroup_LoadAll()
-  b2Joint_LoadAll()
-  
-  gravity\x = gravity_x
-  gravity\y = gravity_y
-  world\ptr = b2World_Create(gravity\x, gravity\y)
-  
-  ProcedureReturn 1
-EndProcedure
-
-
-
-
-
-
-
-
-  
-
-
-Procedure b2World_FollowBody(body_name.s, initial.i = 0)
-  
-  b2Body_GetPositionEx(body_name)
-
-  If initial = 1
-  
-    tmp_x.d = world\mainCameraPositionX - body(body_name)\currentPositionX
-    tmp_y.d = world\mainCameraPositionY - body(body_name)\currentPositionY
-    glTranslatef_(tmp_x, tmp_y, 0)
-    world\mainCameraPositionX = world\mainCameraPositionX - tmp_x
-    world\mainCameraPositionY = world\mainCameraPositionY - tmp_y
-  Else
-  
-    glTranslatef_(-body(body_name)\displacementPositionX, -body(body_name)\displacementPositionY, world\mainCameraDisplacementPositionZ)
-    world\mainCameraPositionX = world\mainCameraPositionX + body(body_name)\displacementPositionX
-    world\mainCameraPositionY = world\mainCameraPositionY + body(body_name)\displacementPositionY
-  EndIf
-
-EndProcedure
-
-
-
-
-
-
-
-
-Procedure b2World_CreateBodyEx(body_name.s)
-
-  body(body_name)\ptr = b2World_CreateBody(world\ptr, body(body_name)\active, body(body_name)\allowSleep, Radian(body(body_name)\angle), body(body_name)\angularVelocity, body(body_name)\angularDamping, body(body_name)\awake, body(body_name)\bullet, body(body_name)\fixedRotation, body(body_name)\gravityScale, body(body_name)\linearDamping, body(body_name)\linearVelocityX, body(body_name)\linearVelocityY, body(body_name)\positionX, body(body_name)\positionY, body(body_name)\type, body(body_name)\userData)
-
-EndProcedure
-
-Procedure b2World_CreateBodies()
-              
-  ResetMap(body())
-
-  While NextMapElement(body())
-    
-    If body()\active = 1
+Procedure b2World_CreateParticleGroups()
       
-      b2World_CreateBodyEx(MapKey(body()))
+  ResetMap(particle_group())
+     
+  While NextMapElement(particle_group())
+    
+    If particle_group()\active = 1
+      
+      last_particle_group_name = MapKey(particle_group())
+      b2World_CreateParticleGroupEx(last_particle_group_name)
     EndIf
+    
   Wend
 
 EndProcedure
 
+; #FUNCTION# ====================================================================================================================
+; Name...........: b2World_DestroyParticleGroups
+; Description ...: Destroys all LiquidFun particle groups, loaded from the JSON file, that are active.
+; Syntax.........: b2World_DestroyParticleGroups()
+; Parameters ....: 
+; Return values .: None
+; Author ........: Sean Griffin
+; Modified.......:
+; Remarks .......:
+; Related .......:
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Procedure b2World_DestroyParticleGroups()
 
-Procedure b2World_DestroyBodies()
-  
-    ; Destroy the Box2D Bodies  
-    ResetMap(body())
-    
-    While NextMapElement(body())
+    ; Destroy the LiquidFun Particle Groups
+    ResetMap(particle_group())
+     
+    While NextMapElement(particle_group())
       
-      If body()\active = 1
-
-        b2World_DestroyBody(world\ptr, body()\ptr)
+      If particle_group()\active = 1
+        
+        b2ParticleGroup_DestroyParticles(particle_group()\particle_group_ptr, 0)
       EndIf
     Wend
-
-EndProcedure
-
-Procedure b2World_CreateFixtureEx(fixture_name.s)
+      
+  ; FreeMap(particle_group())
   
-  
-      If fixture(fixture_name)\shape_type_str = "circle"
-        
-        fixture(fixture_name)\shape_type = #b2_circle
-      EndIf
-      
-      If fixture(fixture_name)\shape_type_str = "edge"
-        
-        fixture(fixture_name)\shape_type = #b2_edge
-      EndIf
-      
-      If fixture(fixture_name)\shape_type_str = "polygon"
-        
-        fixture(fixture_name)\shape_type = #b2_polygon
-      EndIf
-      
-      If fixture(fixture_name)\shape_type_str = "chain"
-        
-        fixture(fixture_name)\shape_type = #b2_chain
-      EndIf
-      
-      If fixture(fixture_name)\shape_type_str = "box"
-        
-        fixture(fixture_name)\shape_type = #b2_box
-      EndIf
-      
-      If fixture(fixture_name)\shape_type_str = "sprite"
-        
-        fixture(fixture_name)\shape_type = #b2_sprite
-      EndIf
-      
-      fixture(fixture_name)\draw_type = -1
-      
-      If fixture(fixture_name)\draw_type_str = "texture"
-        
-        fixture(fixture_name)\draw_type = #gl_texture2
-      EndIf
-      
-      If fixture(fixture_name)\draw_type_str = "texture and line loop"
-        
-        fixture(fixture_name)\draw_type = #gl_texture2_and_line_loop2
-      EndIf
-      
-      If fixture(fixture_name)\draw_type_str = "line loop"
-        
-        fixture(fixture_name)\draw_type = #gl_line_loop2
-      EndIf
-      
-      If fixture(fixture_name)\draw_type_str = "line strip"
-        
-        fixture(fixture_name)\draw_type = #gl_line_strip2
-      EndIf
-      
-      b2PolygonShape_CreateFixture(fixture(fixture_name), body(fixture(fixture_name)\body_name)\ptr, fixture(fixture_name)\density, fixture(fixture_name)\friction, fixture(fixture_name)\isSensor, fixture(fixture_name)\restitution, fixture(fixture_name)\categoryBits, fixture(fixture_name)\groupIndex, fixture(fixture_name)\maskBits, fixture(fixture_name)\shape_type, fixture(fixture_name)\vertices_str, fixture(fixture_name)\sprite_size, fixture(fixture_name)\sprite_offset_x, fixture(fixture_name)\sprite_offset_y, fixture(fixture_name)\draw_type, fixture(fixture_name)\line_width, fixture(fixture_name)\line_red, fixture(fixture_name)\line_green, fixture(fixture_name)\line_blue, fixture(fixture_name)\body_offset_x, fixture(fixture_name)\body_offset_y, @texture(fixture(fixture_name)\texture_name))
-
-EndProcedure
-
-
-Procedure b2World_CreateFixtures()
-            
-  ResetMap(fixture())
-
-  While NextMapElement(fixture())
-
-    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1 ;And b2Body_IsActive(body(fixture()\body_name)\ptr) = 1
-      
-      b2World_CreateFixtureEx(MapKey(fixture()))
-    EndIf
-  Wend
-
-
-EndProcedure
-
-Procedure b2World_CreateJointEx(joint_name.s)
-
-  If joint(joint_name)\joint_type = "wheel"
-    
-    joint(joint_name)\joint_ptr = b2WheelJointDef_Create(world\ptr, body(joint(joint_name)\body_a_name)\ptr, body(joint(joint_name)\body_b_name)\ptr, joint(joint_name)\collideConnected, joint(joint_name)\dampingRatio, joint(joint_name)\enableMotor, joint(joint_name)\frequencyHz, joint(joint_name)\localAnchorAx, joint(joint_name)\localAnchorAy, joint(joint_name)\localAnchorBx, joint(joint_name)\localAnchorBy, joint(joint_name)\localAxisAx, joint(joint_name)\localAxisAy, joint(joint_name)\maxMotorTorque, joint(joint_name)\motorSpeed)
-  EndIf
-
-EndProcedure
-
-Procedure b2World_CreateJoints()
-  
-  ResetMap(joint())
-
-  While NextMapElement(joint())
-      
-    If joint()\active = 1
-      
-      b2World_CreateJointEx(MapKey(joint()))
-    EndIf
-  Wend
-EndProcedure
-
-
-Procedure b2World_DestroyJoints()
-  
-      ; Destroy the Box2D Joints  
-    ResetMap(joint())
-    
-    While NextMapElement(joint())
-      
-      If joint()\active = 1
-
-        b2World_DestroyJoint(world\ptr, joint()\joint_ptr)
-      EndIf
-    Wend
-    
-
 EndProcedure
 
 
@@ -2265,175 +2607,11 @@ EndProcedure
 ; EndProcedure
 
 
-Procedure b2World_CreateParticleSystems()
-            
-  ResetMap(particle_system())
-
-  While NextMapElement(particle_system())
-    
-    If particle_system()\active = 1
-      
-      last_particle_system_name = MapKey(particle_system())
-      b2World_CreateParticleSystemEx(last_particle_system_name)
-    EndIf
-  Wend
-
-EndProcedure
-
-Procedure b2World_DestroyParticleSystems()
-  
-    ; Destroy the LiquidFun Particle Systems
-    ResetMap(particle_system())
-
-    While NextMapElement(particle_system())
-      
-      If particle_system()\active = 1
-        
-        b2World_DestroyParticleSystem(world\ptr, particle_system()\particle_system_ptr)
-      EndIf
-    Wend
-     
-   ; FreeMap(particle_system_struct())
-EndProcedure
-
-
-Procedure b2World_CreateParticleGroups()
-      
-  ResetMap(particle_group())
-     
-  While NextMapElement(particle_group())
-    
-    If particle_group()\active = 1
-      
-      last_particle_group_name = MapKey(particle_group())
-      b2World_CreateParticleGroupEx(last_particle_group_name)
-    EndIf
-    
-  Wend
-
-EndProcedure
- 
-Procedure b2World_DestroyParticleGroups()
-
-    ; Destroy the LiquidFun Particle Groups
-    ResetMap(particle_group())
-     
-    While NextMapElement(particle_group())
-      
-      If particle_group()\active = 1
-        
-        b2ParticleGroup_DestroyParticles(particle_group()\particle_group_ptr, 0)
-      EndIf
-    Wend
-      
-  ; FreeMap(particle_group())
-  
-EndProcedure
-
-
-
-
-; #FUNCTION# ====================================================================================================================
-; Name...........: b2DestroyScene
-; Description ...: Destroy all objects in the current Box2D scene
-; Syntax.........: b2DestroyScene()
-; Parameters ....: destroy_fixtures - 1 (true) to destroy all fixtures, anything else to ignore
-;                  destroy_bodies - 1 (true) to destroy all bodies, anything else to ignore
-;                  destroy_particle_system - 1 (true) to destroy all particle system elements, anything else to ignore
-; Return values .: None
-; Author ........: Sean Griffin
-; Modified.......:
-; Remarks .......:
-; Related .......: 
-; Link ..........:
-; Example .......:
-; ===============================================================================================================================
-Procedure b2DestroyScene(destroy_fixtures.i, destroy_bodies.i, destroy_particle_system.i)
-  
-  If destroy_fixtures = 1
-    
-    ; I believe LiquidFun / Box2D automatically destorys fixtures when the associated body is destroyed.
-    ; So nothing required here.
-     
-    ;  FreeMap(fixture())
-
-  EndIf
-  
-  
-  If destroy_bodies = 1
-    
-    ; Destroy the Joints
-    b2World_DestroyJoints()
-  
-    ; Destroy the Bodies
-    b2World_DestroyBodies()
-  EndIf
-  
-  If destroy_particle_system = 1
-    
-    ; Destroy the Particle Groups
-    b2World_DestroyParticleGroups()
-    
-    ; Destroy the Particle Systems
-    b2World_DestroyParticleSystems()
-  
-    ; I read in the LiquidFun docs that the particle groups aren't destroyed until the next Step.  So Step below...
-    b2World_Step(world\ptr, (1 / 60.0), 6, 2)
-  EndIf
-  
-EndProcedure
-
-
-
-
-
-
-
-
-
-Procedure glDraw_Fixtures()
-  
-  ForEach fixture_order()
-    
-    FindMapElement(fixture(), fixture_order())
-  
-  
-;  ResetMap(fixture())
-  
-;  While NextMapElement(fixture())
-   ; Debug fixture()\body_name
-    If FindMapElement(body(), fixture()\body_name) <> 0 And body(fixture()\body_name)\active = 1
-
-      glDraw_Fixture(fixture())
-    EndIf
-    ; Wend
-    
-  Next
-EndProcedure
-
-Procedure glDraw_Particles()
- 
-  ResetMap(particle_system())
-  
-  While NextMapElement(particle_system())
-    
-    If particle_system()\active = 1
-      
-      glDraw_ParticleSystem(particle_system())
-    EndIf
-  Wend
-EndProcedure
-
-
-
-
-
-
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1522
-; FirstLine = 1519
+; CursorPosition = 2297
+; FirstLine = 2260
 ; Folding = ---------
 ; EnableXP
 ; EnableUnicode
