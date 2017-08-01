@@ -15,7 +15,7 @@ alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
 ## Download
 
-Click **Clone or download** above, then **Download ZIP**, then download and extract the contents of the zip file to your computer.
+Click **Clone or download** above, then **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/archive/master.zip" target="_blank">Download ZIP</a>**, and download and extract the contents of the zip file to your computer.
 
 ## Contents
 
