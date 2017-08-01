@@ -20,12 +20,13 @@ Click **Clone or download** above, then **Download ZIP**, then download and extr
 ## Contents
 
 - **bin/<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">PB_LiquidFun_OpenGL_demo_setup.exe</a>** is the installer for the demo of the library
-- **Box2C.au3** is the Box2D UDF itself, containing the Box2D / Box2C functions for AutoIT
-- **Box2C_linear_forces_test_SFML.exe** is a test of Box2D linear forces using AutoIT and SFML
-- **Box2C_angular_forces_test_SFML.exe** is a test of Box2D angular forces using AutoIT and SFML
-- **Box2C_speed_test_SFML.exe** is a speed test using AutoIT and SFML
-- **Box2C_speed_test_Irrlicht.exe** is a speed test using AutoIT and Irrlicht
-- **Box2C_speed_test_D2D.exe** is a speed test using AutoIT and Direct 2D
+- **src/LiquidFun-C.lib** is a static C library of LiquidFun (required by LiquidFun-C.pbi below)
+- **src/LiquidFun-C.dll** is a dynamic C library of LiquidFun (required by LiquidFun-C.pbi below)
+- **src/CSFML.pbi** is a PureBasic Interface File (library) for SFML (required by LiquidFun-C-Ex.pbi below)
+- **src/LiquidFun-C.pbi** is the PureBasic Interface File (library) for LiquidFun
+- **src/LiquidFun-C-Ex.pbi** is an extended library of PureBasic procedures for LiquidFun
+- **src/PB_LiquidFun_OpenGL_demo.pb** is the demonstration source
+- **src/data/*.json** is a speed test using AutoIT and Direct 2D
 - **Box2C_speed_test_GDIPlus.exe** is a speed test using AutoIT and GDI+
 - the ***.au3** files are the AutoIT scripts of the same name as the exe files above
 - the ***.gif** and ***.png** files are the sprites / images used in the tests
