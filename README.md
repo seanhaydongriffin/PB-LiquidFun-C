@@ -26,6 +26,7 @@ Click **Clone or download** above, then **Download ZIP**, then download and extr
 - **src/LiquidFun-C.pbi** is the PureBasic Interface File (library) for LiquidFun
 - **src/LiquidFun-C-Ex.pbi** is an extended library of PureBasic procedures for LiquidFun
 - **src/PB_LiquidFun_OpenGL_demo.pb** is the demonstration source
+- **src/example.pb** is the full source of the Example below
 - **src/data** is a folder of JSON files containing all the definitions of the LiquidFun / Box2D objects (bodies, textures, fixtures, joints, particle systems and groups)
 - **src/texture** is a folder (of PNG files) containing all the textures used in the library
 
@@ -42,11 +43,14 @@ XIncludeFile "LiquidFun-C-Ex.pbi"
 
 This includes both the base LiquidFun library and extension library.
 
+The following block of code creates the LiquidFun and Box2D environment (including the world, bodies, textures, fixtures, joints, particle systems and groups).  The Box2D world is created with a downwards gravity of 10 meters per second.
 
 ```
 b2World_CreateEx(0.0, -10.0)
 b2World_CreateAll()
 ```
+
+The following block of code creates the OpenGL environment, including the main window, OpenGL gadget configuration and textures.  The main window is set to 800 x 600 pixels, with title "LiquidFun Demo".
 
 ```
 glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
