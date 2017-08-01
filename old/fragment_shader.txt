@@ -1,0 +1,25 @@
+﻿precision highp float;
+uniform vec2 ballpos[1565];
+uniform float ballpos_shift_x;
+uniform float ballpos_shift_y;
+
+float ball(vec2 p, float fx, float fy) {
+    vec2 r = vec2(p.x + fx, p.y + fy);
+    return 0.10 / length(r);
+}
+
+void main(void) {
+    vec2 resolution = vec2(800, 600);
+    vec2 q = gl_FragCoord.xy / resolution.xy;
+    vec2 p = -1.0 + 15.0 * q;	
+    p.x	*= resolution.x / resolution.y;
+
+    float col = 0.0;
+    
+    for(int i=0;i<1565;i++) {
+      col += ball(p, ballpos[i].x + ballpos_shift_x, -ballpos[i].y + ballpos_shift_y);
+    }
+    
+  //  gl_FragColor = vec4(col * 0.8, col * 0.3, col * 0.3, 1.0);
+    gl_FragColor = vec4(col * 0.03, col * 0.03, col * 0.03 , -0.0);
+  }
