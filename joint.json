@@ -1,7 +1,0 @@
-{
-  "joint name":             "body A name,         body B name,      joint type,   active, collideConnected, dampingRatio, enableLimit,  enableMotor,  lowerAngle, frequencyHz,  localAnchorAx,  localAnchorAy,  localAnchorBx,  localAnchorBy,  localAxisAx,  localAxisAy,  maxMotorTorque, lowerTranslation, maxMotorForce,  motorSpeed, referenceAngle, upperAngle, upperTranslation",
-
-  "prop spring":            "[\"boat prop\",      \"boat\",         \"wheel\",    1,      0,                0,            0,            0,            0,          60,           0,              0,              -2.0,           -0.5,           0,            1,            2000,           0,                0,              0,          0,              0,          0]",
-  "wheel1 spring":          "[\"wheel1\",         \"car\",          \"wheel\",    0,      1,                0,            0,            0,            0,          60,           0,              0,              -2,             -2.5,           0,            1,            2000,           0,                0,              0,          0,              0,          0]",
-  "wheel2 spring":          "[\"wheel2\",         \"car\",          \"wheel\",    0,      1,                0,            0,            0,            0,          60,           0,              0,              2,              -2.5,           0,            1,            2000,           0,                0,              0,          0,              0,          0]"
-}
