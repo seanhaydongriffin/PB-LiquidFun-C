@@ -31,7 +31,11 @@ Click **Clone or download** above, then **Download ZIP**, then download and extr
 
 ## Example
 
-
+```
+XIncludeFile "LiquidFun-C.pbi"
+XIncludeFile "LiquidFun-C-Ex.pbi"
+UsePNGImageDecoder()
+```
 
 You can run any of the executables (exe files) above to test the UDF. The Angry Nerds game demo should play similar to this YouTube video:
 
