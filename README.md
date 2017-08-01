@@ -19,16 +19,16 @@ Click **Clone or download** above, then **Download ZIP**, then download and extr
 
 ## Contents
 
-- **bin/<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">PB_LiquidFun_OpenGL_demo_setup.exe</a>** is the installer for the demo of the library
-- **src/LiquidFun-C.lib** is a static C library of LiquidFun (required by LiquidFun-C.pbi below)
-- **src/LiquidFun-C.dll** is a dynamic C library of LiquidFun (required by LiquidFun-C.pbi below)
-- **src/CSFML.pbi** is a PureBasic Interface File (library) for SFML (required by LiquidFun-C-Ex.pbi below)
-- **src/LiquidFun-C.pbi** is the PureBasic Interface File (library) for LiquidFun
-- **src/LiquidFun-C-Ex.pbi** is an extended library of PureBasic procedures for LiquidFun
-- **src/PB_LiquidFun_OpenGL_demo.pb** is the demonstration source
-- **src/example.pb** is the full source of the Example below
-- **src/data** is a folder of JSON files containing all the definitions of the LiquidFun / Box2D objects (bodies, textures, fixtures, joints, particle systems and groups)
-- **src/texture** is a folder (of PNG files) containing all the textures used in the library
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">bin/PB_LiquidFun_OpenGL_demo_setup.exe</a>** is the installer for the demo of the library
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/LiquidFun-C.lib</a>** is a static C library of LiquidFun (required by LiquidFun-C.pbi below)
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/LiquidFun-C.dll</a>** is a dynamic C library of LiquidFun (required by LiquidFun-C.pbi below)
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/CSFML.pbi</a>** is a PureBasic Interface File (library) for SFML (required by LiquidFun-C-Ex.pbi below)
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/LiquidFun-C.pbi</a>** is the PureBasic Interface File (library) for LiquidFun
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/LiquidFun-C-Ex.pbi</a>** is an extended library of PureBasic procedures for LiquidFun
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/PB_LiquidFun_OpenGL_demo.pb</a>** is the demonstration source
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/example.pb</a>** is the full source of the Example below
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/data</a>** is a folder of JSON files containing all the definitions of the LiquidFun / Box2D objects (bodies, textures, fixtures, joints, particle systems and groups)
+- **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">src/texture</a>** is a folder (of PNG files) containing all the textures used in the library
 
 ## Example
 
