@@ -88,7 +88,12 @@ Structure b2_World
   mousePreviousPositionY.i            ; the previous vertical position of the mouse (since the last b2World_Step call)
   mouseCurrentPositionX.i             ; the current horizontal position of the mouse (since the last b2World_Step call)
   mouseCurrentPositionY.i             ; the current vertical position of the mouse (since the last b2World_Step call)
-  mouseLeftButtonPressed.i            ; true / false if the left mouse button is currently pressed
+  mouseLeftButtonPressed.i            ; true / false if the left mouse button was pressed
+  mouseLeftButtonReleased.i           ; true / false if the left mouse button was released
+  mouseRightButtonPressed.i           ; true / false if the right mouse button was pressed
+  mouseRightButtonReleased.i          ; true / false if the right mouse button was released
+  mouseMoved.i                        ; true / false if the mouse was moved
+  mouseWheelMoved.i                   ; true / false if the mouse wheel was moved
   mouseWheelPosition.i
 EndStructure
 
@@ -2890,8 +2895,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 2321
-; FirstLine = 2288
+; CursorPosition = 93
+; FirstLine = 81
 ; Folding = -----------
 ; EnableXP
 ; EnableUnicode
