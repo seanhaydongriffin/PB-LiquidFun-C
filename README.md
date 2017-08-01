@@ -32,7 +32,7 @@ Click **Clone or download** above, then **<a href="https://github.com/seanhaydon
 
 ## Example
 
-The following is a walkthrough on how to write a simple LquidFun demo using this library.
+The following is a walkthrough on writing a simple LiquidFun demo using this library.
 
 Start your PB file as follows...
 
