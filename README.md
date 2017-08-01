@@ -2,7 +2,14 @@
 
 ## Introduction
 
-This is an AutoIT UDF of for Box2D.  It uses the Box2C API / wrapper for Box2D.
+This is a LiquidFun / Box2D library for PureBasic.  Also included is an extension to this library (LiquidFun-C-Ex.pbi) which adds several convenience procedures for developing games.
+
+
+## Demonstration
+
+For a quick-start, try the pre-built demo.
+
+As a quick-start check out this Youtube video 
 
 
 ## Download
