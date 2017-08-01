@@ -4,13 +4,14 @@
 
 This is a LiquidFun / Box2D library for PureBasic.  Also included is an extension to this library (LiquidFun-C-Ex.pbi) which adds several convenience procedures for developing games.
 
-
 ## Demonstration
 
 Try the demo by running this installer ->  <a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">PB_LiquidFun_OpenGL_demo_setup.exe</a>  
 
-As a quick-start check out this Youtube video 
-
+Check out a video of the demonstration here:
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=h5QH1O63Wik
+" target="_blank"><img src="http://img.youtube.com/vi/h5QH1O63Wik/0.jpg" 
+alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
 ## Download
 
@@ -18,7 +19,7 @@ Click **Clone or download** above, then **Download ZIP**, then download and extr
 
 ## Contents
 
-- **Box2C_Angry_Nerds_Game_SFML_installer.exe** is an installer for Angry Nerds, the best demo so far for the UDF
+- **bin/<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">PB_LiquidFun_OpenGL_demo_setup.exe</a>** is the installer for the demo of the library
 - **Box2C.au3** is the Box2D UDF itself, containing the Box2D / Box2C functions for AutoIT
 - **Box2C_linear_forces_test_SFML.exe** is a test of Box2D linear forces using AutoIT and SFML
 - **Box2C_angular_forces_test_SFML.exe** is a test of Box2D angular forces using AutoIT and SFML
