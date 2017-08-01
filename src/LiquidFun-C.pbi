@@ -1381,7 +1381,7 @@ EndImport
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 1368
-; FirstLine = 1342
+; CursorPosition = 80
+; FirstLine = 60
 ; EnableXP
 ; EnableUnicode

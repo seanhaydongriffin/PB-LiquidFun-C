@@ -419,7 +419,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure glTexture_Create(*tmp_gl_texture.gl_Texture)
   
-  *tmp_gl_texture\image_number = LoadImage(#PB_Any, *tmp_gl_texture\file_name)
+  *tmp_gl_texture\image_number = LoadImage(#PB_Any, "texture\" + *tmp_gl_texture\file_name)
   GetObject_(ImageID(*tmp_gl_texture\image_number), SizeOf(BITMAP), @*tmp_gl_texture\image_bitmap)
   
   ProcedureReturn 1
@@ -441,7 +441,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure glTexture_LoadAll(filename.s = "texture.json")
     
-  LoadJSON(2, filename)
+  LoadJSON(2, "data\" + filename)
   
   If JSONErrorMessage() <> ""
     
@@ -1520,7 +1520,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2Fixture_LoadAll(filename.s = "fixture.json")
   
-  ReadFile(1, filename) 
+  ReadFile(1, "data\" + filename) 
   
   While Eof(1) = 0         
     
@@ -1542,7 +1542,7 @@ Procedure b2Fixture_LoadAll(filename.s = "fixture.json")
   
   CloseFile(1)             
 
-  LoadJSON(1, filename)
+  LoadJSON(1, "data\" + filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(1), fixture_json())       
   
@@ -1602,7 +1602,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2Body_LoadAll(filename.s = "body.json")
   
-  LoadJSON(0, filename)
+  LoadJSON(0, "data\" + filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(0), body_json())       
 
@@ -1875,7 +1875,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2Joint_LoadAll(filename.s = "joint.json")
     
-  LoadJSON(5, filename)
+  LoadJSON(5, "data\" + filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(5), joint_json())       
 
@@ -1937,7 +1937,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2ParticleSystem_LoadAll(filename.s = "particle_system.json")
   
-  LoadJSON(3, filename)
+  LoadJSON(3, "data\" + filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(3), particle_system_json())       
 
@@ -2000,7 +2000,7 @@ EndProcedure
 ; ===============================================================================================================================
 Procedure b2ParticleGroup_LoadAll(filename.s = "particle_group.json")
   
-  LoadJSON(4, filename)
+  LoadJSON(4, "data\" + filename)
   ;Debug JSONErrorMessage()
   ExtractJSONMap(JSONValue(4), particle_group_json())       
   
@@ -2895,8 +2895,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 93
-; FirstLine = 81
+; CursorPosition = 421
+; FirstLine = 419
 ; Folding = -----------
 ; EnableXP
 ; EnableUnicode
