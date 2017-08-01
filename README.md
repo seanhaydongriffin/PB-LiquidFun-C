@@ -26,13 +26,12 @@ Click **Clone or download** above, then **Download ZIP**, then download and extr
 - **src/LiquidFun-C.pbi** is the PureBasic Interface File (library) for LiquidFun
 - **src/LiquidFun-C-Ex.pbi** is an extended library of PureBasic procedures for LiquidFun
 - **src/PB_LiquidFun_OpenGL_demo.pb** is the demonstration source
-- **src/data/*.json** is a speed test using AutoIT and Direct 2D
-- **Box2C_speed_test_GDIPlus.exe** is a speed test using AutoIT and GDI+
-- the ***.au3** files are the AutoIT scripts of the same name as the exe files above
-- the ***.gif** and ***.png** files are the sprites / images used in the tests
-- the ***.dll** files are the graphic engine libraries, and also the Box2C libraries
+- **src/data** is a folder of JSON files containing all the definitions of the LiquidFun / Box2D objects (bodies, textures, fixtures, joints, particle systems and groups)
+- **src/texture** is a folder (of PNG files) containing all the textures used in the library
 
-## Usage
+## Example
+
+
 
 You can run any of the executables (exe files) above to test the UDF. The Angry Nerds game demo should play similar to this YouTube video:
 
