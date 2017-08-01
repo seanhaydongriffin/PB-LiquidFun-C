@@ -34,14 +34,14 @@ Click **Clone or download** above, then **<a href="https://github.com/seanhaydon
 
 The following is a walkthrough on writing a simple LiquidFun demo using this library.
 
-Start your PB file as follows...
+Start your PB file as follows.
 
 ```
 XIncludeFile "LiquidFun-C.pbi"
 XIncludeFile "LiquidFun-C-Ex.pbi"
 ```
 
-This includes both the base LiquidFun library and extension library.
+This will include both the base LiquidFun library and extension library.
 
 The following block of code creates the LiquidFun and Box2D environment (including the world, bodies, textures, fixtures, joints, particle systems and groups).  The Box2D world is created with a downwards gravity of 10 meters per second.
 
