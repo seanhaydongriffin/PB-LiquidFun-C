@@ -74,7 +74,7 @@ Repeat
     frame_timer = ElapsedMilliseconds()
 ```
 
-For each frame of animation the Box2D world is stepped one frame.  The default parameters for b2World_Step are used.
+For each frame of animation in this loop the Box2D world is stepped one frame.  The default parameters below for **b2World_Step** are used.
 
 ```
     b2World_Step(world\ptr, (1 / 60.0), 6, 2)
