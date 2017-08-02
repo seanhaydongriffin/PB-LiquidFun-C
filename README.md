@@ -43,7 +43,7 @@ XIncludeFile "LiquidFun-C-Ex.pbi"
 
 This will include both the base LiquidFun library and extension library.
 
-The following block of code establishes the LiquidFun and Box2D environment (including the world, bodies, textures, fixtures, joints, particle systems and groups).  The Box2D world is created with a downwards gravity of 10 meters per second.
+The following block of code establishes the LiquidFun and Box2D environment.  The Box2D world is created with a downwards gravity of 10 meters per second.  All physics objects (including the world, bodies, textures, fixtures, joints, particle systems and groups) are loaded from the default JSON files (pre-existing in the **data** folder), which define their properties (such as initial positions, velocities, shape, densities, friction, masks, vertices and so forth).
 
 ```
 b2World_CreateEx(0.0, -10.0)
