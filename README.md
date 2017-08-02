@@ -52,7 +52,7 @@ b2World_CreateAll()
 
 The following block of code creates the OpenGL environment, including the main window, OpenGL gadget configuration and textures.  The main window is set to 800 x 600 pixels, with title "LiquidFun Demo".  Within this window is a PureBasic OpenGL Gadget of the same dimensions as the main window.  
 
-The OpenGL world is configured with a field of view of 30 degrees, and aspect ration matching the OpenGL gadget (800:600 pixels), a clipping distance of 1 to 1000, and initial main camera offset of -10 vertically and depth of -190.
+The OpenGL world is configured with a field of view of 30 degrees, and aspect ratio matching that of the OpenGL gadget (800:600 pixels), a clipping distance of 1 to 1000, and initial main camera offset of -10 vertically and depth of -190.
 
 glWorld_CreateTextures() takes the textures that were loaded into the Box2D environment (b2World_CreateAll() above) and creates these as textures for the OpenGL environment.
 
