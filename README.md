@@ -80,11 +80,11 @@ For each frame of animation in this loop the Box2D world is stepped one frame.  
     b2World_Step(world\ptr, (1 / 60.0), 6, 2)
 ```
 
-The following OpenGL calls paint the LiquidFun particles and Box2D fixtures onto the OpenGL world.  glColor3f_ resets the current color. glClearColor_ sets the background color of the OpenGL gadget.  glClear clears the OpenGL gadget for the next frame of animation.
+The following OpenGL calls paint (draw) the LiquidFun particles and Box2D fixtures onto the OpenGL world.  **glColor3f_** resets the current color. **glClearColor_** sets the background color of the OpenGL gadget.  **glClear** clears the OpenGL gadget for the next frame of animation.
 
-glDraw_Particles is responsible for drawing all LiquidFun particles in all active particle systems and groups.  glDraw_Fixtures is responsible for drawing all active Box2D fixtures.
+**glDraw_Particles** is responsible for drawing all LiquidFun particles in all active particle systems and groups.  **glDraw_Fixtures** is responsible for drawing all active Box2D fixtures.
 
-The SetGadgetAttribute call is responsible for displaying all drawn objects above for the frame of animation.
+The **SetGadgetAttribute** call is responsible for displaying all drawn objects above for the frame of animation.
 
 ```
     glColor3f_(1.0, 1.0, 1.0)
