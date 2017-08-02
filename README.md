@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is a LiquidFun / Box2D library for PureBasic.  Also included is an extension to this library (LiquidFun-C-Ex.pbi) which adds several convenience procedures for developing games.
+This is a LiquidFun / Box2D library for PureBasic.  Also included is an extension to this library (LiquidFun-C-Ex.pbi) which adds OpenGL graphics and several convenience procedures for developing games.
 
 ## Demonstration
 
