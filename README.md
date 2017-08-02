@@ -43,14 +43,18 @@ XIncludeFile "LiquidFun-C-Ex.pbi"
 
 This will include both the base LiquidFun library and extension library.
 
-The following block of code creates the LiquidFun and Box2D environment (including the world, bodies, textures, fixtures, joints, particle systems and groups).  The Box2D world is created with a downwards gravity of 10 meters per second.
+The following block of code establishes the LiquidFun and Box2D environment (including the world, bodies, textures, fixtures, joints, particle systems and groups).  The Box2D world is created with a downwards gravity of 10 meters per second.
 
 ```
 b2World_CreateEx(0.0, -10.0)
 b2World_CreateAll()
 ```
 
-The following block of code creates the OpenGL environment, including the main window, OpenGL gadget configuration and textures.  The main window is set to 800 x 600 pixels, with title "LiquidFun Demo".  Within this window is a PureBasic OpenGL Gadget of the same dimensions as the main window.  The OpenGL world is 
+The following block of code creates the OpenGL environment, including the main window, OpenGL gadget configuration and textures.  The main window is set to 800 x 600 pixels, with title "LiquidFun Demo".  Within this window is a PureBasic OpenGL Gadget of the same dimensions as the main window.  
+
+The OpenGL world is configured with a field of view of 30 degrees, and aspect ration matching the OpenGL gadget (800:600 pixels), a clipping distance of 1 to 1000, and initial main camera offset of -10 vertically and depth of -190.
+
+glWorld_CreateTextures() takes the textures that were loaded into the Box2D environment (b2World_CreateAll() above) and creates these as textures for the OpenGL environment.
 
 ```
 glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black)
@@ -58,24 +62,30 @@ glWorld_Setup(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
 glWorld_CreateTextures()
 ```
 
-```
-frame_timer = 0
-```
+The next block of code initiates the main animation loop.  The **frame_timer** is used to ensure animation is performed at 60 frames per second (every 16 milliseconds).
 
 ```
+frame_timer = 0
+
 Repeat
-```
   
-```
   If (ElapsedMilliseconds() - frame_timer) > 16
     
     frame_timer = ElapsedMilliseconds()
 ```
-    
+
+For each frame of animation the Box2D world is stepped one frame.  The default parameters for b2World_Step are used.
+
 ```
     b2World_Step(world\ptr, (1 / 60.0), 6, 2)
 ```
-    
+
+The following OpenGL calls paint the LiquidFun particles and Box2D fixtures onto the OpenGL world.  glColor3f_ resets the current color. glClearColor_ sets the background color of the OpenGL gadget.  glClear clears the OpenGL gadget for the next frame of animation.
+
+glDraw_Particles is responsible for drawing all LiquidFun particles in all active particle systems and groups.  glDraw_Fixtures is responsible for drawing all active Box2D fixtures.
+
+The SetGadgetAttribute call is responsible for displaying all drawn objects above for the frame of animation.
+
 ```
     glColor3f_(1.0, 1.0, 1.0)
     glClearColor_(0.7, 0.7, 0.7, 1)
@@ -84,6 +94,8 @@ Repeat
     glDraw_Fixtures()
     SetGadgetAttribute(Gadget, #PB_OpenGL_FlipBuffers, #True)
 ```
+
+Finally, we check for the event that the user has closed the main window, and if so exit the program.
 
 ```
     Eventxx = WindowEvent()
