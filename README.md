@@ -50,10 +50,10 @@ b2World_CreateEx(0.0, -10.0)
 b2World_CreateAll()
 ```
 
-The following block of code creates the OpenGL environment, including the main window, OpenGL gadget configuration and textures.  The main window is set to 800 x 600 pixels, with title "LiquidFun Demo".
+The following block of code creates the OpenGL environment, including the main window, OpenGL gadget configuration and textures.  The main window is set to 800 x 600 pixels, with title "LiquidFun Demo".  Within this window is a PureBasic OpenGL Gadget of the same dimensions as the main window.  The OpenGL world is 
 
 ```
-glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
+glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black)
 glWorld_Setup(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
 glWorld_CreateTextures()
 ```
