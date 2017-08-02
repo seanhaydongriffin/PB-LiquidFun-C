@@ -62,7 +62,7 @@ glWorld_Setup(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
 glWorld_CreateTextures()
 ```
 
-The next block of code initiates the main animation loop.  The **frame_timer** is used to ensure animation is performed at 60 frames per second (every 16 milliseconds).
+The next block of code initiates the main animation loop.  The **frame_timer** is used to ensure the rate of animation is 60 frames per second (being every 16 milliseconds).
 
 ```
 frame_timer = 0
