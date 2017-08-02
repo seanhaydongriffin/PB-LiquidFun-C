@@ -8,14 +8,9 @@ This is a LiquidFun / Box2D library for PureBasic.  Also included is an extensio
 
 Try the demo by running this installer ->  <a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/raw/master/bin/PB_LiquidFun_OpenGL_demo_setup.exe" target="_blank">PB_LiquidFun_OpenGL_demo_setup.exe</a>  
 
-Check out the following video of the demonstration => 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=h5QH1O63Wik
-" target="_blank"><img src="http://img.youtube.com/vi/h5QH1O63Wik/0.jpg" 
+Check out the following video of the demonstration => <a href="http://www.youtube.com/watch?feature=player_embedded&v=zdUW69nzy8w
+" target="_blank"><img src="http://img.youtube.com/vi/zdUW69nzy8w/0.jpg" 
 alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
-
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/zdUW69nzy8w" frameborder="0" allowfullscreen></iframe>
-
 
 ## Download
 
