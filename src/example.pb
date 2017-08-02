@@ -4,7 +4,7 @@ XIncludeFile "LiquidFun-C-Ex.pbi"
 b2World_CreateEx(0.0, -10.0)
 b2World_CreateAll()
 
-glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
+glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 0, 0, $006600, #Black)
 glWorld_Setup(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
 glWorld_CreateTextures()
 
@@ -30,10 +30,10 @@ Repeat
     Eventxx = WindowEvent()
   EndIf
     
-Until Eventxx = #PB_Event_CloseWindow Or end_game = 1
+Until Eventxx = #PB_Event_CloseWindow
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 23
+; CursorPosition = 32
 ; EnableXP
 ; Executable = PB_LiquidFun_OpenGL_demo.exe
 ; SubSystem = OpenGL

@@ -1,6 +1,5 @@
 ﻿XIncludeFile "LiquidFun-C.pbi"
 XIncludeFile "LiquidFun-C-Ex.pbi"
-UsePNGImageDecoder()
 
 ; #GLOBALS# ===================================================================================================================
 
@@ -34,7 +33,6 @@ Global Dim tmp_fixture_angle.f(50)
 ; ===============================================================================================================================
 
 ; #FUNCTIONS# ===================================================================================================================
-Declare keyboard_mouse_handler(*Value)
 Declare text_window_handler(*Value)
 ; ===============================================================================================================================
 
@@ -55,7 +53,7 @@ b2World_CreateAll()
 ; ============
 
 ; Setup the OpenGL Windows
-glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 400, 500, $006600, #Black, 0)
+glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo for PureBasic", 0, 0, 800, 600, 400, 500, $006600, #Black)
 
 ; Setup the OpenGL World
 ;glWorld_Setup(30.0, 200/200, 1.0, 1000.0, 0, 0, -190.0)
@@ -603,15 +601,23 @@ Repeat
     If world\mouseWheelPosition > 0  
       
       world\mouseWheelPosition = 0
-      world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ + 10
-      world\mainCameraPositionZ = world\mainCameraPositionZ - 10
+      
+      If world\mainCameraPositionZ >= (1 + 10)
+      
+        world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ + 10
+        world\mainCameraPositionZ = world\mainCameraPositionZ - 10
+      EndIf
     EndIf
           
     If world\mouseWheelPosition < 0  
             
       world\mouseWheelPosition = 0
-      world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ - 10
-      world\mainCameraPositionZ = world\mainCameraPositionZ + 10
+      
+      If world\mainCameraPositionZ <= (1000 - 10)
+        
+        world\mainCameraDisplacementPositionZ = world\mainCameraDisplacementPositionZ - 10
+        world\mainCameraPositionZ = world\mainCameraPositionZ + 10
+      EndIf
     EndIf
     
     If player_tracking = 0
@@ -983,8 +989,8 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 707
-; FirstLine = 702
+; CursorPosition = 55
+; FirstLine = 39
 ; Folding = -
 ; EnableXP
 ; Executable = PB_LiquidFun_OpenGL_demo.exe

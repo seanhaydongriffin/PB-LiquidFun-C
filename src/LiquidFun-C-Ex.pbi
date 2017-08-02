@@ -10,6 +10,7 @@
 
 XIncludeFile "LiquidFun-C.pbi"
 XIncludeFile "CSFML.pbi"
+UsePNGImageDecoder()
 
 
 ; #CONSTANTS# ===================================================================================================================
@@ -798,20 +799,27 @@ EndProcedure
 ; Name...........: glWindow_Setup
 ; Description ...: Setup the OpenGL windows
 ; Syntax.........: glWindow_Setup(main_window_x.i, main_window_y.i, main_window_width.i, main_window_height.i, main_window_title.s, openglgadget_x.i, openglgadget_y.i, openglgadget_width.i, openglgadget_height.i, text_window_width.i, text_window_height.i, text_window_background_colour.i, text_window_text_colour.i, open_console_window.i)
-; Parameters ....: main_window_x
-;                  main_window_y
-;                  main_window_width
-;                  main_window_height
-;                  main_window_title
-;                  openglgadget_x
-;                  openglgadget_y
-;                  openglgadget_width
-;                  openglgadget_height
-;                  text_window_width
-;                  text_window_height
-;                  text_window_background_colour
-;                  text_window_text_colour
-;                  open_console_window
+; Parameters ....: main_window_x - the horizontal position of the main window (in pixels)
+;                                  0 = center of the desktop
+;                  main_window_y - the vertical position of the main window (in pixels)
+;                                  0 = center of the desktop
+;                  main_window_width - the width of the main window (in pixels)
+;                  main_window_height - the height of the main window (in pixels)
+;                  main_window_title - the title of the main window (in pixels)
+;                  openglgadget_x - the horizontal position of the OpenGL gadget within the main window (in pixels)
+;                                   0 = leftmost position in the main window
+;                  openglgadget_y - the vertical position of the OpenGL gadget within the main window (in pixels)
+;                                   0 = topmost position in the main window
+;                  openglgadget_width - the width of the OpenGL gadget
+;                  openglgadget_height - the height of the OpenGL gadget
+;                  text_window_width - the width of the text window within the main window
+;                                      0 (default) = do not display the text window
+;                  text_window_height - the height of the text window within the main window
+;                                       0 (default) = do not display the text window
+;                  text_window_background_colour - the colour of the background within the text window (as a hexidecimal or PureBasic color constant)
+;                  text_window_text_colour - the colour of the foreground within the text window (as a hexidecimal or PureBasic color constant)
+;                  open_console_window - 0 (false - default) = do not display a console window
+;                                        1 (true - default) = display a console window
 ; Return values .: 
 ; Author ........: Sean Griffin
 ; Modified.......:
@@ -820,23 +828,27 @@ EndProcedure
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Procedure glWindow_Setup(main_window_x.i, main_window_y.i, main_window_width.i, main_window_height.i, main_window_title.s, openglgadget_x.i, openglgadget_y.i, openglgadget_width.i, openglgadget_height.i, text_window_width.i, text_window_height.i, text_window_background_colour.i, text_window_text_colour.i, open_console_window.i)
+Procedure glWindow_Setup(main_window_x.i, main_window_y.i, main_window_width.i, main_window_height.i, main_window_title.s, openglgadget_x.i, openglgadget_y.i, openglgadget_width.i, openglgadget_height.i, text_window_width.i = 0, text_window_height.i = 0, text_window_background_colour.i = $000000, text_window_text_colour.i = $FFFFFF, open_console_window.i = 0)
     
   ; Setup the OpenGL Main Window
   OpenWindow(0, main_window_x, main_window_y, main_window_width, main_window_height, main_window_title, #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
   OpenGLGadget(0, openglgadget_x, openglgadget_y, openglgadget_width, openglgadget_height, #PB_OpenGL_Keyboard|#PB_OpenGL_NoFlipSynchronization )
   
-  ; Setup the OpenGL Info Window
-  SetWindowCallback(@_MyWindowCallback()) ; Set callback for this window.
-  GetWindowRect_(WindowID(0),win.RECT)
-  OpenWindow(1, win\left+10, win\top+20, text_window_width, text_window_height, "Follower", #PB_Window_BorderLess, WindowID(0))
-  info_text_window = WindowID(1)
-  SetWindowColor(1, text_window_background_colour)
-  SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
-  SetLayeredWindowAttributes_(WindowID(1), text_window_background_colour,0,#LWA_COLORKEY)
-  TextGadget(5, 10,  10, text_window_width, text_window_height, "")
-  SetGadgetColor(5, #PB_Gadget_BackColor, text_window_background_colour)
-  SetGadgetColor(5, #PB_Gadget_FrontColor, text_window_text_colour)
+  If text_window_width > 0
+  
+    ; Setup the OpenGL Info Window
+    SetWindowCallback(@_MyWindowCallback()) ; Set callback for this window.
+    GetWindowRect_(WindowID(0),win.RECT)
+    OpenWindow(1, win\left+10, win\top+20, text_window_width, text_window_height, "Follower", #PB_Window_BorderLess, WindowID(0))
+    info_text_window = WindowID(1)
+    SetWindowColor(1, text_window_background_colour)
+    SetWindowLong_(WindowID(1), #GWL_EXSTYLE, #WS_EX_LAYERED | #WS_EX_TOPMOST)
+    SetLayeredWindowAttributes_(WindowID(1), text_window_background_colour,0,#LWA_COLORKEY)
+    TextGadget(5, 10,  10, text_window_width, text_window_height, "")
+    SetGadgetColor(5, #PB_Gadget_BackColor, text_window_background_colour)
+    SetGadgetColor(5, #PB_Gadget_FrontColor, text_window_text_colour)
+  EndIf
+  
   SetActiveWindow(0)
   SetActiveGadget(0)
   glInfo_Get()
@@ -856,13 +868,13 @@ EndProcedure
 ; Name...........: glWorld_Setup
 ; Description ...: Setup the OpenGL world.
 ; Syntax.........: glWorld_Setup(field_of_view.d, aspect_ratio.d, viewer_to_near_clipping_plane_distance.d, viewer_to_far_clipping_plane_distance.d, camera_x.f, camera_y.f, camera_z.f)
-; Parameters ....: field_of_view
-;                  aspect_ratio
-;                  viewer_to_near_clipping_plane_distance
-;                  viewer_to_far_clipping_plane_distance
-;                  camera_x
-;                  camera_y
-;                  camera_z
+; Parameters ....: field_of_view - the field of view of the main camera (in degrees)
+;                  aspect_ratio - the aspect ratio (ideally set this to main_window_width / main_window_height from the glWindow_Setup call above)
+;                  viewer_to_near_clipping_plane_distance - the distance from the viewer to the near clipping plane
+;                  viewer_to_far_clipping_plane_distance - the distance from the viewer to the far clipping plane
+;                  camera_x - the initial horizontal position of the main camera
+;                  camera_y - the initial vertical position of the main camera
+;                  camera_z - the initial depth of the main camera
 ; Return values .: 
 ; Author ........: Sean Griffin
 ; Modified.......:
@@ -2895,8 +2907,8 @@ EndProcedure
 ; ===============================================================================================================================
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 421
-; FirstLine = 419
+; CursorPosition = 876
+; FirstLine = 861
 ; Folding = -----------
 ; EnableXP
 ; EnableUnicode
