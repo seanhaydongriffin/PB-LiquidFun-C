@@ -30,6 +30,14 @@ Click **Clone or download** above, then **<a href="https://github.com/seanhaydon
 - **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/tree/master/src/data" target="_blank">src/data</a>** is a folder of JSON files containing all the definitions of the LiquidFun / Box2D objects (bodies, textures, fixtures, joints, particle systems and groups)
 - **<a href="https://github.com/seanhaydongriffin/PB-LiquidFun-C/tree/master/src/texture" target="_blank">src/texture</a>** is a folder (of PNG files) containing all the textures used in the library
 
+## Requirements
+
+This code has been tested on Windows 7, 8 and 10 64-bit operating systems.
+
+The code was developed in PureBasic version 5.60.
+
+The code has also been tested on a number of OpenGL versions including 1.2, 3.0 and 4.0.
+
 ## Example
 
 The following is a walkthrough on writing a simple LiquidFun demo using this library.
@@ -104,69 +112,46 @@ Finally, we check for the event that the user has closed the main window, and if
 Until Eventxx = #PB_Event_CloseWindow Or end_game = 1
 ```
 
+Here is the complete PB example ...
 
+```
+XIncludeFile "LiquidFun-C.pbi"
+XIncludeFile "LiquidFun-C-Ex.pbi"
 
-You can run any of the executables (exe files) above to test the UDF. The Angry Nerds game demo should play similar to this YouTube video:
+b2World_CreateEx(0.0, -10.0)
+b2World_CreateAll()
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=h5QH1O63Wik
-" target="_blank"><img src="http://img.youtube.com/vi/h5QH1O63Wik/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+glWindow_Setup(0, 0, 800, 600, "LiquidFun Demo", 0, 0, 800, 600, 0, 0, $006600, #Black)
+glWorld_Setup(30.0, 800/600, 1.0, 1000.0, 0, -10, -190.0)
+glWorld_CreateTextures()
 
-The four speed tests will test the performance of the UDF against four popular graphics engines, as follows.
+frame_timer = 0
 
-Filename | Test
--------- | ----
-Box2C_speed_test_SFML.exe | Tests the SFML graphics engine with the Box2D UDF
-Box2C_speed_test_Irrlicht.exe | Tests the Irrlicht graphics engine with the Box2D UDF
-Box2C_speed_test_D2D.exe | Tests the Direct 2D graphics engine with the Box2D UDF
-Box2C_speed_test_GDIPlus.exe | Tests the GDI+ graphics engine with the Box2D UDF
+Repeat
+  
+  If (ElapsedMilliseconds() - frame_timer) > 16
+    
+    frame_timer = ElapsedMilliseconds()
+    
+    b2World_Step(world\ptr, (1 / 60.0), 6, 2)
+    
+    glColor3f_(1.0, 1.0, 1.0)
+    glClearColor_(0.7, 0.7, 0.7, 1)
+    glClear_ (#GL_COLOR_BUFFER_BIT | #GL_DEPTH_BUFFER_BIT)
+    
+    glDraw_Particles()
+    glDraw_Fixtures()
+    
+    SetGadgetAttribute(Gadget, #PB_OpenGL_FlipBuffers, #True)
 
-Follow the prompts in the displayed GUI on how to conduct the test.
+    Eventxx = WindowEvent()
+  EndIf
+    
+Until Eventxx = #PB_Event_CloseWindow
+```
 
-SFML (Box2C_speed_test_SFML.exe) should provide the best performance.
+Once executed the main "LiquidFun Demo" window should be displayed, with a scene consisting of a circular group of (water-like) particles descending (via gravity) onto a textured green / brown platform.  The platform has two textured posts attached at each end.  There is a textured boat at one end.  The OpenGL world position of 0,0 is drawn (just above the platform) for reference.
 
-## Benchmarks
+As the scene animates you'll notice the water particles gently push the boat off the platform (as per the laws of physics).
 
-FPS readings are not limited.
-
-test 1. 60hz box2d step, all frame rendering, for 4 bodies ...
-
-Engine | FPS
------- | ---
-Irrlicht | 1360
-SFML | 1260
-D2D | 650
-GDI+ | 114
-
-Repeated above but with 10 bodies ...
-
-Engine | FPS
------- | ---
-Irrlicht | 780
-SFML | 700
-D2D | 333
-GDI+ | 86
-
-Repeated above but with 100 bodies ...
-
-Engine | FPS
------- | ---
-Irrlicht | 100
-SFML | 87
-D2D | 44
-GDI+ | 24
-
-test 2. Irrlicht and SFML only. 60hz box2d step and frame rendering combined, for 100 bodies
-
-Engine | FPS
------- | ---
-Irrlicht | 7300
-SFML | 6500
-
-test 3. as above but excluding transforming / draw logic
-
-Engine | FPS
------- | ---
-Irrlicht | 13000
-SFML | 14200
-
+A more advanced and interactive version of this scene is in the demo (see the **Demonstration** section above).
